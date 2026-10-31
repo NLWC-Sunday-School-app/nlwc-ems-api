@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NLWC EMS · Admin Console (prototype)</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../components.css">
+<script src="../theme.js"></script>
+</head>
+<body class="admin">
+<div class="proto-bar"><b>Admin prototype</b><span>Switch role →</span>
+  <a href="#" data-role="super" class="on">Super Admin</a><a href="#" data-role="event">Event Admin</a><a href="#" data-role="finance">Finance</a><a href="#" data-role="safe">Child Safety</a><a href="#" data-role="acc">Accommodation</a>
+  <span style="margin-left:12px">Nav and data are filtered by role and scope, as in BRD §5.</span></div>
+
+<aside class="side" aria-label="Admin navigation">
+  <img class="logo-light" src="../assets/nlwc-logo-coloured.png" alt="NLWC EMS admin"><img class="logo-dark" src="../assets/nlwc-logo-white.png" alt="" aria-hidden="true">
+  <h6>Overview</h6>
+  <a href="#dash" data-s="dash" data-roles="super event finance safe acc">Dashboard</a>
+  <h6>Events</h6>
+  <a href="#events" data-s="events" data-roles="super event">Event editions</a>
+  <a href="#pricing" data-s="pricing" data-roles="super event finance">Pricing &amp; rate plans <span class="ct">1</span></a>
+  <a href="#regs" data-s="regs" data-roles="super event">Registrations</a>
+  <a href="#people" data-s="people" data-roles="super event">People &amp; claims <span class="ct">4</span></a>
+  <a href="#pairing" data-s="pairing" data-roles="super event acc">Spouse pairing <span class="ct">2</span></a>
+  <h6>Operations</h6>
+  <a href="#camp" data-s="camp" data-roles="super event safe">Camp review <span class="ct">9</span></a>
+  <a href="#accom" data-s="accom" data-roles="super event acc">Accommodation <span class="ct">3</span></a>
+  <a href="#safe" data-s="safe" data-roles="super event safe">Safeguarding &amp; check-in</a>
+  <h6>Money</h6>
+  <a href="#finance" data-s="finance" data-roles="super finance">Orders &amp; finance <span class="ct">2</span></a>
+  <h6>Governance</h6>
+  <a href="#roles" data-s="roles" data-roles="super">Staff &amp; roles</a>
+  <a href="#audit" data-s="audit" data-roles="super finance">Audit log</a>
+</aside>
+
+<div class="main">
+<div class="topbar">
+  <div class="scope" data-event="bootcamp" id="scope"><span class="dot"></span><span id="scopeTxt">All events</span> <span aria-hidden="true">▾</span></div>
+  <input class="input" style="max-width:340px;min-height:38px" placeholder="Search name, phone, reference…" aria-label="Search">
+  <span style="margin-left:auto" class="row"><span data-theme-slot></span><span class="badge b-neutral" id="roleBadge">Super Admin</span><span class="avatar" style="width:34px;height:34px">AO</span></span>
+</div>
+
+<main class="page">
+
+<!-- ===== DASHBOARD ===== -->
+<section class="screen" id="dash">
+  <div class="page-h"><div><h1>Church dashboard</h1><p>Unique people and event registrations are counted separately.</p></div><div class="row"><button class="btn btn-secondary">Export</button></div></div>
+  <div class="grid g4">
+    <div class="kpi"><div class="l">Active editions</div><div class="v">3</div><div class="s">1 open · 2 draft/TBA</div></div>
+    <div class="kpi"><div class="l">Unique people</div><div class="v">1,284</div><div class="s">Across 1,771 registrations</div></div>
+    <div class="kpi"><div class="l">Collected</div><div class="v">₦ —</div><div class="s">No paid editions published yet</div></div>
+    <div class="kpi"><div class="l">Need attention</div><div class="v" style="color:var(--bad-fg)">19</div><div class="s">Across 6 queues</div></div>
+  </div>
+  <div class="grid g2" style="margin-top:var(--space-4)">
+    <div class="card"><div class="card-h"><h3>Exceptions</h3></div>
+      <table><tbody>
+        <tr><td><span class="badge b-warn">⏱ Rate pending</span></td><td>Singlz · 7–12 special dorm has no approved rate</td><td class="right"><a href="#pricing">Fix</a></td></tr>
+        <tr><td><span class="badge b-bad">⚠ Paid, unallocated</span></td><td>3 paid campers have no bed</td><td class="right"><a href="#accom">Resolve</a></td></tr>
+        <tr><td><span class="badge b-info">Claims</span></td><td>4 duplicate/claim reviews waiting</td><td class="right"><a href="#people">Review</a></td></tr>
+        <tr><td><span class="badge b-warn">Camp</span></td><td>9 camp applications awaiting review</td><td class="right"><a href="#camp">Review</a></td></tr>
+        <tr><td><span class="badge b-bad">Money</span></td><td>2 payment mismatches</td><td class="right"><a href="#finance">Reconcile</a></td></tr></tbody></table></div>
+    <div class="card"><div class="card-h"><h3>By edition</h3></div><div class="stack-4">
+      <div data-event="bootcamp"><div class="row between"><b><span class="badge b-event">Bible Bootcamp 2026</span></b><span class="sm muted">21–23 Dec · open</span></div><div class="sm" style="margin-top:6px">412 registered · 361 children 3–16 · 51 aged 17+</div></div>
+      <div data-event="singlz"><div class="row between"><b><span class="badge b-event">Singlz Summit</span></b><span class="sm muted">Dates TBA · draft</span></div><div class="sm" style="margin-top:6px">Rate plan 1 awaiting approval</div></div>
+      <div data-event="couples"><div class="row between"><b><span class="badge b-event">Couples Retreat</span></b><span class="sm muted">Dates TBA · draft</span></div><div class="sm" style="margin-top:6px">Fee basis not yet decided</div></div></div></div>
+  </div>
+</section>
+
+<!-- ===== EVENTS ===== -->
+<section class="screen" id="events">
+  <div class="page-h"><div><h1>Event editions</h1><p>A template (family) has many editions. Each edition owns its dates, rules, rate plan and capabilities.</p></div><div class="row"><button class="btn btn-secondary">Clone edition</button><button class="btn btn-primary">+ New edition</button></div></div>
+  <div class="card flush tbl-wrap"><table><thead><tr><th>Edition</th><th>Dates</th><th>Lifecycle</th><th>Capabilities</th><th class="num">Registered</th></tr></thead><tbody>
+    <tr class="sel"><td><b>Bible Bootcamp 2026</b></td><td>21–23 Dec 2026</td><td><span class="badge b-ok">Registration open</span></td><td class="xs">Daily attendance · Child safeguarding · Camp review</td><td class="num">412</td></tr>
+    <tr><td><b>Singlz Summit (2026 edition)</b></td><td class="muted">TBA</td><td><span class="badge b-neutral">Draft</span></td><td class="xs">Accommodation · Spouse pairing · Dependants</td><td class="num">0</td></tr>
+    <tr><td><b>Couples Retreat (2026 edition)</b></td><td class="muted">TBA</td><td><span class="badge b-neutral">Draft</span></td><td class="xs">Paid registration · Couple group · <b>No accommodation</b></td><td class="num">0</td></tr></tbody></table></div>
+  <div class="grid g2" style="margin-top:var(--space-4)">
+    <div class="card"><div class="card-h"><h3>Bible Bootcamp 2026 · setup</h3></div>
+      <ol class="stepper" style="margin-bottom:var(--space-4)"><li class="done">Draft</li><li class="done">Preview</li><li class="cur">Registration open</li><li>Closed</li><li>Live</li><li>Completed</li><li>Archived</li></ol>
+      <dl class="kv"><dt>Dates</dt><dd>21–23 Dec 2026 · Africa/Lagos</dd><dt>Age reference date</dt><dd>Edition start <span class="badge b-info">proposed default</span></dd><dt>Venue</dt><dd>Faith Plaza, Igbogunu Bus Stop, Bariga, Lagos</dd><dt>Pick-up window</dt><dd>4:00pm – 6:00pm daily</dd><dt>Studio drop-off</dt><dd>By 8:30am daily</dd><dt>Modes</dt><dd>Online · Walk-in · Camp (review)</dd></dl></div>
+    <div class="card"><div class="card-h"><h3>Capabilities</h3></div><div class="stack-2">
+      <div class="row between"><span>Accommodation</span><span class="switch"><i></i>Off</span></div>
+      <div class="row between"><span>Daily child check-in/out (3–16)</span><span class="switch on"><i></i>On</span></div>
+      <div class="row between"><span>Camp review</span><span class="switch on"><i></i>On</span></div>
+      <div class="row between"><span>Studio requests</span><span class="switch on"><i></i>On</span></div>
+      <div class="row between"><span>Parent Interactive Forum</span><span class="switch on"><i></i>On</span></div>
+      <div class="row between"><span>Paid registration</span><span class="switch"><i></i>Off · free edition</span></div></div>
+      <div class="note" style="margin-top:var(--space-3)">Switching a capability off removes its screens and API for this edition. Couples Retreat has Accommodation off, so no room UI exists for it. Clone copies structure and rules, never people, payments or health data.</div></div>
+  </div>
+</section>
+
+<!-- ===== PRICING ===== -->
+<section class="screen" id="pricing" data-event="singlz">
+  <div class="page-h"><div><h1>Pricing &amp; rate plans <span class="badge b-event" style="vertical-align:middle">Singlz Summit</span></h1><p>Every amount is per edition and versioned. Free and unpriced are different things.</p></div><div class="row"><button class="btn btn-secondary">Copy from previous edition → draft</button></div></div>
+  <div class="card" style="margin-bottom:var(--space-4)"><ol class="stepper"><li class="done">Draft v2</li><li class="cur">Pending approval</li><li>Approved</li><li>Published</li><li>Retired</li></ol>
+    <div class="row between" style="margin-top:var(--space-4)"><span class="sm">Drafted by <b>Chinwe A.</b> (Event Admin) · 30 Oct 2026. <b>Approval needs a different person</b> with the Finance Approver role.</span><div class="row"><button class="btn btn-secondary btn-sm">Request changes</button><button class="btn btn-primary btn-sm" id="approveBtn">Approve and schedule</button></div></div></div>
+  <div class="card flush"><div class="toolbar"><b>Rate matrix · per person · NGN</b><span class="muted xs">Click a cell to edit (creates a draft change)</span></div>
+    <div class="tbl-wrap"><table class="matrix"><thead><tr><th>Participant band</th><th>Hostel</th><th>Special dorm</th><th>Chalet</th></tr></thead><tbody>
+      <tr><td><b>Dependant 0–6</b></td><td><span class="cell free">✓ ₦0 · Free</span></td><td><span class="cell none">⏱ Unconfigured</span></td><td><span class="cell na">Not offered</span></td></tr>
+      <tr><td><b>Dependant 7–12</b></td><td><span class="cell amt">₦5,000</span></td><td><span class="cell none">⏱ Unconfigured</span></td><td><span class="cell na">Not offered</span></td></tr>
+      <tr><td><b>Participant 13+ · single</b></td><td><span class="cell none">⏱ Unconfigured</span></td><td><span class="cell none">⏱ Unconfigured</span></td><td><span class="cell na">Not eligible</span></td></tr>
+      <tr><td><b>Participant · married</b></td><td><span class="cell none">⏱ Unconfigured</span></td><td><span class="cell na">Policy TBC</span></td><td><span class="cell none">⏱ Unconfigured<br><span class="xs">pairing unit TBC</span></span></td></tr></tbody></table></div>
+    <div style="padding:var(--space-4)" class="legend"><span style="--c:var(--ok-solid)">Explicit ₦0 rule</span><span style="--c:var(--warn-solid)">Unconfigured → checkout blocked</span><span style="--c:var(--border-strong)">Not offered / not eligible</span></div></div>
+  <div class="grid g2" style="margin-top:var(--space-4)">
+    <div class="card"><div class="card-h"><h3>Publish readiness</h3><span class="badge b-bad">5 gaps</span></div>
+      <p class="sm muted">An option can't be sold until it has exactly one approved price rule, a unit and a cancellation policy.</p>
+      <ul class="sm" style="padding-left:18px;margin:var(--space-3) 0 0"><li>Hostel 13+ single: no rate</li><li>Special dorm (all bands): no rate</li><li>Chalet pairing: price and unit undecided (D-07)</li><li>Cancellation policy missing</li></ul></div>
+    <div class="card"><div class="card-h"><h3>Preview quote</h3></div>
+      <div class="row" style="margin-bottom:var(--space-2)"><select class="select" style="max-width:150px"><option>Age 9</option></select><select class="select" style="max-width:150px"><option>Hostel</option></select></div>
+      <div class="price"><span>Hostel · dependant 7–12</span><span class="amt">₦5,000</span></div>
+      <div class="price"><span>Rate source</span><span class="mono xs">Singlz · rate plan v2 · rule R-0712-H</span></div>
+      <p class="xs muted">Change 7–12 hostel to ₦7,000 in a new edition and only that edition's quotes change. Settled orders keep their snapshot.</p></div>
+  </div>
+  <div class="card" style="margin-top:var(--space-4)"><div class="card-h"><h3>Version history</h3></div><ul class="timeline"><li><b>v2 draft</b> · Chinwe A. · set 7–12 hostel ₦5,000, 0–6 hostel ₦0 · reason: <i>"per 2026 instruction"</i></li><li><b>v1</b> · created from blank · 28 Oct</li></ul></div>
+</section>
+
+<!-- ===== REGISTRATIONS ===== -->
+<section class="screen" id="regs" data-event="bootcamp">
+  <div class="page-h"><div><h1>Registrations <span class="badge b-event" style="vertical-align:middle">Bible Bootcamp 2026</span></h1><p>Registration, payment, booking and occupancy are separate columns, never one status.</p></div><button class="btn btn-secondary">Export (audited)</button></div>
+  <div class="card flush"><div class="toolbar"><input class="input" placeholder="Filter by name, ref, phone"><select class="select"><option>Mode: all</option></select><select class="select"><option>Age band: all</option></select>
+    <span class="chip on">All 412</span><span class="chip">Needs action 17</span><span class="chip">Pending claim 6</span><span class="chip">Provisional 3</span></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Participant</th><th>Mode</th><th>Registration</th><th>Payment</th><th>Booking</th><th>Pass</th><th>By</th></tr></thead><tbody>
+      <tr data-open="drawer"><td><b>Tobi Egwu</b> · 9<div class="mono xs muted">BB26-0412-A7</div></td><td>Walk-in</td><td><span class="badge b-ok">✓ Confirmed</span></td><td><span class="badge b-neutral">Not required</span></td><td class="muted">None</td><td><span class="badge b-ok">Active</span></td><td class="xs">Kelechi E.</td></tr>
+      <tr data-open="drawer"><td><b>Seun Ade</b> · 14<div class="mono xs muted">BB26-0418-C2</div></td><td>Camp request</td><td><span class="badge b-warn">⏱ Needs action</span></td><td><span class="badge b-neutral">Not required</span></td><td><span class="badge b-info">Review</span></td><td><span class="badge b-warn">Pending</span></td><td class="xs">Guardian</td></tr>
+      <tr data-open="drawer"><td><b>Amaka Obi</b> · 24<div class="mono xs muted">SS26-0007-K1</div></td><td>Camping</td><td><span class="badge b-warn">⏱ Pending claim</span></td><td><span class="badge b-ok">✓ Paid</span></td><td><span class="badge b-info">Confirmed · unit TBD</span></td><td><span class="badge b-warn">Restricted</span></td><td class="xs">Kelechi E. (sponsor)</td></tr></tbody></table></div></div>
+  <aside class="drawer" id="drawer"><div class="row between"><h2>Seun Ade · 14</h2><button class="btn btn-ghost btn-sm" data-close>Close</button></div>
+    <p class="muted sm">BB26-0418-C2 · Registered by guardian Mrs Ade</p>
+    <div class="axes" style="margin:var(--space-4) 0"><div><b>Registration</b><span class="badge b-warn">⏱ Needs action</span></div><div><b>Payment</b><span class="badge b-neutral">Not req.</span></div><div><b>Booking</b><span class="badge b-info">Camp review</span></div><div><b>Occupancy</b><span class="badge b-neutral">—</span></div></div>
+    <div class="alert warn"><span>⏱</span><div><b>Missing</b>Guardian media answer</div></div>
+    <h4 style="margin:var(--space-4) 0 8px">Health &amp; welfare</h4><div class="alert info"><span>🔒</span><div><b>Restricted</b>Visible to Medical/Welfare only. Your role can't open this. <a href="#">Request access</a> (logged)</div></div>
+    <h4 style="margin:var(--space-4) 0 8px">History</h4><ul class="timeline"><li>Registered by guardian · 27 Oct 10:12</li><li>Camp requested · 27 Oct 10:14</li><li>Guardian consent recorded · 27 Oct 10:18</li></ul></aside>
+</section>
+
+<!-- ===== PEOPLE ===== -->
+<section class="screen" id="people">
+  <div class="page-h"><div><h1>People &amp; claims</h1><p>Profiles are never merged automatically. A person decides, or a human reviews with evidence.</p></div></div>
+  <div class="tabs" style="margin-bottom:var(--space-4)"><a class="on" href="#people">Possible duplicates <span class="badge b-warn">2</span></a><a href="#people">Claim disputes <span class="badge b-warn">1</span></a><a href="#people">Unclaimed (expiring) <span class="badge b-neutral">7</span></a></div>
+  <div class="card"><div class="card-h"><h3>Possible duplicate · matched on phone</h3><span class="badge b-warn">Medium confidence</span></div>
+    <div class="grid g2"><div class="card" style="background:var(--surface-sunken)"><b>Amaka Obi</b><dl class="kv" style="margin-top:8px"><dt>DOB</dt><dd>03 Sep 2002</dd><dt>Phone</dt><dd>0812 ••• 7788 ✓</dd><dt>Created</dt><dd>Sponsored by Kelechi E. · 28 Oct</dd><dt>Events</dt><dd>Singlz 2026</dd></dl></div>
+    <div class="card" style="background:var(--surface-sunken)"><b>Amaka C. Obi</b><dl class="kv" style="margin-top:8px"><dt>DOB</dt><dd>03 Sep 2002</dd><dt>Phone</dt><dd>0812 ••• 7788 ✓</dd><dt>Created</dt><dd>Self · 2025</dd><dt>Events</dt><dd>Bible Bootcamp 2025</dd></dl></div></div>
+    <div class="row" style="margin-top:var(--space-4)"><button class="btn btn-primary">Send ownership check to verified phone</button><button class="btn btn-secondary">Keep separate</button><button class="btn btn-ghost">Escalate</button></div>
+    <p class="xs muted" style="margin-top:8px">No "merge" button. Linking happens only after the owner confirms through their verified contact; every decision is audited.</p></div>
+</section>
+
+<!-- ===== PAIRING ===== -->
+<section class="screen" id="pairing" data-event="singlz">
+  <div class="page-h"><div><h1>Spouse pairing exceptions <span class="badge b-event" style="vertical-align:middle">Singlz Summit</span></h1><p>Chalet is married-only. Each spouse is a separate person and occupant.</p></div></div>
+  <div class="card flush tbl-wrap"><table><thead><tr><th>Applicant</th><th>Spouse</th><th>Link</th><th>Pairing</th><th>Issue</th><th></th></tr></thead><tbody>
+    <tr><td><b>Kelechi Egwu</b></td><td>Ngozi Egwu</td><td><span class="badge b-warn">⏱ Awaiting confirmation</span></td><td><span class="badge b-warn">Pending details</span></td><td class="sm">Link not confirmed in 2 days</td><td><button class="btn btn-secondary btn-sm">Nudge</button></td></tr>
+    <tr><td><b>David Ola</b></td><td>Funke Ola</td><td><span class="badge b-bad">Disputed</span></td><td><span class="badge b-bad">Blocked</span></td><td class="sm">Funke says "not my husband"</td><td><button class="btn btn-primary btn-sm">Review</button></td></tr></tbody></table></div>
+  <div class="note" style="margin-top:var(--space-4)">Review shows both parties' claims, booking impact (reprice, relocate, refund) and requires a reason. Nothing unlinks or refunds in one click.</div>
+</section>
+
+<!-- ===== CAMP ===== -->
+<section class="screen" id="camp" data-event="bootcamp">
+  <div class="page-h"><div><h1>Camp review <span class="badge b-event" style="vertical-align:middle">Bible Bootcamp 2026</span></h1><p>A human decides. The system never approves fitness to camp or assigns a bed on its own.</p></div></div>
+  <div class="alert info" style="margin-bottom:var(--space-4)"><span>ℹ</span><div><b>Camp rule for 2026: ages 10–16, free.</b>Applicants outside 10–16 are blocked at registration. Capacity is not set yet, so approvals stay disabled until it is.</div></div>
+  <div class="card flush tbl-wrap"><table><thead><tr><th>Applicant</th><th>Age</th><th>Guardian permission</th><th>Welfare flags</th><th>Capacity</th><th>Decision</th></tr></thead><tbody>
+    <tr><td><b>Seun Ade</b></td><td>14</td><td><span class="badge b-ok">✓ Given</span></td><td><span class="badge b-lock">🔒 Welfare only</span></td><td><span class="badge b-neutral">Not set</span></td><td><button class="btn btn-secondary btn-sm" disabled>Approve</button> <button class="btn btn-ghost btn-sm">Waitlist</button></td></tr>
+    <tr><td><b>Ife Bello</b></td><td>11</td><td><span class="badge b-warn">⏱ Missing</span></td><td><span class="badge b-lock">🔒 Welfare only</span></td><td><span class="badge b-neutral">Not set</span></td><td><button class="btn btn-secondary btn-sm" disabled>Approve</button></td></tr></tbody></table></div>
+</section>
+
+<!-- ===== ACCOMMODATION ===== -->
+<section class="screen" id="accom" data-event="singlz">
+  <div class="page-h"><div><h1>Accommodation <span class="badge b-event" style="vertical-align:middle">Singlz Summit</span></h1><p>Entitlement, allocation and occupancy are separate. Free occupants still use capacity.</p></div><button class="btn btn-secondary">+ Block unit</button></div>
+  <div class="grid g3">
+    <div class="card"><b>Hostel</b><div class="meter" style="margin:10px 0"><i class="m-sold" style="width:55%"></i><i class="m-held" style="width:10%"></i></div><div class="row between sm"><span>110 sold · 20 held</span><b>70 free</b></div></div>
+    <div class="card"><b>Special dorm</b><div class="meter" style="margin:10px 0"><i class="m-sold" style="width:30%"></i><i class="m-held" style="width:5%"></i></div><div class="row between sm"><span>30 sold · 5 held</span><b>65 free</b></div></div>
+    <div class="card"><b>Chalet (married)</b><div class="meter" style="margin:10px 0"><i class="m-sold" style="width:60%"></i><i class="m-held" style="width:10%"></i></div><div class="row between sm"><span>12 sold · 2 held</span><b>6 free</b></div></div></div>
+  <div class="legend" style="margin:var(--space-3) 0"><span style="--c:var(--ember-600)">Sold</span><span style="--c:var(--ember-300)">Held (expires)</span><span style="--c:var(--border-strong)">Available</span></div>
+  <div class="card"><div class="card-h"><h3>Chalets</h3></div><div class="units">
+    <div class="unit full"><b>C-01</b>Ola, Ola · 2/2</div><div class="unit full"><b>C-02</b>2/2</div><div class="unit hold"><b>C-03</b>Held 09:41</div><div class="unit"><b>C-04</b>Free</div><div class="unit oos"><b>C-05</b>Out of service</div><div class="unit full"><b>C-06</b>2/2</div><div class="unit"><b>C-07</b>Free</div><div class="unit"><b>C-08</b>Free</div></div></div>
+  <div class="card" style="margin-top:var(--space-4)"><div class="card-h"><h3>Paid but unallocated</h3><span class="badge b-bad">3</span></div>
+    <div class="alert bad"><span>⚠</span><div><b>These people have paid but have no bed.</b>They must never be shown as housed. Assign, offer an alternative, or refund.</div></div>
+    <table style="margin-top:var(--space-3)"><tbody><tr><td><b>Chuka N.</b> · Hostel · paid ₦ …</td><td class="right"><button class="btn btn-primary btn-sm">Assign bed</button> <button class="btn btn-secondary btn-sm">Offer alternative</button> <button class="btn btn-ghost btn-sm">Refund</button></td></tr></tbody></table></div>
+</section>
+
+<!-- ===== SAFEGUARDING ===== -->
+<section class="screen" id="safe" data-event="bootcamp">
+  <div class="page-h"><div><h1>Safeguarding &amp; check-in <span class="badge b-event" style="vertical-align:middle">Bible Bootcamp 2026</span></h1><p>Each day is its own record. Checking out on 21 Dec closes nothing on 22 Dec.</p></div><div class="seg"><button data-seg>Mon 21</button><button data-seg class="on">Tue 22</button><button data-seg>Wed 23</button></div></div>
+  <div class="alert info" style="margin-bottom:var(--space-4)"><svg class="ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg><div><b>Wed 23 Dec is the last day.</b>Every child leaves with a parent or guardian, before 6:00pm. Expect a heavier pick-up window and brief the gate team.</div></div>
+  <div class="grid g4">
+    <div class="kpi"><div class="l">Expected</div><div class="v">361</div><div class="s">children 3–16</div></div>
+    <div class="kpi"><div class="l">On site now</div><div class="v" style="color:var(--ok-fg)">298</div><div class="s">checked in</div></div>
+    <div class="kpi"><div class="l">Checked out</div><div class="v">41</div><div class="s">pick-up verified</div></div>
+    <div class="kpi"><div class="l">Overdue pickup</div><div class="v" style="color:var(--bad-fg)">3</div><div class="s">after 6:00pm</div></div></div>
+  <div class="grid g2" style="margin-top:var(--space-4)">
+    <div class="card flush"><div class="toolbar"><b>Overdue &amp; exceptions</b></div><table><tbody>
+      <tr><td><span class="badge b-bad">Late pickup</span></td><td><b>Ife Bello</b> · 11<div class="xs muted">Mother called · ETA 25 min</div></td><td class="right"><button class="btn btn-secondary btn-sm">Contact guardian</button></td></tr>
+      <tr><td><span class="badge b-bad">Pick-up mismatch</span></td><td><b>Tobi Egwu</b> · 9<div class="xs muted">Unlisted adult at gate B · 15:42</div></td><td class="right"><button class="btn btn-primary btn-sm">Open incident</button></td></tr>
+      <tr><td><span class="badge b-warn">Duplicate scan</span></td><td><b>Seun Ade</b> · 14<div class="xs muted">First scan Gate A 08:51</div></td><td class="right"><button class="btn btn-ghost btn-sm">Resolve</button></td></tr></tbody></table></div>
+    <div class="card"><div class="card-h"><h3>Incident IR-0214</h3><span class="badge b-bad">Open</span></div>
+      <ul class="timeline"><li>15:42 · Gate B officer: person not on the pick-up list. Release refused.</li><li>15:43 · Supervisor alerted (Mrs Okoro)</li><li>15:46 · Guardian called, awaiting answer</li></ul>
+      <div class="field" style="margin-top:var(--space-3)"><label for="rs">Resolution note (required to close)</label><textarea id="rs" class="textarea"></textarea></div>
+      <div class="row" style="margin-top:var(--space-3)"><button class="btn btn-primary">Release to verified adult</button><button class="btn btn-secondary">Keep in care</button></div>
+      <p class="xs muted" style="margin-top:8px">There is no "force success". Overrides need a supervisor role, a reason and are written to an append-only record.</p></div></div>
+  <div class="note" style="margin-top:var(--space-4)">The gate staff use the check-in PWA (see the design system's device screens). This page is the control room. Camper roll-call and overnight occupancy sit on separate tabs so they never merge with day attendance.</div>
+</section>
+
+<!-- ===== FINANCE ===== -->
+<section class="screen" id="finance">
+  <div class="page-h"><div><h1>Orders &amp; finance</h1><p>Counts show orders, couples, people and entitlements separately so revenue is never double-counted.</p></div><button class="btn btn-secondary">Reconciliation export</button></div>
+  <div class="grid g4"><div class="kpi"><div class="l">Orders</div><div class="v">1</div></div><div class="kpi"><div class="l">People covered</div><div class="v">3</div></div><div class="kpi"><div class="l">Outstanding</div><div class="v">₦5,000</div></div><div class="kpi"><div class="l">Mismatches</div><div class="v" style="color:var(--bad-fg)">2</div></div></div>
+  <div class="card flush" style="margin-top:var(--space-4)"><div class="toolbar"><b>Payment mismatches</b></div><div class="tbl-wrap"><table><thead><tr><th>Order</th><th>Gateway ref</th><th>Expected</th><th>Received</th><th>Issue</th><th></th></tr></thead><tbody>
+    <tr><td class="mono">ORD-2F9C1</td><td class="mono">PSK-9X21A</td><td class="num">₦5,000</td><td class="num">₦500</td><td><span class="badge b-bad">Amount mismatch</span></td><td><button class="btn btn-secondary btn-sm">Investigate</button></td></tr>
+    <tr><td class="mono">ORD-1B77E</td><td class="mono">PSK-4C12B</td><td class="num">₦ …</td><td class="num">₦ … ×2</td><td><span class="badge b-warn">Duplicate webhook (ignored)</span></td><td><button class="btn btn-ghost btn-sm">View</button></td></tr></tbody></table></div></div>
+  <div class="grid g2" style="margin-top:var(--space-4)"><div class="card"><div class="card-h"><h3>Manual / offline payment</h3></div><p class="sm muted">Needs evidence, a reason and a second reviewer for high-risk overrides.</p><div class="row" style="margin-top:var(--space-3)"><button class="btn btn-secondary">Record cash payment</button></div></div>
+  <div class="card"><div class="card-h"><h3>Refunds</h3></div><p class="sm muted">Refunds post ledger entries and never erase paid history. Policy not yet supplied.</p></div></div>
+</section>
+
+<!-- ===== ROLES ===== -->
+<section class="screen" id="roles">
+  <div class="page-h"><div><h1>Staff &amp; roles</h1><p>Roles can be church-wide or scoped to an edition. Nobody gets health data by default.</p></div><button class="btn btn-primary">+ Invite staff</button></div>
+  <div class="card flush tbl-wrap"><table class="matrix"><thead><tr><th>Role</th><th>Scope</th><th>Pricing</th><th>Money</th><th>Health</th><th>Custody</th><th>Config</th></tr></thead><tbody>
+    <tr><td><b>Super Admin</b></td><td>Church-wide</td><td>Approve</td><td>View</td><td>—</td><td>View</td><td>Edit</td></tr>
+    <tr><td><b>Event Admin</b></td><td>Assigned edition</td><td>Draft</td><td>—</td><td>—</td><td>View</td><td>Edit</td></tr>
+    <tr><td><b>Finance Officer</b></td><td>Church-wide</td><td>Approve</td><td>Edit</td><td>—</td><td>—</td><td>—</td></tr>
+    <tr><td><b>Child Check-in Officer</b></td><td>Assigned edition</td><td>—</td><td>—</td><td>Flags only</td><td>Act</td><td>—</td></tr>
+    <tr><td><b>Medical/Welfare</b></td><td>Assigned edition</td><td>—</td><td>—</td><td>Full · logged</td><td>View</td><td>—</td></tr>
+    <tr><td><b>Volunteer/Usher</b></td><td>Assigned edition</td><td>—</td><td>—</td><td>—</td><td>Scan only</td><td>—</td></tr></tbody></table></div>
+  <div class="grid g2" style="margin-top:var(--space-4)"><div class="card"><div class="card-h"><h3>Chinwe A.</h3><span class="badge b-ok">MFA on</span></div><dl class="kv"><dt>Roles</dt><dd>Event Admin · Singlz Summit 2026</dd><dt>Granted</dt><dd>28 Oct by Super Admin</dd><dt>Expires</dt><dd>After edition archive</dd></dl><button class="btn btn-ghost btn-sm" style="margin-top:8px">Revoke</button></div>
+  <div class="note">Elevated roles require MFA. Access to Singlz roles never exposes Bootcamp data. Pricing drafter and approver must be different people.</div></div>
+</section>
+
+<!-- ===== AUDIT ===== -->
+<section class="screen" id="audit">
+  <div class="page-h"><div><h1>Audit log</h1><p>Append-only. Includes sensitive reads and exports.</p></div><button class="btn btn-secondary">Export</button></div>
+  <div class="card flush"><div class="toolbar"><input class="input" placeholder="Actor, entity, reference"><select class="select"><option>All categories</option></select><span class="chip on">All</span><span class="chip">Pricing</span><span class="chip">Custody</span><span class="chip">Sensitive access</span><span class="chip">Money</span></div>
+    <div class="tbl-wrap"><table><thead><tr><th>When (WAT)</th><th>Actor</th><th>Action</th><th>Entity</th><th>Detail</th></tr></thead><tbody>
+      <tr><td class="mono xs">30 Oct 16:02</td><td>Chinwe A.</td><td><span class="badge b-info">Pricing</span> draft changed</td><td class="mono xs">Singlz · RP v2</td><td class="sm">7–12 hostel: unset → ₦5,000 · "per 2026 instruction"</td></tr>
+      <tr><td class="mono xs">30 Oct 15:46</td><td>Okoro M.</td><td><span class="badge b-bad">Custody</span> release refused</td><td class="mono xs">IR-0214</td><td class="sm">Not on pick-up list</td></tr>
+      <tr><td class="mono xs">30 Oct 14:20</td><td>Dr Bassey</td><td><span class="badge b-warn">Sensitive access</span> opened</td><td class="mono xs">BB26-0418-C2</td><td class="sm">Health disclosure · reason: camp review</td></tr></tbody></table></div></div>
+</section>
+</main></div>
+
+<script>
+var cur='dash',role='super';
+var names={super:'All events',event:'Bible Bootcamp 2026',finance:'All events',safe:'Bible Bootcamp 2026',acc:'Singlz Summit'};
+var roleNames={super:'Super Admin',event:'Event Admin',finance:'Finance Officer',safe:'Child Safety Officer',acc:'Accommodation Manager'};
+var evOf={super:'',event:'bootcamp',finance:'',safe:'bootcamp',acc:'singlz'};
+function go(){var id=(location.hash||'#dash').slice(1);var a=document.querySelector('.side a[data-s="'+id+'"]');
+ if(!a||a.hidden){var f=document.querySelector('.side a:not([hidden])');id=f?f.dataset.s:'dash'}
+ cur=id;document.querySelectorAll('.screen').forEach(function(e){e.classList.toggle('on',e.id===id)});
+ document.querySelectorAll('.side a').forEach(function(x){x.classList.toggle('on',x.dataset.s===id)});document.querySelectorAll('.drawer').forEach(function(d){d.classList.remove('on')});scrollTo({top:0,behavior:'instant'})}
+function applyRole(){document.querySelectorAll('.side a').forEach(function(a){a.hidden=a.dataset.roles.split(' ').indexOf(role)<0});
+ document.querySelectorAll('.side h6').forEach(function(h){var n=h.nextElementSibling,vis=false;while(n&&n.tagName==='A'){if(!n.hidden)vis=true;n=n.nextElementSibling}h.hidden=!vis});
+ document.getElementById('scopeTxt').textContent=names[role];document.getElementById('roleBadge').textContent=roleNames[role];
+ var s=document.getElementById('scope');if(evOf[role])s.setAttribute('data-event',evOf[role]);else s.removeAttribute('data-event');
+ document.querySelectorAll('.proto-bar [data-role]').forEach(function(x){x.classList.toggle('on',x.dataset.role===role)});go()}
+document.querySelectorAll('.proto-bar [data-role]').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();role=a.dataset.role;applyRole()})});
+addEventListener('hashchange',go);applyRole();
+document.addEventListener('click',function(e){var o=e.target.closest('[data-open]');if(o){document.getElementById(o.dataset.open).classList.add('on')}
+ if(e.target.closest('[data-close]'))e.target.closest('.drawer').classList.remove('on');
+ var b=e.target.closest('[data-seg]');if(b)b.parentElement.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b)})});
+</script>
+</body></html>

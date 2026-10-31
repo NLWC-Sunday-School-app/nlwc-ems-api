@@ -1,0 +1,7 @@
+{
+  "name": "@nlwc/ui",
+  "version": "0.0.0",
+  "private": true,
+  "exports": { "./tokens.css": "./tokens.css", "./components.css": "./components.css", "./theme.js": "./theme.js", "./tokens.json": "./tokens.json" },
+  "scripts": { "build": "echo skip", "typecheck": "echo skip", "lint": "echo skip", "test": "echo skip" }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "@nlwc/domain",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p .",
+    "typecheck": "tsc -p . --noEmit",
+    "lint": "echo skip",
+    "test": "echo skip",
+    "prepare": "tsc -p ."
+  },
+  "dependencies": {},
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

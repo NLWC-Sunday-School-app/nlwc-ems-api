@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NLWC Events · Attendee Portal (prototype)</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Marcellus&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../components.css">
+<script src="../theme.js"></script>
+</head>
+<body>
+<div class="proto-bar" id="protobar"><b>Portal prototype</b></div>
+
+<header class="site-head"><div class="in">
+  <a href="#home"><img class="logo-light" src="../assets/nlwc-logo-coloured.png" alt="The New &amp; Living Way Church, events home"><img class="logo-dark" src="../assets/nlwc-logo-white.png" alt="" aria-hidden="true"></a>
+  <button type="button" class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mainNav"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path class="m-open" d="M4 7h16M4 12h16M4 17h16"/><path class="m-close" d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <nav aria-label="Main" id="mainNav">
+    <a href="#home" class="hide-m" data-nav="home">Events</a>
+    <a href="#family" class="hide-m" data-nav="family">Profile</a>
+    <a href="#orders" class="hide-m" data-nav="orders">Payments</a>
+    <span data-theme-slot></span>
+    <a href="#auth" class="btn btn-brand btn-sm" id="signin">Sign in</a>
+  </nav>
+</div></header>
+
+<!-- ============ 1 HOME ============ -->
+<main>
+<section class="screen" id="home">
+  <div class="hero hero-home">
+  <div class="hero-stars" aria-hidden="true"></div>
+  <div class="hero-embers" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <svg class="hero-land" viewBox="0 0 1440 300" preserveAspectRatio="xMidYMax meet" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="flame" x1="0" x2="1"><stop offset="0" stop-color="#B3260E"/><stop offset=".55" stop-color="#E8541A"/><stop offset="1" stop-color="#F28216"/></linearGradient>
+      <linearGradient id="rock" gradientUnits="userSpaceOnUse" x1="560" y1="40" x2="1500" y2="240"><stop offset="0" style="stop-color:var(--rock-a)"/><stop offset="1" style="stop-color:var(--rock-b)"/></linearGradient>
+      <linearGradient id="land" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1440" y2="0"><stop offset="0" style="stop-color:var(--land-a)"/><stop offset="1" style="stop-color:var(--land-b)"/></linearGradient>
+      <linearGradient id="hill" gradientUnits="userSpaceOnUse" x1="40" y1="0" x2="660" y2="0"><stop offset="0" style="stop-color:var(--cliff-a)"/><stop offset="1" style="stop-color:var(--cliff-b)"/></linearGradient>
+      <linearGradient id="crown" gradientUnits="userSpaceOnUse" x1="60" y1="0" x2="290" y2="0"><stop offset="0" style="stop-color:var(--tree-a)"/><stop offset=".55" style="stop-color:var(--tree-b)"/><stop offset="1" style="stop-color:var(--tree-c)"/></linearGradient>
+      <linearGradient id="lit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--lit)" stop-opacity=".55"/><stop offset="1" style="stop-color:var(--lit)" stop-opacity="0"/></linearGradient>
+      <linearGradient id="mist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--mist)" stop-opacity="0"/><stop offset="1" style="stop-color:var(--mist)" stop-opacity=".8"/></linearGradient>
+      <radialGradient id="sun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFD08A"/><stop offset=".6" stop-color="#FF9A4D"/><stop offset="1" stop-color="#F28216"/></radialGradient>
+      <radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFB070" stop-opacity=".6"/><stop offset="1" stop-color="#FFB070" stop-opacity="0"/></radialGradient>
+      <filter id="soft" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="1.4"/></filter>
+      <filter id="softer" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3"/></filter>
+    </defs>
+
+    <g class="clouds"><ellipse cx="470" cy="38" rx="70" ry="11"/><ellipse cx="510" cy="30" rx="40" ry="11"/><ellipse cx="1180" cy="26" rx="80" ry="10"/><ellipse cx="1220" cy="18" rx="42" ry="10"/></g>
+    <circle class="sun-glow" cx="560" cy="96" r="150" fill="url(#glow)"/>
+    <circle class="sun" cx="560" cy="96" r="44" fill="url(#sun)"/>
+
+    <g class="layer far"><path style="fill:var(--far)" d="M-700 200 C-500 150 -300 160 -100 132 S200 92 330 112 S560 66 700 98 S960 52 1100 82 S1350 62 1500 96 S1900 92 2140 122 L2140 300 L-700 300Z"/></g>
+    <g class="birds" style="stroke:var(--bird)"><path d="M0 0 q6 -6 12 0 q6 -6 12 0"/><path d="M30 -14 q5 -5 10 0 q5 -5 10 0"/><path d="M-26 -10 q4 -4 8 0 q4 -4 8 0"/></g>
+    <path style="fill:var(--mid)" d="M-700 214 C-300 160 60 176 380 156 S820 150 1060 148 S1600 140 2140 158 L2140 260 L-700 260Z"/>
+
+    <!-- main range: rounded summits, curved ridgelines -->
+    <path fill="url(#rock)" d="M450 240 C510 196 570 150 606 112 Q620 94 636 108 C656 120 676 124 690 124 C716 98 748 52 760 40 Q770 28 782 40 C796 54 808 66 820 70 C840 48 862 22 872 13 Q880 4 890 13 C906 30 932 60 950 72 C970 62 992 48 1002 44 Q1010 36 1020 45 C1040 66 1062 98 1080 110 C1104 92 1146 70 1160 64 Q1170 57 1181 66 C1200 84 1230 110 1250 118 C1270 108 1298 98 1310 96 Q1320 91 1331 99 C1352 113 1380 134 1402 140 C1440 134 1500 120 1560 124 C1660 112 1760 118 1860 132 C1960 128 2060 138 2140 144 L2140 240 L450 240Z"/>
+    <g fill="url(#lit)" filter="url(#soft)">
+      <path d="M622 96 C604 114 572 150 540 186 L588 182 C598 152 610 124 622 96Z"/>
+      <path d="M771 31 C752 54 718 94 692 124 L730 130 C744 100 758 64 771 31Z"/>
+      <path d="M881 7 C866 26 840 52 822 70 L854 92 C864 66 874 36 881 7Z"/>
+      <path d="M1011 39 C996 50 966 66 952 72 L986 86 C996 70 1004 54 1011 39Z"/>
+      <path d="M1171 60 C1150 76 1110 100 1082 110 L1124 120 C1140 104 1158 82 1171 60Z"/>
+      <path d="M1320 93 C1306 100 1272 112 1252 118 L1288 130 C1300 118 1311 105 1320 93Z"/>
+    </g>
+    <g class="ridges" fill="none" style="stroke:var(--ridge)" stroke-width="1.6" stroke-linecap="round" opacity=".28" filter="url(#soft)">
+      <path d="M880 14 C894 40 912 64 936 92"/><path d="M770 40 C782 62 796 84 812 108"/><path d="M1170 66 C1182 90 1196 112 1214 140"/><path d="M1010 46 C1022 66 1036 86 1054 112"/>
+    </g>
+    <g style="fill:var(--snow)" filter="url(#soft)">
+      <path d="M872 13 Q880 4 890 13 C898 22 904 30 908 38 C900 35 895 41 888 36 C882 43 875 38 868 43 C867 32 869 21 872 13Z"/>
+      <path d="M760 40 Q770 28 782 40 C788 47 792 53 795 60 C788 57 784 62 778 58 C772 63 766 59 759 63 C757 54 758 47 760 40Z"/>
+      <path d="M1160 64 Q1170 57 1181 66 C1187 72 1191 78 1194 84 C1188 81 1184 86 1178 82 C1172 87 1166 83 1158 87 C1157 79 1158 70 1160 64Z"/>
+      <path d="M1002 44 Q1010 36 1020 45 C1025 51 1028 56 1030 61 C1024 59 1020 63 1015 60 C1010 64 1005 61 999 64 C998 57 1000 50 1002 44Z"/>
+    </g>
+    <rect x="-700" y="150" width="2840" height="80" fill="url(#mist)"/>
+
+    <path fill="url(#land)" d="M-700 300 L-700 212 C-200 200 200 196 560 200 C760 206 980 196 1200 200 C1500 206 1800 200 2140 204 L2140 300Z"/>
+    <path class="river" style="fill:var(--river)" d="M990 201 C880 206 740 210 660 224 C560 242 570 262 660 274 C750 286 720 294 600 300 L1100 300 C1080 288 1000 276 880 266 C790 258 780 246 820 236 C880 222 960 214 1030 207Z"/>
+    <path class="river-flow" d="M1008 204 C880 214 700 226 680 246 C670 262 760 272 840 282 C920 292 880 296 860 300" fill="none" style="stroke:var(--river-line)" stroke-width="2.5" stroke-dasharray="12 18" stroke-linecap="round"/>\n    <path class="river-flow r2" d="M1020 206 C910 218 790 232 790 250 C790 266 900 276 980 286 C1040 294 1030 298 1020 300" fill="none" style="stroke:var(--river-line)" stroke-width="1.8" stroke-dasharray="8 22" stroke-linecap="round" opacity=".7"/>
+
+    <!-- foothill with the tree, at the foot of the range -->
+    <path fill="url(#hill)" d="M40 300 C80 246 180 184 280 172 C380 162 470 190 560 248 C600 274 640 292 660 300Z"/>
+    <path style="fill:var(--lit)" opacity=".28" filter="url(#softer)" d="M280 172 C380 162 470 190 560 248 C500 232 430 208 360 198 C330 192 300 184 280 172Z"/>
+    <g transform="translate(136.4 5) scale(1.1)">
+      <g class="roots" fill="none" style="stroke:var(--root)" stroke-linecap="round">
+        <path stroke-width="3" d="M170 150 C168 175 150 192 140 222"/><path stroke-width="3" d="M174 150 C178 172 192 188 206 216"/>
+        <path stroke-width="2" d="M168 152 C158 168 130 174 116 196"/><path stroke-width="2" d="M176 152 C188 164 216 168 234 188"/>
+        <path stroke-width="1.4" d="M150 192 C140 202 136 216 128 234"/><path stroke-width="1.4" d="M192 190 C202 200 214 204 222 224"/>
+        <path stroke-width="1.2" d="M130 176 C120 182 112 190 100 192"/><path stroke-width="1.2" d="M216 170 C228 174 240 176 252 172"/>
+        <path stroke-width="1" d="M140 222 C136 232 140 240 134 252"/><path stroke-width="1" d="M206 216 C214 226 212 236 220 246"/>
+      </g>
+      <g class="tree">
+        <path style="fill:var(--trunk)" d="M164 150 C168 130 170 116 167 100 L185 100 C182 116 184 132 190 150Z"/>
+        <g fill="none" style="stroke:var(--trunk)" stroke-linecap="round"><path stroke-width="5" d="M175 110 C164 100 148 96 130 98"/><path stroke-width="5" d="M177 106 C192 98 208 98 226 102"/><path stroke-width="3" d="M174 102 C170 88 166 80 158 72"/><path stroke-width="3" d="M178 100 C184 86 192 78 202 72"/></g>
+        <g class="crown" fill="url(#crown)">
+          <circle cx="175" cy="70" r="40"/><circle cx="135" cy="82" r="30"/><circle cx="215" cy="80" r="32"/><circle cx="105" cy="95" r="20"/><circle cx="245" cy="95" r="22"/>
+          <circle cx="150" cy="55" r="28"/><circle cx="200" cy="52" r="27"/><circle cx="175" cy="42" r="24"/><circle cx="120" cy="68" r="22"/><circle cx="232" cy="66" r="22"/>
+          <circle cx="160" cy="98" r="18"/><circle cx="195" cy="98" r="18"/><circle cx="88" cy="100" r="11"/><circle cx="264" cy="104" r="12"/>
+          <circle cx="80" cy="92" r="6"/><circle cx="272" cy="90" r="7"/><circle cx="108" cy="58" r="8"/><circle cx="248" cy="52" r="8"/><circle cx="175" cy="18" r="9"/>
+          <circle cx="138" cy="32" r="8"/><circle cx="214" cy="30" r="8"/><circle cx="70" cy="104" r="5"/><circle cx="282" cy="110" r="5"/><circle cx="96" cy="78" r="5"/><circle cx="258" cy="76" r="5"/>
+        </g>
+        <g style="fill:var(--leaf-gap)"><circle cx="150" cy="75" r="3"/><circle cx="205" cy="86" r="3"/><circle cx="186" cy="60" r="2.5"/><circle cx="128" cy="96" r="2"/><circle cx="226" cy="98" r="2"/><circle cx="166" cy="40" r="2"/><circle cx="236" cy="72" r="2"/><circle cx="114" cy="80" r="2"/></g>
+      </g>
+    </g>
+  </svg>
+  <div class="in hero-grid">
+    <div>
+      <span class="eyebrow">NLWC Events</span>
+      <h1>Experience the life behind the veil.</h1>
+      <p>Having boldness to enter the Holiest by the blood of Jesus, <b>by a new and living way</b> which He consecrated for us, through the veil… (<a href="https://www.biblegateway.com/passage/?search=Hebrews+10%3A19-20&amp;version=NKJV" target="_blank" rel="noopener">Hebrews 10:19–20</a>)</p>
+      <div class="row" style="margin-top:var(--space-6)"><a class="btn btn-brand" href="#event">Browse events</a><a class="btn btn-hero-ghost" href="#signup">Create an account</a></div>
+    </div>
+    <article class="hero-feature" data-event="bootcamp" aria-label="Featured event">
+      <div class="hf-top"><span class="hf-label">Next event</span><span class="hf-soon">In 51 days</span></div>
+      <div class="hf-body">
+        <div class="hf-date" aria-label="21 to 23 December"><b>21–23</b><span>Dec</span></div>
+        <div class="hf-info">
+          <h2>Bible Bootcamp 2026</h2>
+          <p class="hf-meta"><span class="hf-dot" aria-hidden="true"></span>Registration open · Ages 3 and up</p>
+        </div>
+      </div>
+      <div class="hf-actions"><a class="btn btn-primary btn-sm" href="#event">Register</a></div>
+    </article>
+  </div></div>
+  <div class="container stack-8">
+    <div class="row between" style="align-items:flex-end">
+      <div><h2>Events</h2><p class="muted sm" style="margin-top:4px">Dates and prices appear only once NLWC has confirmed them.</p></div>
+      <div class="row" role="group" aria-label="Filter events"><button class="chip on" data-filter="all">All</button><button class="chip" data-filter="open">Open now</button><button class="chip" data-filter="soon">Coming soon</button></div>
+    </div>
+
+    <div class="ev-list">
+      <article class="ev-row" data-event="bootcamp" data-status="open">
+        <div class="ev-date"><b>21–23</b><span>Dec 2026</span></div>
+        <div class="ev-body"><div class="row"><h3>Bible Bootcamp</h3><span class="badge b-ok">✓ Registration open</span></div>
+          <p class="sm muted">Children 3–16, and everyone aged 17 and over is welcome.</p>
+          <div class="row" style="gap:6px"><span class="tag">Online</span><span class="tag">Walk-in</span><span class="tag">Camp</span></div></div>
+        <div class="ev-cta"><a class="btn btn-primary" href="#event">Preview</a></div>
+      </article>
+      <article class="ev-row" data-event="singlz" data-status="soon">
+        <div class="ev-date tba"><b>TBA</b><span>Dates soon</span></div>
+        <div class="ev-body"><div class="row"><h3>Singlz Summit</h3><span class="badge b-warn">⏱ Coming soon</span></div>
+          <p class="sm muted">For singles, married couples and families.</p>
+          <div class="row" style="gap:6px"><span class="tag">Online</span><span class="tag">Walk-in</span><span class="tag">Camping</span></div></div>
+        <div class="ev-cta"><button class="btn btn-secondary" disabled aria-disabled="true" title="Not available yet">Preview</button></div>
+      </article>
+      <article class="ev-row" data-event="couples" data-status="soon">
+        <div class="ev-date tba"><b>TBA</b><span>Dates soon</span></div>
+        <div class="ev-body"><div class="row"><h3>Couples Retreat</h3><span class="badge b-warn">⏱ Coming soon</span></div>
+          <p class="sm muted">Register together, or sponsor a couple.</p>
+          <div class="row" style="gap:6px"><span class="tag">Registration only</span></div></div>
+        <div class="ev-cta"><button class="btn btn-secondary" disabled aria-disabled="true" title="Not available yet">Preview</button></div>
+      </article>
+    </div>
+
+    <div>
+      <h2>How it works</h2>
+      <ol class="steps">
+        <li><span class="n">1</span><div><b>Create your profile</b><p class="sm muted">Sign in with your phone. No password needed.</p></div></li>
+        <li><span class="n">2</span><div><b>Add your family</b><p class="sm muted">Add your children and link your spouse, once.</p></div></li>
+        <li><span class="n">3</span><div><b>Register and get passes</b><p class="sm muted">Each person gets their own pass.</p></div></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2 EVENT LANDING ============ -->
+<section class="screen" id="event" data-event="bootcamp">
+  <div class="hero hero-event"><div class="in">
+    <div class="crumbs"><a href="#home">Events</a> <span aria-hidden="true">/</span> Bible Bootcamp 2026</div>
+    <span class="eyebrow">Bible Bootcamp · 2026 edition</span>
+    <h1>Bible Bootcamp 2026</h1>
+    <p>Three days of the Word for children aged 3–16. Everyone aged 17 and over is welcome at the daily programme.</p>
+    <div class="row" style="margin-top:var(--space-6)"><a class="btn btn-brand" href="#bootcamp">Register now</a></div>
+    <div class="keyinfo keyinfo-hero" aria-label="Key information">
+      <div><span>Dates</span><b>Mon 21 – Wed 23 Dec 2026</b></div>
+      <div><span>Venue</span><b>Faith Plaza, Igbogunu Bus Stop, Bariga, Lagos</b></div>
+      <div><span>Cost</span><b>Free</b></div>
+      <div><span>Ages</span><b>3–16 · camp 10–16</b></div>
+      <div><span>Walk-in pick-up</span><b>4:00pm – 6:00pm daily</b></div>
+    </div>
+  </div></div>
+
+  <div class="container"><div class="event-layout">
+    <div class="ev-main" style="min-width:0">
+
+      <section class="ev-sec">
+        <h2>How you can take part</h2>
+        <ul class="ev-opts">
+          <li><div><b>Online</b><p>Join the broadcast from home.</p></div><span class="ev-tags">Everyone</span></li>
+          <li><div><b>Walk-in</b><p>Attend in person and check in and out each day.</p></div><span class="ev-tags">Ages 3–16 · Free</span></li>
+          <li><div><b>Camp</b><p>Request it when you register. Our team reviews every request before a bed is offered.</p></div><span class="ev-tags">Ages 10–16 · Free</span></li>
+        </ul>
+      </section>
+
+      <section class="ev-sec">
+        <h2>Three days, one pick-up rule</h2>
+        <ol class="ev-days" aria-label="Programme days">
+          <li><b>21</b><span>Mon · Dec</span></li>
+          <li><b>22</b><span>Tue · Dec</span></li>
+          <li class="last"><b>23</b><span>Wed · Dec · Last day</span></li>
+        </ol>
+        <dl class="ev-pick">
+          <div><dt>Walk-in</dt><dd>Pick up between <b>4:00pm and 6:00pm</b> every day. A child not collected by 6:00pm may not take part the next day.</dd></div>
+          <div class="hl"><dt>Wed 23 Dec</dt><dd>Parents and guardians collect every child <b>in person before 6:00pm</b>.</dd></div>
+        </dl>
+      </section>
+
+      <section class="ev-sec ev-two">
+        <div><h2>Before you register</h2>
+          <ul class="ev-list"><li>Each child's date of birth</li><li>Names and phone numbers of adults who may pick them up</li><li>Any health or allergy information</li><li>Parental consent information</li></ul></div>
+        <div><h2>Studio broadcast team</h2>
+          <p class="sm muted">Children in the Kiddies class may be asked to join the studio sessions.</p>
+          <ul class="ev-list"><li><b>Drop-off by 8:30am</b> every day. Late arrivals won't be considered.</li><li>Based on year-round class attendance and participation.</li></ul></div>
+      </section>
+
+      <section class="ev-sec">
+        <h2>Frequently asked questions</h2>
+        <div class="faq card flush">
+          <details><summary>Will there be Bible Museum this year?</summary><p class="sm muted">No, there will not be Bible Museum this year.</p></details>
+          <details><summary>Will there be Christmas party this year?</summary><p class="sm muted">No, there will not be Christmas party this year.</p></details>
+          <details><summary>When is Boot Camp ending?</summary><p class="sm muted">Boot Camp is ending on <b>23rd December, 2026</b>.</p></details>
+          <details><summary>When can we start picking up campers?</summary><p class="sm muted">Campers can be picked up on <b>23rd December by 6PM latest</b>.</p></details>
+          <details class="faq-more" hidden><summary>Will there be interhouse sport at this year's Bible Boot Camp?</summary><p class="sm muted">No, there will not be Interhouse sport at this year's Bible Boot Camp.</p></details>
+          <details class="faq-more" hidden><summary>Can children from age 17 and above camp?</summary><p class="sm muted">No. They can only come in as walk-in participants daily. Only children from age 10 to 16 are allowed to camp.</p></details>
+          <details class="faq-more" hidden><summary>Can we know more about the ministry?</summary><p class="sm muted">Yes, you can visit <a href="https://nlwc.church" target="_blank" rel="noopener">nlwc.church</a> for more info about the ministry.</p></details>
+          <details class="faq-more" hidden><summary>Will there be parent interactive forum?</summary><p class="sm muted">No, there won't be a parent interactive forum this year, but parents can stream the training sessions for the virtual Boot Camp sessions.</p></details>
+          <details class="faq-more" hidden><summary>Are adults allowed to come for Bible Boot Camp?</summary><p class="sm muted">No, Bible Boot Camp is majorly for children. However, there are sessions for adults at the virtual Boot Camp sessions.</p></details>
+          <details class="faq-more" hidden><summary>How can we give towards this event?</summary><p class="sm muted">Yes, you can sow to this account: <b>[account details to be added]</b>.</p></details>
+        
+          <button type="button" class="faq-toggle" id="faqToggle" aria-expanded="false" data-more="6"><span class="plus" aria-hidden="true">+</span><span class="lbl-t">Show 6 more questions</span></button>
+        </div>
+      </section>
+
+      <section class="ev-sec ev-venue"><div><span class="xs muted lbl">Venue</span><h3>Faith Plaza</h3><p class="sm muted">Igbogunu Bus Stop, Bariga, Lagos</p></div><a class="btn btn-secondary" href="https://www.google.com/maps/search/?api=1&query=Faith+Plaza+Igbogunu+Bus+Stop+Bariga+Lagos">Open in Maps</a></section>
+    </div>
+
+    <aside class="card cart reg-card"><span class="badge b-ok">✓ Registration open</span>
+      <div class="reg-price"><b>Free</b><span class="muted sm">Walk-in and camp</span></div>
+      <a class="btn btn-primary btn-block" href="#bootcamp">Start registration</a>
+      <p class="xs muted">Register one or more children in a single go. Each child gets their own pass.</p></aside>
+  </div>
+  <div class="note" style="margin-top:var(--space-8)">Venue, dates, fee, camp ages and pick-up time come from the 2026 terms supplied by NLWC. "Free" renders from an explicit ₦0 rule on this edition, not from a missing price.</div></div>
+</section>
+
+<!-- ============ 3 AUTH: LOG IN ============ -->
+<section class="screen" id="auth"><div class="container"><div class="authx stack-4">
+  <a href="#home" class="authx-logo"><img class="logo-light" src="../assets/nlwc-logo-coloured.png" alt="The New &amp; Living Way Church"><img class="logo-dark" src="../assets/nlwc-logo-white.png" alt="" aria-hidden="true"></a>
+  <div><h1>Welcome to NLWC Events</h1><p class="muted" style="margin-top:8px">Register, choose how you'll take part, and pay for accommodation if it applies.</p></div>
+  <form class="stack-4" onsubmit="return false">
+    <div class="field"><label for="li-email">Email<span class="req" aria-hidden="true"> *</span></label><input id="li-email" class="input" type="email" autocomplete="email" required></div>
+    <div class="field"><label for="li-pw">Password<span class="req" aria-hidden="true"> *</span></label><div class="pw"><input id="li-pw" class="input" type="password" autocomplete="current-password" required><button type="button" class="pw-toggle" data-pw aria-label="Show password"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></div><a class="sm" href="#" style="justify-self:start">Forgot password?</a></div>
+    <button class="btn btn-primary btn-block">Log in</button>
+  </form>
+  <div class="or"><span>Or</span></div>
+  <button class="btn btn-secondary btn-block"><svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z"/><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg> Continue with Google</button>
+  <p class="center sm">Don't have an account? <a class="bold" href="#signup">Create an account</a></p>
+</div></div></section>
+
+<!-- ============ 3b AUTH: CREATE ACCOUNT ============ -->
+<section class="screen" id="signup"><div class="container"><div class="authx stack-4">
+  <a href="#home" class="authx-logo"><img class="logo-light" src="../assets/nlwc-logo-coloured.png" alt="The New &amp; Living Way Church"><img class="logo-dark" src="../assets/nlwc-logo-white.png" alt="" aria-hidden="true"></a>
+  <h1>Create an account</h1>
+  <form class="stack-4" onsubmit="return false">
+    <div class="field"><label for="su-email">Email<span class="req" aria-hidden="true"> *</span></label><input id="su-email" class="input" type="email" autocomplete="email" required></div>
+    <div class="field"><label for="su-first">Full name<span class="req" aria-hidden="true"> *</span></label><div class="two"><input id="su-first" class="input" placeholder="First name" autocomplete="given-name" required aria-label="First name"><input class="input" placeholder="Last name" autocomplete="family-name" required aria-label="Last name"></div></div>
+    <div class="field"><label for="su-gender">Gender<span class="req" aria-hidden="true"> *</span></label><select id="su-gender" class="select" required><option value="" selected disabled>Select gender</option><option>Male</option><option>Female</option></select></div>
+    <div class="field"><label for="su-pw">Password<span class="req" aria-hidden="true"> *</span></label><div class="pw"><input id="su-pw" class="input" type="password" autocomplete="new-password" required><button type="button" class="pw-toggle" data-pw aria-label="Show password"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></div><span class="hint">At least 8 characters.</span></div>
+    <div class="field"><label for="su-pw2">Confirm password<span class="req" aria-hidden="true"> *</span></label><div class="pw"><input id="su-pw2" class="input" type="password" autocomplete="new-password" required><button type="button" class="pw-toggle" data-pw aria-label="Show password"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+    <div class="stack-2">
+      <label class="check"><input type="checkbox" required><span>I accept the <a href="#">Terms of Use</a> and have read the <a href="#">Privacy Notice</a> <span class="mono muted xs">v2026.1</span></span></label>
+      <label class="check"><input type="checkbox"><span>Send me NLWC news and event invitations <span class="muted">(optional)</span></span></label>
+    </div>
+    <button class="btn btn-primary btn-block">Create account</button>
+  </form>
+  <div class="or"><span>Or</span></div>
+  <button class="btn btn-secondary btn-block"><svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z"/><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg> Continue with Google</button>
+  <p class="center sm">Already have an account? <a class="bold" href="#auth">Log in</a></p>
+</div></div></section>
+
+<!-- ============ 4 DASHBOARD ============ -->
+<section class="screen" id="dashboard"><div class="container stack-6">
+  <div class="row between"><div><h1>Hello, Kelechi</h1><p class="muted sm">Your events, your family and anything that needs you.</p></div><div class="row"><a class="btn btn-secondary" href="#sponsor">Register someone else</a><a class="btn btn-primary" href="#bootcamp">Register for an event</a></div></div>
+  <div class="stack-2"><h3>Needs your attention <span class="badge b-warn">3</span></h3>
+    <div class="task"><div style="flex:1"><b>Hold expires in 14:32</b><div class="sm muted">Singlz Summit · Hostel bed for Tobi. Pay to keep it.</div></div><a class="btn btn-primary btn-sm" href="#singlz">Pay now</a></div>
+    <div class="task"><div style="flex:1"><b>Photo and video permission needed</b><div class="sm muted">Bible Bootcamp 2026 · Chidi (5)</div></div><a class="btn btn-secondary btn-sm" href="#bootcamp">Answer</a></div>
+    <div class="task"><div style="flex:1"><b>Ngozi hasn't confirmed your spouse link</b><div class="sm muted">We sent her a message on 29 Oct. Chalet pairing waits for this.</div></div><a class="btn btn-secondary btn-sm" href="#family">View</a></div></div>
+  <div class="stack-2"><h3>My registrations</h3>
+    <div class="card stack-4">
+      <div class="row between"><div class="row"><div class="avatar">T</div><div><b>Tobi Egwu</b> <span class="muted sm">· 9</span><div class="sm muted">Bible Bootcamp 2026 · Walk-in</div></div></div><a class="btn btn-ghost btn-sm" href="#credentials">View pass</a></div>
+      <div class="axes"><div><b>Registration</b><span class="badge b-ok">✓ Confirmed</span></div><div><b>Payment</b><span class="badge b-neutral">Not required</span></div><div><b>Booking</b><span class="badge b-neutral">None</span></div><div><b>Pass</b><span class="badge b-ok">✓ Active</span></div></div>
+      <hr class="divider" style="margin:0">
+      <div class="row between"><div class="row"><div class="avatar">T</div><div><b>Tobi Egwu</b> <span class="muted sm">· 9</span><div class="sm muted">Singlz Summit · Hostel</div></div></div><a class="btn btn-ghost btn-sm" href="#singlz">Continue</a></div>
+      <div class="axes"><div><b>Registration</b><span class="badge b-info">Submitted</span></div><div><b>Payment</b><span class="badge b-warn">⏱ Unpaid</span></div><div><b>Booking</b><span class="badge b-warn">⏱ Held · 14:32</span></div><div><b>Pass</b><span class="badge b-neutral">Pending</span></div></div>
+    </div></div>
+  <div class="note">Each person's registration shows the four separate status axes. Tasks are the only red/amber things on the page. Sponsored people appear here too, with a "Paid by you" label and no access to their private profile.</div>
+</div></section>
+
+<!-- ============ 5 PROFILE & FAMILY ============ -->
+<section class="screen" id="family"><div class="container stack-6">
+  <div><h1>Profile and family</h1><p class="muted sm" style="margin-top:4px">Your details, your spouse and your children.</p></div>
+
+  <div class="profile-layout">
+    <nav class="local-nav card" aria-label="On this page"><a href="#" data-scroll="pf-details" class="on">My details</a><a href="#" data-scroll="pf-spouse">Spouse</a><a href="#" data-scroll="pf-kids">Dependants <span class="badge b-neutral">2</span></a></nav>
+
+    <div class="stack-6" style="min-width:0">
+
+      <!-- MY DETAILS -->
+      <div class="card" id="pf-details" data-editable>
+        <div class="card-h"><div class="row"><div class="avatar" style="width:56px;height:56px;font-size:var(--text-xl)">KE</div><div><h2>My details</h2><div class="xs muted">Profile ID <span class="mono">P-004127</span></div></div></div>
+          <div class="row"><button class="btn btn-secondary btn-sm view" data-edit>Edit details</button><button class="btn btn-ghost btn-sm edit" data-edit>Cancel</button><button class="btn btn-primary btn-sm edit" data-edit>Save changes</button></div></div>
+
+        <div class="view detail-cols">
+          <dl class="kv"><dt>Full name</dt><dd>Kelechi Chukwuemeka Egwu</dd><dt>Date of birth</dt><dd>12 May 1988 <span class="xs muted">· age 38</span></dd><dt>Gender</dt><dd>Male</dd><dt>Marital status</dt><dd>Married</dd></dl>
+          <dl class="kv"><dt>Phone</dt><dd>0803 123 4567 <span class="badge b-ok">✓ verified</span></dd><dt>Email</dt><dd class="muted">Not added</dd><dt>Country / city</dt><dd>Nigeria · Lagos</dd></dl>
+        </div>
+
+        <div class="edit grid g2">
+          <div class="field"><label for="d1">First name</label><input id="d1" class="input" value="Kelechi"></div>
+          <div class="field"><label for="d2">Other / middle names</label><input id="d2" class="input" value="Chukwuemeka"></div>
+          <div class="field"><label for="d3">Last name</label><input id="d3" class="input" value="Egwu"></div>
+          <div class="field"><label for="d5">Date of birth</label><input id="d5" class="input" value="12 / 05 / 1988"><span class="hint">Changes to your date of birth are reviewed and logged.</span></div>
+          <div class="field"><label for="d6">Gender</label><select id="d6" class="select"><option>Male</option><option>Female</option></select></div>
+          <div class="field"><label for="d7">Marital status</label><select id="d7" class="select"><option>Single</option><option selected>Married</option></select></div>
+          <div class="field"><label for="d8">Country and city</label><input id="d8" class="input" value="Nigeria · Lagos"></div>
+          <div class="field"><label for="d12">Phone</label><input id="d12" class="input" value="0803 123 4567"><span class="hint">Changing it needs a code sent to the new number.</span></div>
+          <div class="field"><label for="d13">Email <span class="muted">(optional)</span></label><input id="d13" class="input" placeholder="you@example.com"></div>
+        </div>
+      </div>
+
+      <!-- SPOUSE -->
+      <div class="card" id="pf-spouse">
+        <div class="card-h"><h2>Spouse</h2><button class="btn btn-ghost btn-sm">Remove</button></div>
+        <div class="person-pill"><div class="avatar">N</div><div style="flex:1"><b>Ngozi Egwu</b><div class="xs muted">0805 123 1180 · Female</div></div></div>
+      </div>
+
+      <!-- DEPENDANTS -->
+      <div class="card" id="pf-kids">
+        <div class="card-h"><div><h2>Dependants</h2><div class="xs muted">Children aged 0–12</div></div><button class="btn btn-primary btn-sm" data-toggle="adddep">+ Add dependant</button></div>
+
+        <div id="adddep" hidden class="card" style="background:var(--surface-sunken);box-shadow:none;margin-bottom:var(--space-4)"><h3 style="margin-bottom:var(--space-3)">Add a dependant</h3>
+          <div class="grid g2"><div class="field"><label for="k1">First name</label><input id="k1" class="input"></div><div class="field"><label for="k2">Last name</label><input id="k2" class="input" value="Egwu"></div>
+          <div class="field"><label for="k3">Date of birth</label><input id="k3" class="input" placeholder="DD / MM / YYYY"><span class="hint">Children must be 12 or under. From 13 they have their own profile.</span></div>
+          <div class="field"><label for="k4">Your relationship</label><select id="k4" class="select"><option>Parent</option><option>Legal guardian</option><option>Other carer (with written authority)</option></select></div>
+          <div class="field"><label for="k5">Gender</label><select id="k5" class="select"><option>Male</option><option>Female</option></select></div></div>
+          <label class="opt" style="margin-top:var(--space-3)"><input type="checkbox"><span class="sm">I am this child's parent or legal guardian and may register them for events.</span></label>
+          <div class="row" style="margin-top:var(--space-3)"><button class="btn btn-primary btn-sm">Save dependant</button><button class="btn btn-ghost btn-sm" data-toggle="adddep">Cancel</button></div></div>
+
+        <div class="stack-4">
+          <div class="dep"><div class="row between"><div class="row"><div class="avatar">T</div><div><b>Tobi Egwu</b><div class="xs muted">Born 14 Mar 2017 · age 9 · Male</div></div></div><div class="row"><button class="btn btn-secondary btn-sm">Edit</button><button class="btn btn-ghost btn-sm">Remove</button></div></div></div>
+          <hr class="divider">
+          <div class="dep"><div class="row between"><div class="row"><div class="avatar">C</div><div><b>Chidi Egwu</b><div class="xs muted">Born 02 Aug 2021 · age 5 · Male</div></div></div><div class="row"><button class="btn btn-secondary btn-sm">Edit</button><button class="btn btn-ghost btn-sm">Remove</button></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ============ 6 BIBLE BOOTCAMP WIZARD ============ -->
+<section class="screen" id="bootcamp" data-event="bootcamp"><div class="container"><div class="narrow stack-6" data-wiz>
+  <div><span class="badge b-event">Bible Bootcamp 2026</span><h1 style="margin-top:8px">Register</h1></div>
+  <ol class="stepper"><li>Participants</li><li>Health &amp; care</li><li>Pick-up</li><li>Permissions</li><li>Review</li></ol>
+
+  <div class="wiz-step"><div class="stack-4">
+    <div><h3>Who is attending, and how?</h3><p class="sm muted" style="margin-top:4px">Tick everyone attending, then choose how each person will take part. It can be different for each one.</p></div>
+    <div class="card mp stack-4">
+      <label class="mp-head"><input type="checkbox" checked><span class="avatar">T</span><span><b>Tobi Egwu</b><span class="xs muted" style="display:block">9 years old</span></span></label>
+      <div class="mp-body stack-4">
+        <div class="lbl">How will Tobi take part?</div>
+        <div class="mp-group" role="radiogroup" aria-label="How will Tobi take part?">
+          <label class="mp-opt"><input type="radio" name="m1" value="online"><div><b>Online</b><span>Joins the broadcast</span></div></label>
+          <label class="mp-opt"><input type="radio" name="m1" value="walkin" checked><div><b>Walk-in</b><span>In person, daily</span></div></label>
+          <label class="mp-opt off"><input type="radio" name="m1" value="camp" disabled><div><b>Camping</b><span>Ages 10–16 only</span></div></label>
+        </div>
+        <p class="sm muted mp-note n-online">Joins the broadcast from home. No check-in or pick-up.</p>
+        <p class="sm muted mp-note n-walkin">Check in and out each day. Pick-up between 4:00pm and 6:00pm.</p>
+        <p class="sm muted mp-note n-camp">Camp is free and reviewed by our team before a bed is offered.</p>
+        <label class="opt mp-studio"><input type="checkbox"><span class="sm">Indicate interest if you don't mind your child participating in the Studio Session</span></label>
+      </div>
+    </div>
+    <div class="card mp stack-4">
+      <label class="mp-head"><input type="checkbox" checked><span class="avatar">C</span><span><b>Chidi Egwu</b><span class="xs muted" style="display:block">5 years old</span></span></label>
+      <div class="mp-body stack-4">
+        <div class="lbl">How will Chidi take part?</div>
+        <div class="mp-group" role="radiogroup" aria-label="How will Chidi take part?">
+          <label class="mp-opt"><input type="radio" name="m2" value="online"><div><b>Online</b><span>Joins the broadcast</span></div></label>
+          <label class="mp-opt"><input type="radio" name="m2" value="walkin" checked><div><b>Walk-in</b><span>In person, daily</span></div></label>
+          <label class="mp-opt off"><input type="radio" name="m2" value="camp" disabled><div><b>Camping</b><span>Ages 10–16 only</span></div></label>
+        </div>
+        <p class="sm muted mp-note n-online">Joins the broadcast from home. No check-in or pick-up.</p>
+        <p class="sm muted mp-note n-walkin">Check in and out each day. Pick-up between 4:00pm and 6:00pm.</p>
+        <p class="sm muted mp-note n-camp">Camp is free and reviewed by our team before a bed is offered.</p>
+        <label class="opt mp-studio"><input type="checkbox"><span class="sm">Indicate interest if you don't mind your child participating in the Studio Session</span></label>
+      </div>
+    </div>
+    <div class="card mp stack-4">
+      <label class="mp-head"><input type="checkbox"><span class="avatar">K</span><span><b>Kelechi Egwu</b> (you)<span class="xs muted" style="display:block">38 years old</span></span></label>
+      <div class="mp-body stack-4">
+        <div class="lbl">How will Kelechi take part?</div>
+        <div class="mp-group" role="radiogroup" aria-label="How will Kelechi take part?">
+          <label class="mp-opt"><input type="radio" name="m3" value="online"><div><b>Online</b><span>Joins the broadcast</span></div></label>
+          <label class="mp-opt"><input type="radio" name="m3" value="walkin" checked><div><b>Walk-in</b><span>In person, daily</span></div></label>
+          <label class="mp-opt off"><input type="radio" name="m3" value="camp" disabled><div><b>Camping</b><span>Ages 10–16 only</span></div></label>
+        </div>
+        <p class="sm muted mp-note n-online">Joins the broadcast from home. No check-in or pick-up.</p>
+        <p class="sm muted mp-note n-walkin">Attends the daily programme in person. No child check-out.</p>
+        <p class="sm muted mp-note n-camp">Camp is free and reviewed by our team before a bed is offered.</p>
+        
+      </div>
+    </div>
+    <div class="note">Age is worked out at event start from the date of birth. The 2026 terms describe ages 3–16; the BRD also welcomes 17+ at the daily programme (BB-02). 17+ is kept here, without child-only steps, until NLWC confirms.</div>
+  </div></div>
+
+  <div class="wiz-step"><div class="stack-4 hc">
+    <div><h3>Health and care</h3><p class="sm muted" style="margin-top:4px">Please answer for each child so our team can look after them well. It takes about a minute each.</p></div>
+    <div class="alert info hc-private"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span><div><b>Private and restricted.</b>Only our welfare and medical team can see this. It never appears in the general list.</div></div>
+    <div class="hc-tabs" role="tablist" aria-label="Choose a child">
+      <input type="radio" name="hcchild" id="hc1" class="sr" checked><label for="hc1" class="hc-tab"><span class="avatar">T</span><span><b>Tobi</b><span class="hc-status done" id="hs1">✓ Done</span></span></label>
+      <input type="radio" name="hcchild" id="hc2" class="sr"><label for="hc2" class="hc-tab"><span class="avatar">C</span><span><b>Chidi</b><span class="hc-status" id="hs2">To do</span></span></label>
+      <span class="hc-count xs muted" id="hcount">1 of 2 children done</span>
+    </div>
+    <section class="card hc-panel stack-4" id="hp1" aria-label="Health and care for Tobi">
+      <div class="row between"><div><h3>Tobi</h3><div class="xs muted">9 years old</div></div></div>
+      <fieldset class="hc-q"><legend class="lbl">Does Tobi have any allergy or health condition we should know about?</legend>
+        <div class="hc-yn">
+          <label class="mp-opt"><input type="radio" name="yn1" value="no" checked><div><b>No</b><span>Nothing to report</span></div></label>
+          <label class="mp-opt"><input type="radio" name="yn1" value="yes"><div><b>Yes</b><span>I'll tell you more</span></div></label>
+        </div></fieldset>
+      <div class="hc-details stack-4">
+        <fieldset class="hc-q"><legend class="lbl">Which of these apply? <span class="muted">(choose all that apply)</span></legend>
+          <div class="chip-checks"><label class="chip-check"><input type="checkbox"><span>Asthma</span></label><label class="chip-check"><input type="checkbox"><span>Sickle cell</span></label><label class="chip-check"><input type="checkbox"><span>Ulcer</span></label><label class="chip-check"><input type="checkbox"><span>Other</span></label></div></fieldset>
+        <div class="field"><label for="al1">Allergies or other special health conditions we need to be aware of</label><textarea id="al1" class="textarea" placeholder="Tell us what to look out for and what to do"></textarea></div>
+      </div>
+    </section>
+    <section class="card hc-panel stack-4" id="hp2" aria-label="Health and care for Chidi">
+      <div class="row between"><div><h3>Chidi</h3><div class="xs muted">5 years old</div></div></div>
+      <fieldset class="hc-q"><legend class="lbl">Does Chidi have any allergy or health condition we should know about?</legend>
+        <div class="hc-yn">
+          <label class="mp-opt"><input type="radio" name="yn2" value="no"><div><b>No</b><span>Nothing to report</span></div></label>
+          <label class="mp-opt"><input type="radio" name="yn2" value="yes"><div><b>Yes</b><span>I'll tell you more</span></div></label>
+        </div></fieldset>
+      <div class="hc-details stack-4">
+        <fieldset class="hc-q"><legend class="lbl">Which of these apply? <span class="muted">(choose all that apply)</span></legend>
+          <div class="chip-checks"><label class="chip-check"><input type="checkbox"><span>Asthma</span></label><label class="chip-check"><input type="checkbox"><span>Sickle cell</span></label><label class="chip-check"><input type="checkbox"><span>Ulcer</span></label><label class="chip-check"><input type="checkbox"><span>Other</span></label></div></fieldset>
+        <div class="field"><label for="al2">Allergies or other special health conditions we need to be aware of</label><textarea id="al2" class="textarea" placeholder="Tell us what to look out for and what to do"></textarea></div>
+      </div>
+    </section>
+  </div></div>
+
+  <div class="wiz-step"><div class="card stack-4"><h3>Who may pick up your children?</h3>
+    <div class="alert warn"><span aria-hidden="true">⏱</span><div><b>Walk-in children must be picked up between 4:00pm and 6:00pm daily.</b>A child not picked up by 6:00pm may not be allowed to take part the next day.</div></div>
+    <p class="sm muted">Applies to Tobi and Chidi. A pass alone never releases a child.</p>
+    <label class="opt"><input type="checkbox" checked><div><b>Ngozi Egwu</b> · Mother<div class="xs muted">Always</div></div></label>
+    <label class="opt"><input type="checkbox" checked><div><b>Mr Ade Egwu</b> · Uncle<div class="xs muted">21–23 Dec only</div></div></label>
+    <button class="btn btn-secondary">+ Add a person</button>
+    <div class="field"><label for="em">Emergency contact (not at the venue)</label><input id="em" class="input" value="Ngozi Egwu · 0805 123 1180"></div></div></div>
+
+  <div class="wiz-step" id="perm"><div class="stack-4">
+    <div class="row between"><div><h3>Permissions</h3><p class="sm muted" style="margin-top:4px">For Tobi and Chidi. Three quick things to confirm.</p></div>
+      <div class="perm-progress"><span class="sm bold" id="pcount">0 of 3 done</span><div class="meter"><i class="m-sold" id="pbar" style="width:0"></i></div></div></div>
+
+    <section class="card perm-card stack-4">
+      <header class="perm-h"><span class="perm-n">1</span><div><h3>Parent Consent for BBC 2026</h3><span class="mono xs muted">BB26-consent v1</span></div><span class="perm-ok"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Done</span></header>
+      <div class="consent-text" role="region" aria-label="Parent Consent for BBC 2026">
+          <p><b>Child(ren):</b> Tobi Egwu, Chidi Egwu</p>
+          <p>As the parent/legal guardian of the child named above, by submitting this form, I hereby give my consent for my child to participate in the Bible Bootcamp organized by The New and Living Way Church taking place from 21st to 23rd December 2026.</p>
+          <p>I understand that my child will be involved in camp activities and I acknowledge the potential risks associated with these activities. I affirm that my child is physically and emotionally fit to participate in camp activities.</p>
+          <p>I further consent to the following:</p>
+          <ol>
+            <li><b>Emergency Medical Treatment:</b> In the event of an emergency, I authorize the camp authorities to seek first aid medical treatment for my child.</li>
+            <li><b>Liability Waiver:</b> I release The New and Living Way Church and its volunteers from any liability for injuries or losses sustained by my child during camp activities, except in cases of gross negligence or willful misconduct.</li>
+          </ol>
+        </div>
+      <label class="opt perm-confirm"><input type="checkbox" id="pc1"><span class="sm"><b>I am the parent or legal guardian of Tobi and Chidi, and I give this consent.</b></span></label>
+    </section>
+
+    <section class="card perm-card stack-4">
+      <header class="perm-h"><span class="perm-n">2</span><div><h3>Last day pick-up</h3></div><span class="perm-ok"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Done</span></header>
+      <div class="perm-callout"><span class="perm-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></span><p>On the last day, <b>Wednesday 23 December</b>, all parents and guardians must come to pick up their children <b>before 6:00pm</b>.</p></div>
+      <label class="opt perm-confirm"><input type="checkbox" id="pc2"><span class="sm"><b>I understand.</b></span></label>
+    </section>
+
+    <section class="card perm-card perm-photo stack-4">
+      <header class="perm-h"><span class="perm-n">3</span><div><h3>Photos and videos</h3><span class="xs muted">As a parent or guardian, do you consent to the use of pictures and videos of your child or children in the photo and video publicity of the event? Saying no never stops registration.</span></div><span class="perm-ok"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Done</span></header>
+      <div class="ph-rows">
+        <div class="ph-row"><div class="row" style="flex:1;min-width:150px"><div class="avatar">T</div><div><b>Tobi Egwu</b><div class="xs muted">9 years old</div></div></div>
+        <div class="ph-choice" role="radiogroup" aria-label="Photo and video for Tobi Egwu"><label><input type="radio" name="ph1" value="yes"><span>I consent</span></label><label><input type="radio" name="ph1" value="no"><span>I do not consent</span></label></div>
+        <span class="ph-st"><span class="badge b-warn st-none">⏱ Not answered</span><span class="badge b-ok st-yes">✓ Consent given</span><span class="badge b-neutral st-no">Declined</span></span></div>
+        <div class="ph-row"><div class="row" style="flex:1;min-width:150px"><div class="avatar">C</div><div><b>Chidi Egwu</b><div class="xs muted">5 years old</div></div></div>
+        <div class="ph-choice" role="radiogroup" aria-label="Photo and video for Chidi Egwu"><label><input type="radio" name="ph2" value="yes"><span>I consent</span></label><label><input type="radio" name="ph2" value="no" checked><span>I do not consent</span></label></div>
+        <span class="ph-st"><span class="badge b-warn st-none">⏱ Not answered</span><span class="badge b-ok st-yes">✓ Consent given</span><span class="badge b-neutral st-no">Declined</span></span></div>
+      </div>
+    </section>
+  </div></div>
+
+  <div class="wiz-step"><div class="card stack-4"><h3>Review</h3>
+    <div class="person-pill"><div class="avatar">T</div><div style="flex:1"><b>Tobi · 9</b><div class="xs muted">Walk-in · 3 days · pick up 4–6pm · 2 pick-up adults · media: not answered</div></div><span class="badge b-warn">1 task left</span></div>
+    <div class="person-pill"><div class="avatar">C</div><div style="flex:1"><b>Chidi · 5</b><div class="xs muted">Walk-in · 3 days · pick up 4–6pm · 2 pick-up adults · media: declined</div></div><span class="badge b-ok">✓ Ready</span></div>
+    <div class="price"><span>Registration · 2 children</span><span class="free">₦0 · Free</span></div>
+    <div class="price"><span>Studio broadcast requests</span><span class="muted">None</span></div>
+    <div class="alert warn"><svg class="ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg><div><b>Wed 23 Dec: a parent or guardian picks up each child before 6:00pm.</b>Remember to come in person on the last day.</div></div>
+    <div class="alert warn"><span aria-hidden="true">⏱</span><div><b>You can submit now.</b>Tobi's passes stay "Pending" until his photo permission is answered. Each child gets their own pass and reference.</div></div></div></div>
+
+  <div class="wiz-actions"><button class="btn btn-secondary" data-prev>Back</button><button class="btn btn-primary" data-next>Continue</button></div>
+</div></div></section>
+
+<!-- ============ 7 SINGLZ WIZARD ============ -->
+<section class="screen" id="singlz" data-event="singlz"><div class="container"><div class="grid" style="grid-template-columns:minmax(0,2fr) minmax(260px,1fr);gap:var(--space-6);align-items:start">
+  <div class="stack-6" data-wiz>
+    <div><span class="badge b-event">Singlz Summit</span><h1 style="margin-top:8px">Register and book</h1></div>
+    <ol class="stepper"><li>Who</li><li>Status</li><li>Accommodation</li><li>Review &amp; pay</li></ol>
+
+    <div class="wiz-step"><div class="card stack-4"><h3>Who and how?</h3>
+      <label class="opt"><input type="checkbox" checked><div><b>Kelechi Egwu</b> (you) · 38</div></label>
+      <label class="opt"><input type="checkbox" checked><div><b>Tobi Egwu</b> · 9</div></label>
+      <label class="opt"><input type="checkbox"><div><b>Chidi Egwu</b> · 5</div></label>
+      <div class="lbl">Kelechi's attendance</div><div class="seg"><button data-seg>Online</button><button data-seg>Walk-in</button><button data-seg class="on">Camping</button></div></div></div>
+
+    <div class="wiz-step"><div class="card stack-4"><h3>Your status</h3>
+      <div class="seg"><button data-seg>Single</button><button data-seg class="on">Married</button></div>
+      <div class="alert info"><span aria-hidden="true">ℹ</span><div><b>Chalets are for married participants.</b>Add your spouse's details so we can pair you.</div></div>
+      <div class="grid g2"><div class="field"><label for="sn">Spouse's full name</label><input id="sn" class="input" value="Ngozi Egwu"></div><div class="field"><label for="sp">Spouse's phone</label><input id="sp" class="input" value="0805 123 1180"></div></div>
+      <div class="alert ok"><span aria-hidden="true">✓</span><div><b>Ngozi may already be on NLWC.</b>We can't say. We'll send her a code to confirm the link. If she isn't, we'll create a pending profile and send her a claim link.</div></div></div></div>
+
+    <div class="wiz-step"><div class="card stack-4"><h3>Choose accommodation</h3>
+      <p class="sm muted">Prices below are set by NLWC for this edition.</p>
+      <div class="lbl">Kelechi &amp; Ngozi (married)</div>
+      <label class="opt"><input type="radio" name="acc" checked><div style="flex:1"><div class="row between"><b>Chalet · pairing</b><span class="badge b-ok">✓ Eligible: married</span></div><div class="xs muted">Both spouses are occupants. Unit assigned by our team.</div><div class="price" style="border:0;padding-bottom:0"><span>Price</span><span class="pending">⏱ Price pending approval</span></div></div></label>
+      <label class="opt"><input type="radio" name="acc"><div style="flex:1"><div class="row between"><b>Hostel</b><span class="badge b-ok">Available · 38 left</span></div><div class="price" style="border:0;padding-bottom:0"><span>per person</span><span class="amt">₦ …</span></div></div></label>
+      <label class="opt off"><input type="radio" name="acc" disabled><div style="flex:1"><div class="row between"><b>Special dorm</b><span class="badge b-neutral">Not offered to married</span></div><div class="xs muted">Policy for married participants is not yet set.</div></div></label>
+      <hr class="divider" style="margin:0">
+      <div class="lbl">Tobi (9)</div>
+      <label class="opt"><input type="radio" name="acc2" checked><div style="flex:1"><div class="row between"><b>Hostel</b><span class="badge b-ok">Available</span></div><div class="price" style="border:0;padding-bottom:0"><span>Dependant 7–12</span><span class="amt">₦5,000</span></div></div></label>
+      <label class="opt off"><input type="radio" name="acc2" disabled><div style="flex:1"><div class="row between"><b>Special dorm</b><span class="badge b-warn">⏱ Rate pending</span></div><div class="xs muted">We can't book this yet. Choose hostel, or check back soon.</div></div></label>
+      <div class="note">Singles never see a chalet card. 7–12 in special dorm shows "rate pending" and is blocked: no guessed price. Amounts here are the 2026 Singlz example from the BRD, rendered from the edition rate plan.</div></div></div>
+
+    <div class="wiz-step"><div class="card stack-4"><h3>Review and pay</h3>
+      <div class="alert warn"><span aria-hidden="true">⏱</span><div><b>We're holding your places for 14:32.</b>Pay before then. We can't reserve beds longer.</div></div>
+      <div class="lbl">Who pays?</div><div class="seg"><button data-seg class="on">I'll pay now</button><button data-seg>Pay later</button></div>
+      <p class="xs muted">Pay later keeps a short hold, then releases it. Ask the registrant for a link if someone else is paying.</p>
+      <label class="opt"><input type="checkbox"><span class="sm">I accept the Singlz Summit terms, accommodation and cancellation policy <span class="mono muted">SS-terms v1</span></span></label></div></div>
+
+    <div class="wiz-actions"><button class="btn btn-secondary" data-prev>Back</button><div class="row"><button class="btn btn-ghost">Save draft</button><button class="btn btn-primary" data-next>Continue</button></div></div>
+  </div>
+  <aside class="card cart"><h3>Your order</h3>
+    <div class="price"><span>Kelechi · Chalet pairing</span><span class="pending">⏱ pending</span></div>
+    <div class="price"><span>Ngozi · Chalet pairing<br><span class="xs muted">beneficiary · paid by you</span></span><span class="pending">⏱ pending</span></div>
+    <div class="price"><span>Tobi (9) · Hostel</span><span class="amt">₦5,000</span></div>
+    <div class="price"><span>Chidi (5) · Hostel<br><span class="xs muted">counts toward capacity</span></span><span class="free">₦0 · Free</span></div>
+    <div class="price total"><span>Total due now</span><span>₦5,000</span></div>
+    <div class="alert warn" style="margin-top:var(--space-3)"><span aria-hidden="true">⏱</span><div class="xs"><b>Checkout is blocked</b>Chalet pairing has no approved price yet. We'll tell you the moment it opens.</div></div>
+    <button class="btn btn-primary btn-block" style="margin-top:var(--space-3)" disabled>Pay ₦5,000</button>
+    <p class="xs muted" style="margin-top:8px">Quote <span class="mono">Q-7F3A</span> · rate plan v2 · price confirmed by our server, valid 14:32</p></aside>
+</div></div></section>
+
+<!-- ============ 8 SPONSOR ============ -->
+<section class="screen" id="sponsor"><div class="container"><div class="narrow stack-6" data-wiz>
+  <div><h1>Register someone else</h1><p class="muted sm">You: Kelechi Egwu · Event: Singlz Summit</p></div>
+  <div class="grid g2"><div class="card stack-2" style="border-color:var(--primary)"><span class="badge b-ok">Recommended</span><h3>Register them now</h3><p class="sm muted">You enter the basics, pay now or later. They get a message to claim their profile.</p></div>
+  <div class="card stack-2"><h3>Invite them</h3><p class="sm muted">We send a link; they register themselves. Nothing is booked until they do.</p></div></div>
+  <ol class="stepper"><li>Their details</li><li>Booking</li><li>Pay</li><li>Done</li></ol>
+  <div class="wiz-step"><div class="card stack-4"><h3>Their details</h3>
+    <div class="field"><label for="s1">Full name</label><input id="s1" class="input" value="Amaka Obi"></div>
+    <div class="grid g2"><div class="field"><label for="s2">Date of birth</label><input id="s2" class="input" value="03 / 09 / 2002"><span class="hint">Needed for eligibility and price. Age 24.</span></div>
+    <div class="field"><label for="s3">Phone or email</label><input id="s3" class="input" value="0812 000 7788"><span class="hint">We'll send her a code. Required to claim.</span></div></div>
+    <div class="alert info"><span aria-hidden="true">ℹ</span><div><b>We only ask for the basics.</b>No health or private details about another adult. She adds those herself.</div></div>
+    <div class="alert warn"><span aria-hidden="true">⚠</span><div><b>Possible match.</b>This may already be an NLWC member. We'll send the claim code to <i>that</i> person's verified contact. We never show you their profile.</div></div></div></div>
+  <div class="wiz-step"><div class="card stack-4"><h3>Booking</h3><label class="opt"><input type="radio" name="sp" checked><div><b>Special dorm</b> · single, 24<div class="xs muted">Chalet isn't offered to singles</div></div></label><label class="opt"><input type="radio" name="sp"><div><b>Hostel</b></div></label>
+    <div class="price"><span>Special dorm · full rate</span><span class="amt">₦ …</span></div></div></div>
+  <div class="wiz-step"><div class="card stack-4"><h3>Pay</h3><div class="seg"><button data-seg class="on">Pay now</button><button data-seg>Pay later</button></div>
+    <div class="price"><span>Amaka Obi · beneficiary<br><span class="xs muted">Payer: you</span></span><span class="amt">₦ …</span></div>
+    <p class="xs muted">You'll see your payment and a simple "completed / pending" for Amaka. Never her profile or login.</p></div></div>
+  <div class="wiz-step"><div class="card stack-4"><div class="center"><span class="badge b-ok" style="font-size:var(--text-sm)">✓ Registered for Amaka</span></div>
+    <div class="axes"><div><b>Registration</b><span class="badge b-warn">⏱ Pending claim</span></div><div><b>Payment</b><span class="badge b-ok">✓ Paid by you</span></div><div><b>Booking</b><span class="badge b-info">Confirmed · unit TBD</span></div><div><b>Pass</b><span class="badge b-warn">Restricted</span></div></div>
+    <div class="alert info"><span aria-hidden="true">ℹ</span><div><b>Payment alone doesn't grant entry.</b>Amaka still needs to claim her profile and confirm her permissions. We've messaged her.</div></div></div></div>
+  <div class="wiz-actions"><button class="btn btn-secondary" data-prev>Back</button><button class="btn btn-primary" data-next>Continue</button></div>
+</div></div></section>
+
+<!-- ============ 9 COUPLES ============ -->
+<section class="screen" id="couples" data-event="couples"><div class="container"><div class="grid" style="grid-template-columns:minmax(0,2fr) minmax(260px,1fr);gap:var(--space-6);align-items:start">
+  <div class="stack-6"><div><span class="badge b-event">Couples Retreat</span><h1 style="margin-top:8px">Register as a couple</h1></div>
+  <ol class="stepper"><li class="done">Who</li><li class="cur">Permissions</li><li>Pay</li><li>Passes</li></ol>
+  <div class="card stack-4"><h3>Who is attending?</h3>
+    <div class="person-pill"><div class="avatar">K</div><div style="flex:1"><b>Kelechi Egwu</b><div class="xs muted">You</div></div></div>
+    <div class="person-pill"><div class="avatar">N</div><div style="flex:1"><b>Ngozi Egwu</b><div class="xs muted">Spouse · link pending</div></div><span class="badge b-warn">⏱ Awaiting</span></div>
+    <p class="xs muted">Each of you gets your own registration and pass, even on one order. No accommodation step appears for this event.</p></div>
+  <div class="card stack-2"><h3>Event terms</h3><label class="opt"><input type="checkbox"><span class="sm">I accept the Couples Retreat terms <span class="mono muted">CP-terms v1</span></span></label></div>
+  <div class="note">There is no lodge, camp or room UI anywhere in this flow. The edition has accommodation switched off, so the wizard has no such step. Eligibility (married only? engaged?) is an edition rule and still pending (D-25).</div></div>
+  <aside class="card cart"><h3>Your order</h3><div class="price"><span>Registration<br><span class="xs muted">basis: per couple or per person, TBC</span></span><span class="pending">⏱ pending</span></div>
+    <div class="alert warn" style="margin-top:var(--space-3)"><span aria-hidden="true">⏱</span><div class="xs"><b>Checkout isn't open yet</b>NLWC hasn't published the fee for this edition.</div></div>
+    <button class="btn btn-primary btn-block" style="margin-top:var(--space-3)" disabled>Pay</button></aside>
+</div></div></section>
+
+<!-- ============ 10 CLAIM ============ -->
+<section class="screen" id="claim"><div class="container"><div class="narrow stack-4" data-wiz>
+  <div class="card stack-2"><span class="badge b-info">Message from Kelechi Egwu</span><h1>You've been registered for Singlz Summit</h1><p class="sm muted">Kelechi registered and paid for you. Confirm it's you to see your details and finish.</p></div>
+  <ol class="stepper"><li>Confirm it's you</li><li>Check details</li><li>Permissions</li><li>Done</li></ol>
+  <div class="wiz-step"><div class="card stack-4"><h3>Confirm it's you</h3><p class="sm muted">We sent a code to 0812 ••• 7788.</p><div class="field"><label for="c1">6-digit code</label><input id="c1" class="input mono" value="4 8 2 9 1 0"></div>
+    <p class="xs muted">Not you? <a href="#">This isn't me</a> · <a href="#">Wrong details</a>. We'll tell the sender and stop the registration.</p></div></div>
+  <div class="wiz-step"><div class="card stack-4"><h3>Check your details</h3><dl class="kv"><dt>Name</dt><dd>Amaka Obi</dd><dt>Date of birth</dt><dd>03 Sep 2002</dd><dt>Registered by</dt><dd>Kelechi Egwu (sponsor)</dd><dt>Booking</dt><dd>Special dorm · paid</dd></dl><button class="btn btn-secondary btn-sm">Correct something</button></div></div>
+  <div class="wiz-step"><div class="card stack-4"><h3>Permissions</h3><label class="opt"><input type="checkbox"><span class="sm">I accept the Singlz Summit terms <span class="mono muted">SS-terms v1</span></span></label><label class="opt"><input type="checkbox"><span class="sm">Create my NLWC profile with this phone number</span></label></div></div>
+  <div class="wiz-step"><div class="card stack-4 center"><span class="badge b-ok" style="font-size:var(--text-sm);align-self:center">✓ You're all set</span><div class="qr" style="margin:0 auto"></div><p class="sm muted">Your pass is now active.<br>Kelechi can see that your registration is complete, nothing else.</p></div></div>
+  <div class="wiz-actions"><button class="btn btn-secondary" data-prev>Back</button><button class="btn btn-primary" data-next>Continue</button></div>
+</div></div></section>
+
+<!-- ============ 11 ORDERS ============ -->
+<section class="screen" id="orders"><div class="container stack-6">
+  <h1>Payments and receipts</h1>
+  <div class="card flush tbl-wrap"><table><thead><tr><th>Order</th><th>Event</th><th>For</th><th>Status</th><th class="num">Total</th><th></th></tr></thead><tbody>
+    <tr><td class="mono">ORD-2F9C1</td><td>Singlz Summit</td><td>Tobi, Chidi</td><td><span class="badge b-warn">⏱ Unpaid · hold 14:32</span></td><td class="num">₦5,000</td><td><a class="btn btn-primary btn-sm" href="#singlz">Pay</a></td></tr>
+    <tr><td class="mono">ORD-1B77E</td><td>Singlz Summit</td><td>Amaka Obi <span class="muted">(sponsored)</span></td><td><span class="badge b-ok">✓ Paid</span></td><td class="num">₦ …</td><td><a class="btn btn-ghost btn-sm" href="#receipt">Receipt</a></td></tr></tbody></table></div>
+  <div class="note">Sponsored orders list the beneficiary by name only. Status "completed / pending" is all a sponsor sees of the beneficiary's side.</div>
+</div></section>
+
+<section class="screen" id="receipt"><div class="container"><div class="narrow card stack-4">
+  <div class="row between"><img src="../assets/nlwc-logo-coloured.png" alt="NLWC" style="height:64px"><div class="right"><div class="bold">Receipt</div><div class="mono xs muted">RCT-1B77E · 28 Oct 2026 · 14:07 WAT</div></div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Item</th><th>Beneficiary</th><th class="num">Amount</th></tr></thead><tbody><tr><td>Special dorm</td><td>Amaka Obi</td><td class="num">₦ …</td></tr></tbody></table></div>
+  <div class="price total"><span>Paid</span><span>₦ …</span></div>
+  <dl class="kv"><dt>Payer</dt><dd>Kelechi Egwu</dd><dt>Method</dt><dd>Card · ref <span class="mono">PSK-9X21A</span></dd><dt>Rate plan</dt><dd class="mono">Singlz v2 · quote Q-4C12</dd></dl>
+  <p class="xs muted">Amounts are the ones confirmed when you paid. Later price changes never alter this receipt.</p><button class="btn btn-secondary">Download PDF</button>
+</div></div></section>
+
+<!-- ============ 12 CREDENTIALS ============ -->
+<section class="screen" id="credentials"><div class="container stack-6">
+  <h1>My passes</h1>
+  <div class="grid g2">
+    <div class="card stack-4" data-event="bootcamp" style="border-top:6px solid var(--event-accent)"><div class="row between"><div><b>Tobi Egwu · 9</b><div class="xs muted">Bible Bootcamp 2026 · Walk-in</div></div><span class="badge b-ok">✓ Active</span></div>
+      <div class="row" style="align-items:flex-start"><div class="qr"></div><div class="stack-2"><div class="mono xs">BB26-0412-A7</div><div class="xs muted">Show this at the gate. Staff will also check who picks up.</div></div></div>
+      <div class="lbl">Daily record</div><div class="grid g3"><div class="person-pill xs"><div><b>Mon 21</b><br><span class="badge b-neutral">Expected</span></div></div><div class="person-pill xs"><div><b>Tue 22</b><br><span class="badge b-neutral">Expected</span></div></div><div class="person-pill xs" style="border-color:var(--ember-400)"><div><b>Wed 23 · last day</b><br><span class="badge b-warn">Parent or guardian picks up before 6pm</span></div></div></div>
+      <div class="row"><button class="btn btn-secondary btn-sm">Add to phone</button><button class="btn btn-ghost btn-sm">Print</button><button class="btn btn-ghost btn-sm">Lost my phone</button></div></div>
+    <div class="card stack-4" data-event="singlz" style="border-top:6px solid var(--event-accent)"><div class="row between"><div><b>Amaka Obi</b><div class="xs muted">Singlz Summit · sponsored</div></div><span class="badge b-warn">Restricted</span></div>
+      <div class="row" style="align-items:flex-start"><div class="qr locked"></div><div class="stack-2"><div class="alert warn"><span>⏱</span><div class="xs"><b>Not active yet</b>Needs profile claim and permissions.</div></div></div></div></div>
+  </div>
+  <div class="note">Pass codes hold no DOB, health or payment data, only an opaque token. Restricted passes show why they aren't active. Online participants would see a stream-access entitlement instead (BRD D-22).</div>
+</div></section>
+
+<!-- ============ 13 PRIVACY ============ -->
+<section class="screen" id="privacy"><div class="container"><div class="narrow stack-4">
+  <h1>Privacy and consents</h1>
+  <div class="card stack-4"><h3>Communication</h3>
+    <div class="row between"><div><b>Event messages</b><div class="xs muted">Receipts, passes, safety alerts. Needed to take part.</div></div><span class="badge b-neutral">Always on</span></div>
+    <div class="row between"><div><b>News and invitations</b><div class="xs muted">Optional</div></div><span class="switch"><i></i>Off</span></div>
+    <div class="row between"><div><b>WhatsApp alerts</b></div><span class="switch on"><i></i>On</span></div></div>
+  <div class="card stack-2"><h3>Consent history</h3>
+    <div class="price"><span>Photo/video · Chidi · Bible Bootcamp 2026</span><span class="badge b-bad">Declined</span></div>
+    <div class="price"><span>Event terms · Singlz Summit <span class="mono xs muted">v1</span></span><span class="badge b-ok">Accepted 28 Oct</span></div>
+    <p class="xs muted">You can change media and optional choices at any time. Changes are recorded.</p></div>
+  <div class="row"><button class="btn btn-secondary">Download my data</button><button class="btn btn-ghost">Request correction</button></div>
+</div></div></section>
+</main>
+
+<footer class="site-foot">
+  <div class="foot-in">
+    <div class="foot-brand">
+      <img class="logo-light" src="../assets/nlwc-logo-coloured.png" alt="The New &amp; Living Way Church"><img class="logo-dark" src="../assets/nlwc-logo-white.png" alt="" aria-hidden="true">
+      <p class="sm muted">Events Management &amp; Registration system for the New and Living Way Church</p>
+      <div class="foot-social" aria-label="Social"><a href="#" aria-label="Instagram">Instagram</a><a href="#" aria-label="Facebook">Facebook</a><a href="#" aria-label="YouTube">YouTube</a><a href="#" aria-label="Twitter">Twitter</a></div>
+    </div>
+    <nav aria-label="Events"><h4>Events</h4><a href="#event">Bible Bootcamp</a><a href="#singlz">Singlz Summit</a><a href="#couples">Couples Retreat</a></nav>
+    <nav aria-label="My account"><h4>My account</h4><a href="#auth">Sign in</a><a href="#dashboard">My events</a><a href="#family">Profile</a><a href="#orders">Payments</a><a href="#privacy">Privacy and consents</a></nav>
+    <nav aria-label="NLWC"><h4>NLWC</h4><a href="https://nlwc.church/">nlwc.church</a><a href="https://tyrannus.nlwc.church/">Tyrannus</a><a href="https://nlwc.church/">Live streaming</a><a href="https://nlwc.church/">Contact us</a></nav>
+  </div>
+  <div class="foot-base"><span>© 2026 The New and Living Way Church</span><span>Event times are shown in Africa/Lagos (WAT)</span><span class="row" style="gap:var(--space-4)"><a href="#privacy">Privacy Policy</a><a href="#">Terms &amp; Conditions</a></span></div>
+</footer>
+
+<nav class="tabbar" aria-label="Mobile"><a href="#home" data-nav="home">Events</a><a href="#dashboard" data-nav="dashboard">My events</a><a href="#family" data-nav="family">Profile</a><a href="#orders" data-nav="orders">Payments</a></nav>
+
+<script>
+var screens=[['home','Home'],['event','Event page'],['auth','Sign in'],['dashboard','Dashboard'],['family','Family'],['bootcamp','Bootcamp wizard'],['singlz','Singlz wizard'],['sponsor','Register someone else'],['couples','Couples'],['claim','Claim'],['orders','Payments'],['receipt','Receipt'],['credentials','Passes'],['privacy','Privacy']];
+var bar=document.getElementById('protobar');
+screens.forEach(function(s,i){var a=document.createElement('a');a.href='#'+s[0];a.textContent=(i+1)+' '+s[1];a.dataset.s=s[0];bar.appendChild(a)});
+function go(){var id=(location.hash||'#home').slice(1);if(!document.getElementById(id))id='home';
+ document.querySelectorAll('.screen').forEach(function(e){e.classList.toggle('on',e.id===id)});
+ document.querySelectorAll('.proto-bar a').forEach(function(a){a.classList.toggle('on',a.dataset.s===id)});
+ document.querySelectorAll('[data-nav]').forEach(function(a){a.classList.toggle('on',a.dataset.nav===id)});scrollTo({top:0,behavior:'instant'})}
+(function(){var b=document.getElementById('menuBtn'),n=document.getElementById('mainNav');function set(o){n.classList.toggle('open',o);b.classList.toggle('open',o);b.setAttribute('aria-expanded',o);b.setAttribute('aria-label',o?'Close menu':'Open menu')}
+b.addEventListener('click',function(){set(!n.classList.contains('open'))});n.addEventListener('click',function(e){if(e.target.closest('a'))set(false)});addEventListener('hashchange',function(){set(false)});addEventListener('keydown',function(e){if(e.key==='Escape')set(false)});addEventListener('resize',function(){if(innerWidth>720)set(false)})})();
+(function(){var t=document.getElementById('faqToggle');if(!t)return;t.addEventListener('click',function(){var open=t.getAttribute('aria-expanded')!=='true';document.querySelectorAll('.faq-more').forEach(function(d){d.hidden=!open;if(!open)d.open=false});t.setAttribute('aria-expanded',open);t.querySelector('.plus').textContent=open?'−':'+';t.querySelector('.lbl-t').textContent=open?'Show fewer questions':'Show '+t.dataset.more+' more questions'})})();
+addEventListener('hashchange',go);go();
+document.querySelectorAll('[data-wiz]').forEach(function(w){
+ var steps=w.querySelectorAll('.wiz-step'),lis=w.querySelectorAll('.stepper li'),n=0;
+ function show(){steps.forEach(function(s,i){s.classList.toggle('on',i===n)});lis.forEach(function(l,i){l.className=i<n?'done':i===n?'cur':''});
+  var p=w.querySelector('[data-prev]'),x=w.querySelector('[data-next]');if(p)p.style.visibility=n?'visible':'hidden';if(x)x.textContent=n===steps.length-1?'Submit':'Continue'}
+ w.addEventListener('click',function(e){if(e.target.closest('[data-next]')){if(n<steps.length-1){n++;show()}}else if(e.target.closest('[data-prev]')){if(n>0){n--;show()}}});show()});
+document.addEventListener('click',function(e){
+ var sc=e.target.closest('[data-scroll]');if(sc){e.preventDefault();document.getElementById(sc.dataset.scroll).scrollIntoView({behavior:'smooth',block:'start'});sc.parentElement.querySelectorAll('a').forEach(function(x){x.classList.toggle('on',x===sc)})}
+ var tg=e.target.closest('[data-toggle]');if(tg){var t=document.getElementById(tg.dataset.toggle);t.hidden=!t.hidden}
+ var ed=e.target.closest('[data-edit]');if(ed){ed.closest('[data-editable]').classList.toggle('editing')}});
+function permRefresh(){var s=document.getElementById('perm');if(!s)return;var all=true;s.querySelectorAll('.ph-row').forEach(function(r){if(!r.querySelector('input:checked'))all=false});
+ var n=(s.querySelector('#pc1').checked?1:0)+(s.querySelector('#pc2').checked?1:0)+(all?1:0);document.getElementById('pcount').textContent=n+' of 3 done';document.getElementById('pbar').style.width=(n/3*100)+'%'}
+document.addEventListener('change',function(e){if(e.target.closest('#perm'))permRefresh()});
+function hcRefresh(n){var pn=document.getElementById('hp'+n),s=document.getElementById('hs'+n);if(!pn||!s)return;var a=pn.querySelector('.hc-yn input:checked'),done=false,txt='To do';
+ if(a&&a.value==='no'){done=true}else if(a&&a.value==='yes'){done=!!(pn.querySelector('.chip-check input:checked')||pn.querySelector('textarea').value.trim());txt='Add details'}
+ s.textContent=done?'✓ Done':txt;s.classList.toggle('done',done);
+ var d=document.querySelectorAll('.hc-status.done').length,t=document.querySelectorAll('.hc-status').length;document.getElementById('hcount').textContent=d+' of '+t+' children done'}
+['change','input'].forEach(function(ev){document.addEventListener(ev,function(e){var pn=e.target.closest('.hc-panel');if(pn)hcRefresh(pn.id.slice(2))})});
+document.addEventListener('click',function(e){var f=e.target.closest('[data-filter]');if(f){f.parentElement.querySelectorAll('.chip').forEach(function(x){x.classList.toggle('on',x===f)});document.querySelectorAll('.ev-row').forEach(function(r){r.hidden=f.dataset.filter!=='all'&&r.dataset.status!==f.dataset.filter})}});
+document.addEventListener('click',function(e){var t=e.target.closest('[data-pw]');if(!t)return;var i=t.parentElement.querySelector('input');var show=i.type==='password';i.type=show?'text':'password';t.setAttribute('aria-label',show?'Hide password':'Show password')});
+document.addEventListener('click',function(e){var b=e.target.closest('[data-seg]');if(b){b.parentElement.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b)})}});
+</script>
+</body></html>

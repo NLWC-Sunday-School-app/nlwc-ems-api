@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NLWC EMS Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Marcellus&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<script src="theme.js"></script>
+<style>
+.logo-dark{display:none!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .logo-light{display:none!important}:root:not([data-theme="light"]) .logo-dark{display:inline-block!important}}
+:root[data-theme="dark"] .logo-light{display:none!important}
+:root[data-theme="dark"] .logo-dark{display:inline-block!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 var(--text-base)/var(--lh-body) var(--font-ui);font-variant-numeric:tabular-nums}
+a{color:var(--link)}
+:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 var(--space-4)}
+header.top{background:var(--surface);color:var(--text);border-bottom:4px solid transparent;border-image:var(--flame-gradient) 1}
+header.top .wrap{display:flex;align-items:center;gap:var(--space-6);padding-block:var(--space-3);flex-wrap:wrap}
+header.top img{height:56px;width:auto}
+header.top nav{display:flex;gap:var(--space-4);flex-wrap:wrap;margin-left:auto;font-size:var(--text-sm)}
+header.top nav a{color:var(--text-muted);text-decoration:none;padding:var(--space-2) 0}
+header.top nav a:hover{color:var(--primary)}
+.theme-toggle{background:transparent;color:var(--text);border:1px solid var(--border-strong);width:40px;height:40px;border-radius:50%;display:inline-grid;place-items:center;cursor:pointer;padding:0}
+.btn-theme{background:none;border:1px solid #5E5650;color:#fff;border-radius:var(--radius-pill);padding:6px 14px;font:inherit;font-size:var(--text-sm);cursor:pointer}
+section{padding-block:var(--space-10);border-bottom:1px solid var(--border)}
+h1{font-size:var(--text-4xl);line-height:var(--lh-tight);margin:0 0 var(--space-3)}
+h2{font-size:var(--text-2xl);margin:0 0 var(--space-2);line-height:var(--lh-tight)}
+h3{font-size:var(--text-lg);margin:var(--space-6) 0 var(--space-3)}
+p.lead{color:var(--text-muted);max-width:68ch;margin:0 0 var(--space-6)}
+.grid{display:grid;gap:var(--space-4)}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-5);box-shadow:var(--shadow-1)}
+code,.mono{font-family:var(--font-mono);font-size:.85em}
+.sw{display:flex;gap:0;border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--border);margin-bottom:var(--space-3)}
+.sw div{flex:1;min-height:64px;padding:6px;font-size:11px;font-family:var(--font-mono);display:flex;align-items:flex-end}
+.rule{display:flex;gap:var(--space-3);align-items:flex-start;font-size:var(--text-sm)}
+.do,.dont{border-left:4px solid;padding:var(--space-3) var(--space-4);border-radius:var(--radius-sm);font-size:var(--text-sm)}
+.do{border-color:var(--ok-solid);background:var(--ok-bg);color:var(--ok-fg)}
+.dont{border-color:var(--bad-solid);background:var(--bad-bg);color:var(--bad-fg)}
+
+/* ---- components ---- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--target-min);padding:0 var(--space-5);border-radius:var(--radius-md);border:1px solid transparent;font:600 var(--text-base) var(--font-ui);cursor:pointer;transition:background var(--dur-fast) var(--ease)}
+.btn-primary{background:var(--primary);color:var(--on-primary)}
+.btn-primary:hover{background:var(--primary-hover)}
+.btn-brand{background:var(--ember-400);color:var(--stone-950)}
+.btn-brand:hover{background:var(--ember-300)}
+.btn-secondary{background:var(--surface);color:var(--text);border-color:var(--border-strong)}
+.btn-ghost{background:none;color:var(--link)}
+.btn-danger{background:var(--bad-solid);color:var(--surface);}
+:root[data-theme="dark"] .btn-danger{color:#0F0D0C}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.field{display:grid;gap:6px;margin-bottom:var(--space-4)}
+.field label{font-weight:600;font-size:var(--text-sm)}
+.field .hint{font-size:var(--text-xs);color:var(--text-muted)}
+.input{min-height:var(--target-min);padding:0 var(--space-3);border:1px solid var(--border-strong);border-radius:var(--radius-md);background:var(--surface);color:var(--text);font:inherit}
+.input[aria-invalid=true]{border-color:var(--bad-solid);border-width:2px}
+.err{color:var(--bad-fg);font-size:var(--text-xs);font-weight:600}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:var(--radius-pill);font-size:var(--text-xs);font-weight:600;white-space:nowrap}
+.b-ok{background:var(--ok-bg);color:var(--ok-fg)} .b-warn{background:var(--warn-bg);color:var(--warn-fg)}
+.b-bad{background:var(--bad-bg);color:var(--bad-fg)} .b-info{background:var(--info-bg);color:var(--info-fg)}
+.b-neutral{background:var(--surface-sunken);color:var(--text-muted);border:1px solid var(--border)}
+.b-event{background:var(--event-accent);color:#fff}
+.stack{display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center}
+.price{display:flex;justify-content:space-between;align-items:center;padding:var(--space-3) 0;border-bottom:1px dashed var(--border)}
+.price .amt{font-weight:700;font-variant-numeric:tabular-nums}
+.price .free{color:var(--ok-fg);font-weight:700}
+.price .pending{color:var(--warn-fg);font-weight:600}
+.status-axes{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-2);font-size:var(--text-xs)}
+.status-axes div{padding:var(--space-2);border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
+.status-axes b{display:block;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px}
+.event-hero{border-radius:var(--radius-lg);overflow:hidden;background:var(--stone-950);color:#fff;padding:var(--space-8) var(--space-6);position:relative}
+.event-hero::after{content:"";position:absolute;inset:auto 0 0 0;height:6px;background:var(--flame-gradient)}
+.event-hero h4{font:400 var(--text-3xl)/1.15 var(--font-display);letter-spacing:.04em;text-transform:uppercase;margin:var(--space-2) 0}
+.stepper{display:flex;gap:var(--space-2);list-style:none;padding:0;margin:0;overflow:auto}
+.stepper li{flex:1;min-width:92px;font-size:var(--text-xs);border-top:4px solid var(--border-strong);padding-top:6px;color:var(--text-muted)}
+.stepper li.done{border-color:var(--ok-solid);color:var(--text)} .stepper li.cur{border-color:var(--primary);color:var(--text);font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:var(--text-sm)}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border)} th{color:var(--text-muted);font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.05em}
+td.num,th.num{text-align:right}
+/* device */
+.device{max-width:380px;margin:0 auto;border-radius:28px;border:8px solid #000;overflow:hidden;background:var(--bg);color:var(--text)}
+.device .bar{padding:var(--space-3) var(--space-4);background:var(--surface);display:flex;justify-content:space-between;font-size:var(--text-sm);border-bottom:1px solid var(--border)}
+.device .modes{display:flex;gap:6px;padding:var(--space-3);overflow:auto}
+.device .modes span{padding:10px 14px;border-radius:var(--radius-pill);border:1px solid var(--border-strong);font-size:var(--text-sm);white-space:nowrap}
+.device .modes span.on{background:var(--primary);color:var(--on-primary);border-color:var(--primary);font-weight:700}
+.result{margin:var(--space-3);border-radius:var(--radius-lg);padding:var(--space-5);border:2px solid}
+.result h5{margin:0 0 4px;font-size:var(--text-2xl);display:flex;gap:10px;align-items:center}
+.result.ok{background:var(--ok-bg);border-color:var(--ok-solid);color:var(--ok-fg)}
+.result.hold{background:var(--warn-bg);border-color:var(--warn-solid);color:var(--warn-fg)}
+.result.stop{background:var(--bad-bg);border-color:var(--bad-solid);color:var(--bad-fg)}
+.result .meta{color:var(--text);font-size:var(--text-sm);margin:var(--space-2) 0 var(--space-4)}
+.device .actions{display:grid;gap:var(--space-2)}
+.qr{width:120px;height:120px;background:
+ conic-gradient(from 90deg at 30% 30%,#000 25%,#fff 0 50%,#000 0 75%,#fff 0) 0 0/20px 20px;border:8px solid #fff;outline:1px solid var(--border)}
+.alert{display:flex;gap:var(--space-3);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);border:1px solid;font-size:var(--text-sm)}
+.alert.warn{background:var(--warn-bg);color:var(--warn-fg);border-color:var(--warn-solid)}
+.alert.info{background:var(--info-bg);color:var(--info-fg);border-color:var(--info-solid)}
+.alert.bad{background:var(--bad-bg);color:var(--bad-fg);border-color:var(--bad-solid)}
+.type-row{display:flex;gap:var(--space-4);align-items:baseline;padding:var(--space-2) 0;border-bottom:1px solid var(--border)}
+.type-row small{flex:0 0 150px;color:var(--text-muted);font-family:var(--font-mono);font-size:11px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <img class="logo-light" src="assets/nlwc-logo-coloured.png" alt="The New &amp; Living Way Church"><img class="logo-dark" src="assets/nlwc-logo-white.png" alt="" aria-hidden="true">
+    <strong>Event Management System · Design System v1.0</strong>
+    <nav aria-label="Sections">
+      <a href="#foundations">Foundations</a><a href="#components">Components</a><a href="#domain">Domain patterns</a><a href="#device">Check-in device</a><a href="#events">Events</a>
+      <span data-theme-slot></span>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+<section id="intro">
+  <h1>Warm, trustworthy, unmistakably NLWC, and built for safeguarding.</h1>
+  <p class="lead">One system for four surfaces: public site, attendee portal, admin console and check-in PWA. It inherits the ember gradient from the logo and the Plus Jakarta Sans voice of nlwc.church, but it is tuned for the thing this product really is: money, children and capacity. Full specification in <code>DESIGN_SYSTEM.md</code>.</p>
+  <div class="grid g3">
+    <div class="card"><h3 style="margin-top:0">Clarity over decoration</h3><p>Every state is word + icon + colour. Colour never carries meaning alone.</p></div>
+    <div class="card"><h3 style="margin-top:0">Separate things look separate</h3><p>Registration, payment, booking and attendance each get their own status axis, never one merged badge.</p></div>
+    <div class="card"><h3 style="margin-top:0">Safe by default</h3><p>Destructive and custody actions are never one tap, never green-by-default, always audited.</p></div>
+  </div>
+</section>
+
+<section id="foundations">
+  <h2>Foundations</h2>
+  <h3>Brand</h3>
+  <div class="sw"><div style="background:var(--ember-50);color:#000">50</div><div style="background:var(--ember-100);color:#000">100</div><div style="background:var(--ember-300);color:#000">300</div><div style="background:var(--ember-400);color:#000">400 · site accent</div><div style="background:var(--ember-500);color:#fff">500</div><div style="background:var(--ember-600);color:#fff">600 · primary</div><div style="background:var(--ember-700);color:#fff">700</div><div style="background:var(--ember-800);color:#fff">800</div><div style="background:var(--ember-900);color:#fff">900</div></div>
+  <div style="height:14px;border-radius:7px;background:var(--flame-gradient);margin-bottom:var(--space-4)"></div>
+  <div class="grid g2">
+    <div class="do"><b>Do</b> use ember-600 for buttons with white text (5.64:1) and ember-400 with dark ink text (7.5:1).</div>
+    <div class="dont"><b>Don't</b> put white text on ember-400 (#FF7C18, only 2.58:1). The website accent works as an accent, not a button fill.</div>
+  </div>
+  <h3>Neutrals (warm stone)</h3>
+  <div class="sw"><div style="background:var(--stone-50);color:#000">50</div><div style="background:var(--stone-100);color:#000">100</div><div style="background:var(--stone-200);color:#000">200</div><div style="background:var(--stone-300);color:#000">300</div><div style="background:var(--stone-400);color:#000">400</div><div style="background:var(--stone-500);color:#fff">500</div><div style="background:var(--stone-700);color:#fff">700</div><div style="background:var(--stone-800);color:#fff">800</div><div style="background:var(--stone-900);color:#fff">900</div><div style="background:var(--stone-950);color:#fff">950</div></div>
+  <h3>Semantic</h3>
+  <div class="stack">
+    <span class="badge b-ok">✓ Paid</span><span class="badge b-warn">⏱ Pending claim</span><span class="badge b-bad">⚠ Pick-up mismatch</span><span class="badge b-info">ℹ Price pending approval</span><span class="badge b-neutral">Draft</span>
+  </div>
+  <p class="lead" style="margin-top:var(--space-3)">Danger is a rose-crimson (<code>#B0123C</code>), deliberately distinct from the brand red-orange so an error never looks like a brand moment.</p>
+
+  <h3>Typography</h3>
+  <div class="card">
+    <div class="type-row"><small>display / Marcellus 30</small><span style="font:400 1.875rem var(--font-display);letter-spacing:.04em;text-transform:uppercase">Bible Bootcamp 2026</span></div>
+    <div class="type-row"><small>h1 / 700 36</small><span style="font:700 2.25rem/1.2 var(--font-ui)">Register your family</span></div>
+    <div class="type-row"><small>h2 / 700 24</small><span style="font:700 1.5rem var(--font-ui)">Accommodation</span></div>
+    <div class="type-row"><small>body / 400 16</small><span>Each child receives their own credential, registered to one guardian.</span></div>
+    <div class="type-row"><small>caption / 500 12</small><span style="font-size:.75rem;font-weight:500;color:var(--text-muted)">Rate plan v3 · quote valid until 14:32</span></div>
+    <div class="type-row"><small>mono / refs</small><span class="mono">BB26-0412-A7 · TX-2F9C1</span></div>
+    <div class="type-row"><small>tabular numerals</small><span style="font-weight:700">₦ 5,000 &nbsp; ₦ 12,500 &nbsp; ₦ 105,000</span></div>
+  </div>
+</section>
+
+<section id="components">
+  <h2>Core components</h2>
+  <div class="grid g2">
+    <div class="card">
+      <h3 style="margin-top:0">Buttons</h3>
+      <div class="stack"><button class="btn btn-primary">Pay ₦12,500</button><button class="btn btn-brand">Register now</button><button class="btn btn-secondary">Save draft</button><button class="btn btn-ghost">Cancel</button><button class="btn btn-danger">Revoke credential</button><button class="btn btn-primary" disabled>Checkout unavailable</button></div>
+      <p class="hint" style="font-size:var(--text-xs);color:var(--text-muted)">Primary (ember-600, white text) is the default. Brand (website orange, dark text) is for dark headers and event heroes. One primary or brand button per view. Disabled buttons must say why (adjacent text), never silently.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Form field</h3>
+      <div class="field"><label for="dob">Date of birth</label><input id="dob" class="input" value="14 / 03 / 2017"><span class="hint">Age is calculated at event start: 9 years. Band: 7–12.</span></div>
+      <div class="field"><label for="ph">WhatsApp number</label><input id="ph" class="input" aria-invalid="true" aria-describedby="e" value="0803 12"><span class="err" id="e">⚠ Enter a full 11-digit number, or choose "No phone".</span></div>
+    </div>
+  </div>
+  <h3>Wizard progress</h3>
+  <ol class="stepper card" style="padding:var(--space-4)"><li class="done">✓ Participants</li><li class="done">✓ Mode</li><li class="cur">Permissions</li><li>Payment</li><li>Review</li></ol>
+  <h3>Alerts</h3>
+  <div class="grid">
+    <div class="alert warn"><span aria-hidden="true">⏱</span><div><b>Hold expires in 14:32.</b> Complete payment to keep your Hostel bed. We can't reserve it longer.</div></div>
+    <div class="alert info"><span aria-hidden="true">ℹ</span><div><b>Payment alone does not grant entry.</b> Ada still needs to claim her profile and confirm her permissions.</div></div>
+    <div class="alert bad"><span aria-hidden="true">⚠</span><div><b>This person is not authorised to pick up Tobi.</b> Do not release. Call a supervisor.</div></div>
+  </div>
+</section>
+
+<section id="domain">
+  <h2>Domain patterns</h2>
+  <p class="lead">These exist because the BRD says "an account is not a registration, a registration is not a payment, a payment is not a room, a QR is not custody." The UI must make that visible.</p>
+
+  <h3>1 · Price line: free ≠ unpriced</h3>
+  <div class="grid g2">
+    <div class="card">
+      <div class="price"><span>Hostel · Chidi (age 5) <small class="mono">rate v2</small></span><span class="free">₦0 · Free</span></div>
+      <div class="price"><span>Hostel · Tobi (age 9)</span><span class="amt">₦5,000</span></div>
+      <div class="price"><span>Special dorm · Tobi (age 9)</span><span class="pending">⏱ Price pending approval</span></div>
+      <div class="price" style="border:0"><strong>Total due</strong><span class="amt" style="font-size:var(--text-xl)">₦5,000</span></div>
+      <p style="font-size:var(--text-xs);color:var(--text-muted);margin:8px 0 0">Child occupancy is counted even when the rate is ₦0.</p>
+    </div>
+    <div class="grid">
+      <div class="do"><b>Do</b> show an explicit "Free" label for an approved ₦0 rule, and "Price pending approval" with checkout blocked for an unconfigured one.</div>
+      <div class="dont"><b>Don't</b> render a missing rate as ₦0, "-" or an empty cell. Never guess from another category or year.</div>
+    </div>
+  </div>
+
+  <h3>2 · Separate status axes (never one merged badge)</h3>
+  <div class="card">
+    <strong>Amaka Obi · Singlz Summit</strong> <span class="badge b-event" style="margin-left:8px">Singlz</span>
+    <div class="status-axes" style="margin-top:var(--space-3)">
+      <div><b>Registration</b><span class="badge b-warn">⏱ Pending claim</span></div>
+      <div><b>Payment</b><span class="badge b-ok">✓ Paid by Kelechi</span></div>
+      <div><b>Booking</b><span class="badge b-info">Confirmed · unit TBD</span></div>
+      <div><b>Occupancy</b><span class="badge b-neutral">Expected</span></div>
+    </div>
+    <p style="font-size:var(--text-sm);margin:var(--space-3) 0 0">Credential: <span class="badge b-warn">Restricted until profile claimed</span></p>
+  </div>
+
+  <h3>3 · Payer / registrant / beneficiary</h3>
+  <table class="card" style="padding:0;display:table">
+    <thead><tr><th>Line</th><th>Beneficiary</th><th>Payer</th><th class="num">Amount</th></tr></thead>
+    <tbody>
+      <tr><td>Chalet pairing · spouse</td><td>Ngozi E. <span class="badge b-warn">Link pending</span></td><td>You</td><td class="num">₦ (rate pending)</td></tr>
+      <tr><td>Hostel bed</td><td>Tobi E. (9)</td><td>You</td><td class="num">₦5,000</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4 · Consent card (neutral until answered, no pre-selection)</h3>
+  <div class="card">
+    <strong>Photo and video release · Tobi (age 9)</strong>
+    <p style="font-size:var(--text-sm);color:var(--text-muted)">Separate from event terms. Declining never blocks registration.</p>
+    <div class="stack"><label class="btn btn-secondary"><input type="radio" name="m"> I consent</label><label class="btn btn-secondary"><input type="radio" name="m"> I do not consent</label></div>
+    <p class="mono" style="color:var(--text-muted)">Media release v2026.1 · unanswered</p>
+  </div>
+
+  <h3>5 · Day-attendance strip (each day is its own record)</h3>
+  <div class="grid g3">
+    <div class="card"><b>Mon 21 Dec</b><br><span class="badge b-neutral">Checked out 15:42</span><div class="mono" style="margin-top:6px">by Mrs Obi · ID verified</div></div>
+    <div class="card"><b>Tue 22 Dec</b><br><span class="badge b-ok">✓ Checked in 08:51</span></div>
+    <div class="card"><b>Wed 23 Dec</b><br><span class="badge b-neutral">Expected</span></div>
+  </div>
+</section>
+
+<section id="device">
+  <h2>Check-in device (PWA)</h2>
+  <p class="lead">Always dark, 56px targets, full-width result panels. Mode is chosen first and always visible, because entry, daily check-in, check-out, camp arrival and child handover run different checks.</p>
+  <div class="grid g2">
+    <div class="device" data-surface="device">
+      <div class="bar"><span><b>Daily check-out</b> · 22 Dec</span><span class="badge b-ok">● Online</span></div>
+      <div class="modes"><span>Entry</span><span>Check-in</span><span class="on">Check-out</span><span>Camp</span><span>Session</span></div>
+      <div class="result hold">
+        <h5>⚠ Verify pick-up</h5>
+        <p class="meta"><b>Tobi Egwu, 9</b> · Bible Bootcamp<br>Safety note: none<br>Authorised: <b>Mrs Egwu (mother)</b>, <b>Mr Ade (uncle)</b></p>
+        <div class="actions"><button class="btn btn-primary">On pick-up list · ID checked</button><button class="btn btn-secondary">Not on list → supervisor</button></div>
+      </div>
+      <p style="text-align:center;font-size:var(--text-xs);color:var(--text-muted);padding-bottom:var(--space-3)">A QR scan alone never releases a child.</p>
+    </div>
+    <div style="display:grid;gap:var(--space-4)">
+      <div class="device" data-surface="device">
+        <div class="result ok" style="margin:var(--space-3)"><h5>✓ Checked in</h5><p class="meta" style="margin:0"><b>Seun Ade, 14</b> · 22 Dec · Gate A · 08:51</p></div>
+      </div>
+      <div class="device" data-surface="device">
+        <div class="result stop" style="margin:var(--space-3)"><h5>✕ Do not release</h5><p class="meta" style="margin:0">Not authorised to pick up. Supervisor alerted. Incident #IR-0214 opened.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="events">
+  <h2>Event theming</h2>
+  <p class="lead">An event edition changes only an accent and a hero. Layout, components and safety patterns never change per event.</p>
+  <div class="grid g3">
+    <div data-event="bootcamp" class="event-hero"><span class="badge b-event">Bible Bootcamp</span><h4>21–23 Dec 2026</h4><span style="font-size:var(--text-sm);color:#E6DFD8">Children 3–16 · everyone welcome</span></div>
+    <div data-event="singlz" class="event-hero"><span class="badge b-event">Singlz Summit</span><h4>Dates to be announced</h4><span style="font-size:var(--text-sm);color:#E6DFD8">Singles, married &amp; families</span></div>
+    <div data-event="couples" class="event-hero"><span class="badge b-event">Couples Retreat</span><h4>Dates to be announced</h4><span style="font-size:var(--text-sm);color:#E6DFD8">No accommodation step</span></div>
+  </div>
+  <h3>Logo</h3>
+  <div class="grid g3">
+    <div class="card" style="text-align:center;background:#fff;color:#17120F"><img src="assets/nlwc-logo-coloured.png" alt="NLWC logo, coloured" style="max-width:100%;height:96px;object-fit:contain"><br><small>Coloured: light surfaces</small></div>
+    <div class="card" style="text-align:center;background:#fff;color:#17120F"><img src="assets/nlwc-logo-black.png" alt="NLWC logo, black" style="max-width:100%;height:96px;object-fit:contain"><br><small>Black: print, receipts, tickets</small></div>
+    <div class="card" style="text-align:center;background:var(--stone-950);color:#fff"><img src="assets/nlwc-logo-white.png" alt="NLWC logo, white" style="max-width:100%;height:96px;object-fit:contain"><br><small>White: dark headers, device</small></div>
+  </div>
+</section>
+</main>
+<footer class="wrap" style="padding-block:var(--space-8);color:var(--text-muted);font-size:var(--text-sm)">NLWC EMS Design System v1.0 · derived from BRD v3.1, nlwc.church and tyrannus.nlwc.church.</footer>
+</body>
+</html>

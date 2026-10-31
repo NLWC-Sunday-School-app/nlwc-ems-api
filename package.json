@@ -1,0 +1,48 @@
+{
+  "name": "nlwc-ems-api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r --filter \"./shared/*\" build && tsc -p .",
+    "dev": "tsx watch src/main.ts",
+    "typecheck": "tsc -p . --noEmit",
+    "lint": "echo skip",
+    "test": "vitest run --passWithNoTests",
+    "migrate": "tsx src/db/migrate-cli.ts"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.1.5",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-fastify": "^11.0.0",
+    "@nlwc/contracts": "workspace:*",
+    "@node-rs/argon2": "^2.2.2",
+    "fastify": "^5.12.7",
+    "kysely": "^0.29.7",
+    "otpauth": "^9.5.2",
+    "pg": "^8.23.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "uuid": "^14.0.3",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.9.0",
+    "@testcontainers/postgresql": "^12.2.1",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.23.1",
+    "testcontainers": "^12.2.1",
+    "tsx": "^4.19.0",
+    "unplugin-swc": "^1.5.0",
+    "vitest": "^2.1.0",
+    "typescript": "^5.7.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "@swc/core",
+      "@node-rs/argon2"
+    ]
+  }
+}

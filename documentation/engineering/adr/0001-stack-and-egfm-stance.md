@@ -1,8 +1,11 @@
 # ADR-0001: Stack and EGFM stance
-Status: Accepted (provisional, pending Q2) · 2026-10-31
+Status: Accepted · revised 31 Oct 2026 (API is .NET, per the product owner)
 
-**Decision:** New codebase. TypeScript end to end: NestJS API, Next.js web, Vite + React admin, PostgreSQL 16, pg-boss jobs, Drizzle/Kysely with hand-written SQL migrations.
-**EGFM:** reuse ideas only, no code, until rights (D-27) and security (D-28) are confirmed.
-**Assumption to confirm (Q2):** no EGFM source rights; team knows TypeScript.
-**If wrong:** API can be swapped to .NET 10; contracts, schema and frontends are unaffected.
+**Decision:** New codebase. **Backend: ASP.NET Core on .NET 10**, Npgsql + Dapper with hand-written SQL migrations, PostgreSQL 16. Frontends: Next.js (`nlwc-ems-web`), Vite + React (`nlwc-ems-admin`, `nlwc-ems-checkin`).
+**Supersedes** the first draft of this ADR (TypeScript/NestJS). A NestJS API had been built and pushed in one commit; it was ported to .NET with the same schema, behaviour and tests, and removed.
+**EGFM:** reuse ideas only, no code, until rights (D-27) and security (D-28) are confirmed. The .NET choice does not change that.
+**Consequences:**
+- No shared Zod contracts. The API publishes OpenAPI (`/v1/openapi.json`) and the frontends generate typed clients from it. The OpenAPI diff in CI stays.
+- Jobs: pg-boss is replaced by a Postgres-backed outbox plus a hosted background worker (Quartz.NET or a small `BackgroundService`), decided when the notifications module starts.
+- Tests: xUnit, `WebApplicationFactory`, Testcontainers (real Postgres).
 **Why Postgres:** exclusion constraints and partial unique indexes enforce capacity and one-registration rules declaratively.

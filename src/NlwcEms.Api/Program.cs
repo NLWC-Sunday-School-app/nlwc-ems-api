@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
 using NlwcEms.Api;
 using NlwcEms.Api.Access;
+using NlwcEms.Api.Catalog;
 using NlwcEms.Api.Db;
 using NlwcEms.Api.Identity;
 
@@ -18,6 +19,7 @@ builder.Services.AddSingleton(sp => new NpgsqlDataSourceBuilder(sp.GetRequiredSe
 builder.Services.AddSingleton<IdentityService>();
 builder.Services.AddSingleton<AuditService>();
 builder.Services.AddSingleton<AccessService>();
+builder.Services.AddSingleton<CatalogService>();
 builder.Services.TryAddSingleton<IMailer, ConsoleMailer>();
 builder.Services.AddOpenApi();
 builder.Services.AddCors(o => o.AddDefaultPolicy(p => { }));
@@ -33,6 +35,7 @@ app.MapOpenApi("/v1/openapi.json");
 app.MapGet("/v1/health", () => Results.Ok(new { status = "ok", time = DateTime.UtcNow }));
 app.MapIdentity();
 app.MapAccess();
+app.MapCatalog();
 
 var bootstrap = Array.IndexOf(args, "--bootstrap-admin");
 if (bootstrap >= 0)

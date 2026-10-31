@@ -8,7 +8,7 @@ public static class AccessEndpoints
 
     /// <summary>
     /// Requires a session, MFA (every permissioned role is a staff role), and can(actor, resource, level, edition).
-    /// The edition comes from the <c>editionId</c> query string. Denials are audited.
+    /// The edition comes from the <c>editionId</c> route value, else the query string. Denials are audited.
     /// </summary>
     public static RouteHandlerBuilder RequirePermission(this RouteHandlerBuilder b, string resource, string level)
     {
@@ -17,7 +17,8 @@ public static class AccessEndpoints
         {
             var http = ctx.HttpContext;
             var s = http.Session();
-            Guid? edition = Guid.TryParse(http.Request.Query["editionId"], out var e) ? e : null;
+            var raw = http.Request.RouteValues["editionId"]?.ToString() ?? http.Request.Query["editionId"].ToString();
+            Guid? edition = Guid.TryParse(raw, out var e) ? e : null;
             var access = http.RequestServices.GetRequiredService<AccessService>();
             if (!await access.CanAsync(s.AccountId, resource, level, edition))
             {

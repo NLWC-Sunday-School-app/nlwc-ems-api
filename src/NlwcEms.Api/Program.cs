@@ -6,6 +6,7 @@ using NlwcEms.Api.Access;
 using NlwcEms.Api.Catalog;
 using NlwcEms.Api.Db;
 using NlwcEms.Api.Identity;
+using NlwcEms.Api.People;
 
 DefaultTypeMap.MatchNamesWithUnderscores = true;
 
@@ -20,6 +21,7 @@ builder.Services.AddSingleton<IdentityService>();
 builder.Services.AddSingleton<AuditService>();
 builder.Services.AddSingleton<AccessService>();
 builder.Services.AddSingleton<CatalogService>();
+builder.Services.AddSingleton<PeopleService>();
 builder.Services.TryAddSingleton<IMailer, ConsoleMailer>();
 builder.Services.AddOpenApi();
 builder.Services.AddCors(o => o.AddDefaultPolicy(p => { }));
@@ -36,6 +38,7 @@ app.MapGet("/v1/health", () => Results.Ok(new { status = "ok", time = DateTime.U
 app.MapIdentity();
 app.MapAccess();
 app.MapCatalog();
+app.MapPeople();
 
 var bootstrap = Array.IndexOf(args, "--bootstrap-admin");
 if (bootstrap >= 0)

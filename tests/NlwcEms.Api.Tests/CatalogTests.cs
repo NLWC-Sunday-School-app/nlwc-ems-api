@@ -2,47 +2,17 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Dapper;
-using OtpNet;
+using Staff = NlwcEms.Api.Tests.Harness.Session;
 
 namespace NlwcEms.Api.Tests;
 
 [Collection("app")]
 public sealed class CatalogTests(TestApp app)
 {
-    private const string Origin = "http://localhost:3000";
-    private const string Password = "correct horse battery";
-
-    private sealed record Staff(Guid AccountId, Dictionary<string, string> Headers);
-
-    private Task<HttpResponseMessage> Send(HttpMethod m, string url, Dictionary<string, string>? h = null, object? body = null)
-    {
-        var r = new HttpRequestMessage(m, url);
-        if (body is not null) r.Content = JsonContent.Create(body);
-        r.Headers.Add("Origin", Origin);
-        foreach (var (k, v) in h ?? []) r.Headers.TryAddWithoutValidation(k, v);
-        return app.Client.SendAsync(r);
-    }
-
-    private static async Task<JsonElement> Json(HttpResponseMessage r) => await r.Content.ReadFromJsonAsync<JsonElement>();
-    private static string Cookie(HttpResponseMessage r, string n) => r.Headers.GetValues("Set-Cookie").First(c => c.StartsWith(n + "=")).Split(';')[0][(n.Length + 1)..];
-
-    /// <summary>A signed-in, MFA-verified staff account holding the given roles church-wide.</summary>
-    private async Task<Staff> StaffWith(params string[] roles)
-    {
-        var email = $"s-{Guid.NewGuid():N}@example.com";
-        await Send(HttpMethod.Post, "/v1/auth/signup", null, new { email, password = Password, givenName = "S", familyName = "T" });
-        var login = await Send(HttpMethod.Post, "/v1/auth/login", null, new { email, password = Password, surface = "admin" });
-        var cookie = Cookie(login, "nlwc_session"); var csrf = Cookie(login, "nlwc_csrf");
-        var h = new Dictionary<string, string> { ["Cookie"] = $"nlwc_session={cookie}; nlwc_csrf={csrf}", ["X-CSRF-Token"] = csrf };
-        await using var c = await app.Db.OpenConnectionAsync();
-        var id = await c.ExecuteScalarAsync<Guid>("SELECT id FROM account WHERE email = @email", new { email });
-        foreach (var role in roles)
-            await c.ExecuteAsync("INSERT INTO role_grant(id, account_id, role_id, granted_by, reason) SELECT gen_random_uuid(), @id, id, @id, 'test' FROM role WHERE key = @role", new { id, role });
-        var enrol = await Json(await Send(HttpMethod.Post, "/v1/auth/mfa/enroll", h, new { }));
-        var secret = System.Web.HttpUtility.ParseQueryString(new Uri(enrol.GetProperty("otpauthUri").GetString()!).Query)["secret"]!;
-        await Send(HttpMethod.Post, "/v1/auth/mfa/verify", h, new { code = new Totp(Base32Encoding.ToBytes(secret)).ComputeTotp() });
-        return new Staff(id, h);
-    }
+    private readonly Harness h = new(app);
+    private Task<HttpResponseMessage> Send(HttpMethod m, string url, Dictionary<string, string>? hd = null, object? body = null) => h.Send(m, url, hd, body);
+    private static Task<JsonElement> Json(HttpResponseMessage r) => Harness.Json(r);
+    private Task<Staff> StaffWith(params string[] roles) => h.StaffWith(roles);
 
     private static object NewEdition(string tag) => new
     {

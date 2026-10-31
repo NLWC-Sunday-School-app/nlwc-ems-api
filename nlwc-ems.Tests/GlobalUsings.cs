@@ -1,0 +1,9 @@
+global using FluentAssertions;
+global using Moq;
+global using nlwc.ems.Base.Core;
+global using nlwc.ems.Base.Core.Exceptions;
+global using nlwc.ems.Base.Services;
+global using nlwc.ems.Base.Services.Interfaces;
+global using nlwc.ems.Core.Enums;
+global using nlwc.ems.Data;
+global using nlwc.ems.Services.Interfaces;

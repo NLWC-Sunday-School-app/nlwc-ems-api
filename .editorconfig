@@ -1,0 +1,4 @@
+[*.cs]
+
+# CS9107: a primary-constructor parameter is captured and also passed to the base constructor (the DAO/service convention).
+dotnet_diagnostic.CS9107.severity = silent

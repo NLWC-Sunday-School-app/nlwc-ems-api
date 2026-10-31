@@ -4,7 +4,7 @@
 **Status:** Draft v0.1 for review, 31 Oct 2026 · **Hard date:** Bible Bootcamp, Mon 21 – Wed 23 Dec 2026 (51 days)
 **Inputs:** BRD v3.1, EGFM Reuse & Gap Analysis v1.1, Pricing Handoff v3.1, [FRONTEND_DESIGN.md](../design/FRONTEND_DESIGN.md), [DESIGN_SYSTEM.md](../design/DESIGN_SYSTEM.md), the HTML prototypes in `documentation/design/` (portal, admin, design-system page, email template), all reviewed in full
 
-> **Update 31 Oct 2026:** the API is **ASP.NET Core (.NET 10)**, not NestJS (ADR-0001). Repos are separate per app (`nlwc-ems-api`, `nlwc-ems-web`, `nlwc-ems-admin`, `nlwc-ems-checkin`), with shared UI/domain packages inside `nlwc-ems-api/shared`. Read sections 4.2, 4.3 and 5 with that in mind: NestJS becomes ASP.NET Core, Zod/OpenAPI becomes OpenAPI-first, Vitest becomes xUnit, pg-boss becomes an outbox plus a hosted worker.
+> **Update 31 Oct 2026:** the API is **ASP.NET Core (.NET 10)**, not NestJS (ADR-0001). Repos are separate per app (`nlwc-ems-api`, `nlwc-ems-web`, `nlwc-ems-admin`, `nlwc-ems-checkin`), with shared UI/domain packages inside `nlwc-ems-api/shared`. The API is built in the clusterv2 service architecture on EF Core (ADR-0008): responses use an `ApiResponse` envelope with a machine-readable `code`, not problem+json; migrations are EF-generated. Read sections 4.2, 4.3 and 5 with that in mind: NestJS becomes ASP.NET Core, Zod/OpenAPI becomes OpenAPI-first, Vitest becomes xUnit, pg-boss becomes an outbox plus a hosted worker.
 
 > Facts here come from those documents. Anything I am recommending rather than reading from them is marked **Recommendation**. Anything that needs a decision from you or NLWC is in section 2, and referenced as **Q#** in the text.
 
@@ -135,7 +135,7 @@ Where I have a default I will proceed on it, and I'll change it if you disagree.
 | Language | **C# / .NET 10** for the API, TypeScript for the three frontends | One language across three apps, shared contracts and types, fastest path for a small team in 51 days. If Q2 says the team is .NET-strong and EGFM reuse is cleared, swap the API to .NET 10; every other section still applies. |
 | API | **NestJS** (modules map to bounded contexts) on Node LTS; **Zod** schemas for validation; OpenAPI generated from them | Enforces module boundaries; generated typed client for both frontends. |
 | Database | **PostgreSQL 16** | Needed for the invariants the BRD demands: partial unique indexes (one active registration per person per edition), **exclusion constraints** on date ranges (no two active assignments for one bed on one day), transactional row locks for holds, JSONB for form responses. MySQL (EGFM) cannot enforce the bed/date rule declaratively. |
-| ORM / SQL | **Drizzle** or **Kysely** with hand-written migrations | Explicit SQL for constraints and transactions; no hidden lazy loading. |
+| ORM / SQL | **EF Core** (Npgsql) with EF-generated migrations, raw SQL only for triggers | Explicit SQL for constraints and transactions; no hidden lazy loading. |
 | Jobs | **pg-boss** (Postgres-backed queue) + transactional **outbox** | Durable, multi-replica safe, no extra infrastructure. Replaces EGFM's in-process 5-second loop. |
 | Web | **Next.js** (App Router), React, server components for public pages | SEO and fast first paint on public event pages; client components for wizards. |
 | Admin | **Vite + React SPA** with TanStack Router/Query | Auth-gated, no SEO need, simplest build; PWA shell for `/checkin` via Workbox. |

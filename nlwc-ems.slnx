@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="nlwc-ems.api/nlwc-ems.api.csproj" />
+  <Project Path="nlwc-ems.Base/nlwc-ems.Base.csproj" />
+  <Project Path="nlwc-ems.Tests/nlwc-ems.Tests.csproj" />
+</Solution>

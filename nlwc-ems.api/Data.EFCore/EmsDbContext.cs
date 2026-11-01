@@ -49,6 +49,8 @@ public class EmsDbContext(DbContextOptions<EmsDbContext> options) : DbContext(op
     public DbSet<RegistrationActor> RegistrationActors => Set<RegistrationActor>();
     public DbSet<RegistrationStatusHistory> RegistrationStatusHistories => Set<RegistrationStatusHistory>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
+    public DbSet<ConsentRecord> ConsentRecords => Set<ConsentRecord>();
+    public DbSet<HealthDisclosure> HealthDisclosures => Set<HealthDisclosure>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

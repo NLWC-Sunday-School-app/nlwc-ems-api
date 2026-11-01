@@ -52,6 +52,9 @@ public class EditionDao(EmsDbContext dbContext, IHttpContextAccessor httpContext
             .ExecuteUpdateAsync(set => set.SetProperty(c => c.Enabled, enabled).SetProperty(c => c.DateModified, now));
         return n > 0;
     }
+
+    public Task<bool> IsCapabilityEnabledAsync(Guid editionId, Capability capability)
+        => DbContext.Set<EditionCapability>().AsNoTracking().AnyAsync(c => c.EditionId == editionId && c.Capability == capability && c.Enabled);
 }
 
 public class RatePlanDao(EmsDbContext dbContext, IHttpContextAccessor httpContextAccessor, IAuditEventPublisher auditEventPublisher)

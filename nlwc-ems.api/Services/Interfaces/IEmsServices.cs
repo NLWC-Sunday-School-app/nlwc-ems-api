@@ -120,3 +120,43 @@ public interface IRatePlanService : IBaseService<RatePlan>
     Task ApproveAsync(Guid actorAccountId, Guid editionId, Guid versionId, string? note);
     Task PublishAsync(Guid actorAccountId, Guid editionId, Guid versionId, string? note);
 }
+
+// ---- Registration ----
+
+/// <summary>Owner-scoped: <c>callerPersonId</c> must be the registrant (or the person themself). Anything else answers 404.</summary>
+public interface IRegistrationService : IBaseService<Registration>
+{
+    Task<IReadOnlyList<RegistrationDto>> ListAsync(Guid callerPersonId);
+    Task<RegistrationDto> GetAsync(Guid callerPersonId, Guid registrationId);
+    Task<RegistrationDto> CreateAsync(Guid callerPersonId, CreateRegistrationRequest request);
+    Task SaveDraftAsync(Guid callerPersonId, Guid registrationId, SaveDraftRequest request);
+    Task<ReviewDto> ReviewAsync(Guid callerPersonId, Guid registrationId);
+    Task<ReviewDto> SubmitAsync(Guid callerPersonId, Guid registrationId);
+    Task CancelAsync(Guid callerPersonId, Guid registrationId, string reason);
+}
+
+public interface IConsentService : IBaseService<ConsentRecord>
+{
+    Task<IReadOnlyList<ConsentDto>> ListAsync(Guid callerPersonId, Guid registrationId);
+
+    /// <summary>Appends a new answer (consents are never edited in place).</summary>
+    Task<ConsentDto> RecordAsync(Guid callerPersonId, Guid registrationId, ConsentKind kind, bool accepted);
+}
+
+public interface IHealthService : IBaseService<HealthDisclosure>
+{
+    Task<HealthDto?> GetAsync(Guid callerPersonId, Guid registrationId);
+    Task SetAsync(Guid callerPersonId, Guid registrationId, HealthRequest request);
+}
+
+/// <summary>Staff views of registrations. The controller checks permissions against the registration's edition.</summary>
+public interface IStaffRegistrationService : IBaseService<Registration>
+{
+    Task<PagerEntity<StaffRegistrationDto>> ListAsync(Guid editionId, RegistrationState? state, int page, int max, bool includeHealthFlags);
+
+    /// <summary>The edition a registration belongs to, or 404.</summary>
+    Task<Guid> GetEditionIdAsync(Guid registrationId);
+
+    /// <summary>Writes the access-log row first, then returns the decrypted answers (null when none were given).</summary>
+    Task<HealthDto?> RevealHealthAsync(Guid actorAccountId, Guid registrationId, string reason);
+}

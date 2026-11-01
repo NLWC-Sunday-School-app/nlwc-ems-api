@@ -42,3 +42,6 @@ public enum GuardianRelationship { Parent, LegalGuardian, Grandparent, OtherRela
 
 /// <summary>What the public sees of an edition's price: only an explicit published rule makes it "free".</summary>
 public enum PriceState { Pending, Free, Amount }
+
+/// <summary>What a guardian or adult answers per registration. <see cref="Media"/> never blocks; the others are required.</summary>
+public enum ConsentKind { Terms, GuardianAuthorization, MedicalEmergency, Media }

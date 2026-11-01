@@ -524,6 +524,94 @@ namespace nlwc.ems.Data.EFCore.Migrations
                     b.ToTable("authorized_collectors", (string)null);
                 });
 
+            modelBuilder.Entity("nlwc.ems.Core.Models.ConsentRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("Accepted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("accepted");
+
+                    b.Property<Guid>("AnsweredBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("answered_by");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("CreatedByIp")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("created_by_ip");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_modified");
+
+                    b.Property<string>("DocumentId")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("document_id");
+
+                    b.Property<int>("DocumentVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("document_version");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("modified_by");
+
+                    b.Property<string>("ModifiedByIp")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("modified_by_ip");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("person_id");
+
+                    b.Property<Guid>("RegistrationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("registration_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_consent_records");
+
+                    b.HasIndex("AnsweredBy")
+                        .HasDatabaseName("ix_consent_records_answered_by");
+
+                    b.HasIndex("PersonId")
+                        .HasDatabaseName("ix_consent_records_person_id");
+
+                    b.HasIndex("RegistrationId", "Kind", "DateCreated")
+                        .HasDatabaseName("ix_consent_records_registration_id_kind_date_created");
+
+                    b.ToTable("consent_records", (string)null);
+                });
+
             modelBuilder.Entity("nlwc.ems.Core.Models.Device", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1263,6 +1351,70 @@ namespace nlwc.ems.Data.EFCore.Migrations
                         {
                             t.HasCheckConstraint("ck_guardian_authorizations_distinct", "guardian_person_id <> dependant_person_id");
                         });
+                });
+
+            modelBuilder.Entity("nlwc.ems.Core.Models.HealthDisclosure", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("CreatedByIp")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("created_by_ip");
+
+                    b.Property<byte[]>("DataEncrypted")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("data_encrypted");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_modified");
+
+                    b.Property<bool>("HasFlags")
+                        .HasColumnType("boolean")
+                        .HasColumnName("has_flags");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("modified_by");
+
+                    b.Property<string>("ModifiedByIp")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("modified_by_ip");
+
+                    b.Property<Guid>("RegistrationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("registration_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_health_disclosures");
+
+                    b.HasIndex("RegistrationId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_health_disclosures_registration_id");
+
+                    b.ToTable("health_disclosures", (string)null);
                 });
 
             modelBuilder.Entity("nlwc.ems.Core.Models.Invitation", b =>
@@ -3147,6 +3299,30 @@ namespace nlwc.ems.Data.EFCore.Migrations
                         .HasConstraintName("fk_authorized_collectors_people_child_person_id");
                 });
 
+            modelBuilder.Entity("nlwc.ems.Core.Models.ConsentRecord", b =>
+                {
+                    b.HasOne("nlwc.ems.Core.Models.Person", null)
+                        .WithMany()
+                        .HasForeignKey("AnsweredBy")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_consent_records_people_answered_by");
+
+                    b.HasOne("nlwc.ems.Core.Models.Person", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_consent_records_people_person_id");
+
+                    b.HasOne("nlwc.ems.Core.Models.Registration", null)
+                        .WithMany()
+                        .HasForeignKey("RegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_consent_records_registrations_registration_id");
+                });
+
             modelBuilder.Entity("nlwc.ems.Core.Models.Device", b =>
                 {
                     b.HasOne("nlwc.ems.Core.Models.Account", null)
@@ -3249,6 +3425,16 @@ namespace nlwc.ems.Data.EFCore.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_guardian_authorizations_people_guardian_person_id");
+                });
+
+            modelBuilder.Entity("nlwc.ems.Core.Models.HealthDisclosure", b =>
+                {
+                    b.HasOne("nlwc.ems.Core.Models.Registration", null)
+                        .WithMany()
+                        .HasForeignKey("RegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_health_disclosures_registrations_registration_id");
                 });
 
             modelBuilder.Entity("nlwc.ems.Core.Models.Invitation", b =>

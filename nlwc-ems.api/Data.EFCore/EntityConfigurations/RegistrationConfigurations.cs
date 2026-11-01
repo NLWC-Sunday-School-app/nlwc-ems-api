@@ -62,3 +62,28 @@ public class InvitationConfiguration : IEntityTypeConfiguration<Invitation>
         builder.HasOne<Person>().WithMany().HasForeignKey(i => i.InvitedBy);
     }
 }
+
+public class ConsentRecordConfiguration : IEntityTypeConfiguration<ConsentRecord>
+{
+    public void Configure(EntityTypeBuilder<ConsentRecord> builder)
+    {
+        builder.ConfigureBase("consent_records");
+        builder.Property(c => c.Kind).HasConversion<string>().HasMaxLength(30);
+        builder.Property(c => c.DocumentId).IsRequired().HasMaxLength(60);
+        builder.HasIndex(c => new { c.RegistrationId, c.Kind, c.DateCreated });
+        builder.HasOne<Registration>().WithMany().HasForeignKey(c => c.RegistrationId);
+        builder.HasOne<Person>().WithMany().HasForeignKey(c => c.PersonId);
+        builder.HasOne<Person>().WithMany().HasForeignKey(c => c.AnsweredBy);
+        // Append-only: a trigger in the migration refuses UPDATE and DELETE.
+    }
+}
+
+public class HealthDisclosureConfiguration : IEntityTypeConfiguration<HealthDisclosure>
+{
+    public void Configure(EntityTypeBuilder<HealthDisclosure> builder)
+    {
+        builder.ConfigureBase("health_disclosures");
+        builder.HasIndex(h => h.RegistrationId).IsUnique();
+        builder.HasOne<Registration>().WithMany().HasForeignKey(h => h.RegistrationId);
+    }
+}

@@ -132,6 +132,8 @@ public interface IEditionDao : IBaseDao<EventEdition>
 
     /// <summary>True when the edition has that capability row (every edition gets all of them at creation).</summary>
     Task<bool> SetCapabilityAsync(Guid editionId, Capability capability, bool enabled);
+
+    Task<bool> IsCapabilityEnabledAsync(Guid editionId, Capability capability);
 }
 
 public interface IRatePlanDao : IBaseDao<RatePlan>
@@ -152,3 +154,60 @@ public interface IRatePlanVersionDao : IBaseDao<RatePlanVersion>
     /// <summary>Retires the plan's published version (if any) and publishes this one, in one transaction.</summary>
     Task PublishAsync(RatePlanVersion version);
 }
+
+// ---- Registration ----
+public class StaffRegistrationRow
+{
+    public Guid Id { get; set; }
+    public string Reference { get; set; } = string.Empty;
+    public Guid PersonId { get; set; }
+    public string GivenName { get; set; } = string.Empty;
+    public string FamilyName { get; set; } = string.Empty;
+    public RegistrationState State { get; set; }
+    public ParticipationMode ParticipationMode { get; set; }
+    public string? AgeBand { get; set; }
+    public bool HasHealthFlags { get; set; }
+    public DateTime DateCreated { get; set; }
+}
+
+public interface IRegistrationDao : IBaseDao<Registration>
+{
+    /// <summary>Registrations the person is an actor on (as registrant or beneficiary), newest first.</summary>
+    Task<List<Registration>> RetrieveForActorAsync(Guid personId);
+
+    /// <summary>The registration if the person is its registrant or beneficiary; null otherwise (so it answers 404).</summary>
+    Task<Registration?> RetrieveForActorAsync(Guid personId, Guid registrationId);
+
+    /// <summary>The person's non-cancelled registration for the edition, if any.</summary>
+    Task<Registration?> RetrieveActiveAsync(Guid personId, Guid editionId);
+
+    /// <summary>Takes the next reference from the edition's counter, then inserts the registration, its actors and its first
+    /// history row, in one transaction. False when the one-active-registration index refuses it.</summary>
+    Task<bool> InsertNewAsync(Registration registration, string editionCode, IReadOnlyList<RegistrationActor> actors);
+
+    /// <summary>One edition's registrations for the staff queue, newest first. Health is never read here, only whether flags exist.</summary>
+    Task<PagerEntity<StaffRegistrationRow>> RetrieveStaffPagedAsync(Guid editionId, RegistrationState? state, int page, int max);
+
+    /// <summary>Updates the registration and appends the history row, in one transaction.</summary>
+    Task TransitionAsync(Registration registration, RegistrationState from, string? reason, Guid actorPersonId);
+}
+
+public interface IConsentRecordDao : IBaseDao<ConsentRecord>
+{
+    /// <summary>The latest answer per kind.</summary>
+    Task<List<ConsentRecord>> RetrieveCurrentAsync(Guid registrationId);
+
+    /// <summary>Latest approved wording for the document, or null.</summary>
+    Task<PolicyVersion?> RetrieveApprovedPolicyAsync(string documentId);
+}
+
+public interface IHealthDisclosureDao : IBaseDao<HealthDisclosure>
+{
+    Task<HealthDisclosure?> RetrieveForRegistrationAsync(Guid registrationId);
+
+    /// <summary>One disclosure per registration: replaces any existing, in one transaction.</summary>
+    Task ReplaceAsync(HealthDisclosure disclosure);
+}
+
+/// <summary>Reads of restricted data. Append-only; written before the data is returned.</summary>
+public interface IAccessLogDao : IBaseDao<AccessLog>;

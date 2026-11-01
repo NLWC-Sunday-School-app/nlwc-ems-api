@@ -4,7 +4,7 @@
 **Status:** Draft v0.1 for review, 31 Oct 2026 · **Hard date:** Bible Bootcamp, Mon 21 – Wed 23 Dec 2026 (51 days)
 **Inputs:** BRD v3.1, EGFM Reuse & Gap Analysis v1.1, Pricing Handoff v3.1, [FRONTEND_DESIGN.md](../design/FRONTEND_DESIGN.md), [DESIGN_SYSTEM.md](../design/DESIGN_SYSTEM.md), the HTML prototypes in `documentation/design/` (portal, admin, design-system page, email template), all reviewed in full
 
-> **Update 31 Oct 2026:** the API is **ASP.NET Core (.NET 10)**, not NestJS (ADR-0001). Repos are separate per app (`nlwc-ems-api`, `nlwc-ems-web`, `nlwc-ems-admin`, `nlwc-ems-checkin`), with shared UI/domain packages inside `nlwc-ems-api/shared`. The API is built in the clusterv2 service architecture on EF Core (ADR-0008): responses use an `ApiResponse` envelope with a machine-readable `code`, not problem+json; migrations are EF-generated. Read sections 4.2, 4.3 and 5 with that in mind: NestJS becomes ASP.NET Core, Zod/OpenAPI becomes OpenAPI-first, Vitest becomes xUnit, pg-boss becomes an outbox plus a hosted worker.
+> **Update 31 Oct 2026:** the API is **ASP.NET Core (.NET 10)** (ADR-0001). Repos are separate per app (`nlwc-ems-api`, `nlwc-ems-web`, `nlwc-ems-admin`, `nlwc-ems-checkin`), with shared UI/domain packages inside `nlwc-ems-api/shared`. The API is built in the clusterv2 service architecture on EF Core (ADR-0008): responses use an `ApiResponse` envelope with a machine-readable `code`, not problem+json; migrations are EF-generated.
 
 > Facts here come from those documents. Anything I am recommending rather than reading from them is marked **Recommendation**. Anything that needs a decision from you or NLWC is in section 2, and referenced as **Q#** in the text.
 
@@ -132,11 +132,11 @@ Where I have a default I will proceed on it, and I'll change it if you disagree.
 
 | Layer | Choice | Reasoning |
 |---|---|---|
-| Language | **C# / .NET 10** for the API, TypeScript for the three frontends | One language across three apps, shared contracts and types, fastest path for a small team in 51 days. If Q2 says the team is .NET-strong and EGFM reuse is cleared, swap the API to .NET 10; every other section still applies. |
-| API | **NestJS** (modules map to bounded contexts) on Node LTS; **Zod** schemas for validation; OpenAPI generated from them | Enforces module boundaries; generated typed client for both frontends. |
+| Language | **C# / .NET 10** for the API, TypeScript for the three frontends | The product owner's choice for the backend; the frontends are React, so they share one language and the shared UI package. |
+| API | **ASP.NET Core** in the clusterv2 service architecture (ADR-0008): DAO, service and controller layers per entity, DataAnnotations on DTOs, OpenAPI from Swashbuckle | Familiar to the team; one pattern for every entity; typed clients for the frontends are generated from the OpenAPI document. |
 | Database | **PostgreSQL 16** | Needed for the invariants the BRD demands: partial unique indexes (one active registration per person per edition), **exclusion constraints** on date ranges (no two active assignments for one bed on one day), transactional row locks for holds, JSONB for form responses. MySQL (EGFM) cannot enforce the bed/date rule declaratively. |
 | ORM / SQL | **EF Core** (Npgsql) with EF-generated migrations, raw SQL only for triggers | Explicit SQL for constraints and transactions; no hidden lazy loading. |
-| Jobs | **pg-boss** (Postgres-backed queue) + transactional **outbox** | Durable, multi-replica safe, no extra infrastructure. Replaces EGFM's in-process 5-second loop. |
+| Jobs | Postgres-backed transactional **outbox** with a hosted `BackgroundService` worker (Quartz.NET if scheduling needs grow) | Durable, multi-replica safe, no extra infrastructure. Replaces EGFM's in-process 5-second loop. |
 | Web | **Next.js** (App Router), React, server components for public pages | SEO and fast first paint on public event pages; client components for wizards. |
 | Admin | **Vite + React SPA** with TanStack Router/Query | Auth-gated, no SEO need, simplest build; PWA shell for `/checkin` via Workbox. |
 | UI | Shared **`@nlwc/ui`** package built from the existing `tokens.css` and `components.css` | The prototypes already define tokens, status badges, price states. Do not redesign in code. |
@@ -145,20 +145,20 @@ Where I have a default I will proceed on it, and I'll change it if you disagree.
 
 ### 4.3 Repositories
 
-Three deployables, as you asked, plus one shared package:
+One repository per app, as agreed. Shared packages live inside the API repo (ADR-0002):
 
 ```
-nlwc-ems-api/      NestJS app, migrations, worker entry point
-nlwc-ems-web/      Next.js app
-nlwc-ems-admin/    Vite SPA (+ /checkin PWA)
-nlwc-ems-shared/   (npm workspace or private package)
-   ├─ contracts/   Zod schemas + generated OpenAPI client
-   ├─ ui/          tokens, components (from documentation/design)
-   └─ domain/      pure functions used by both sides for display only
-                   (age band, price-state formatting). Never authoritative.
+nlwc-ems-api/       ASP.NET Core API (nlwc-ems.api), shared library (nlwc-ems.Base), tests, documentation
+   └─ shared/
+      ├─ ui/         tokens, components (from documentation/design), installed as @nlwc/ui
+      └─ domain/     pure functions used by the frontends for display only
+                     (age band, price-state formatting). Never authoritative.
+nlwc-ems-web/       Next.js app
+nlwc-ems-admin/     Vite SPA
+nlwc-ems-checkin/   Vite PWA (ADR-0004)
 ```
 
-Recommendation: a single monorepo (pnpm workspaces + Turborepo) with the three apps and shared package as folders. It keeps contracts in lockstep and CI simple. Three separate git repos remain possible if NLWC prefers; say so under Q7.
+The frontends install the shared packages as git dependencies on `nlwc-ems-api`. There are no shared request contracts: the API publishes OpenAPI and each frontend generates its client from it.
 
 ### 4.4 Environments
 
@@ -419,8 +419,8 @@ Conventions: UUIDv7 primary keys, `created_at`/`updated_at`/`created_by`, soft s
 
 | Layer | What | Tooling |
 |---|---|---|
-| Unit | Pure rules: age on reference date, eligibility, rate resolution, state transitions | Vitest |
-| Integration | API + real Postgres per test run (containers), migrations applied | Vitest + Testcontainers |
+| Unit | Pure rules: age on reference date, eligibility, rate resolution, state transitions | xUnit, Moq, FluentAssertions |
+| Integration | API + real Postgres per test run (containers), migrations applied | xUnit, `WebApplicationFactory`, Testcontainers |
 | **Concurrency** | Two buyers for last bed; webhook replayed 5×; simultaneous checkout of the same child | Dedicated parallel tests, run in CI nightly |
 | **Authorisation matrix** | Every endpoint × role, generated from the permission matrix | Generated tests |
 | Contract | OpenAPI diff in CI, breaking changes blocked | oasdiff |
@@ -597,7 +597,7 @@ Hypercare: daily triage 24–31 Dec; a retrospective and a "what we would change
 
 ## 13. ADRs to write in week 0
 
-1. Stack (TypeScript, NestJS, Next.js, Vite, Postgres) and the EGFM stance (Q2)
+1. Stack (ASP.NET Core, Next.js, Vite, Postgres) and the EGFM stance (Q2)
 2. Monorepo vs three repos
 3. Auth model: sessions, MFA, Google, phone OTP (Q5)
 4. Where the check-in PWA lives (Q6)

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace nlwc.ems.Core.Models;
 
 public class Registration : BaseEntity
@@ -44,4 +46,36 @@ public class Invitation : BaseEntity
     public string Email { get; set; } = string.Empty;
     public DateTime ExpiresAt { get; set; }
     public DateTime? AcceptedAt { get; set; }
+}
+
+/// <summary>Append-only. A changed answer is a new row; the latest per (registration, kind) is the current one.</summary>
+public class ConsentRecord : BaseEntity
+{
+    public Guid RegistrationId { get; set; }
+
+    /// <summary>The person the consent is about (the child, or the adult themself).</summary>
+    public Guid PersonId { get; set; }
+
+    public ConsentKind Kind { get; set; }
+    public bool Accepted { get; set; }
+
+    /// <summary>e.g. <c>BB26-media</c>. Wording is versioned content; version 0 means no approved wording existed yet.</summary>
+    public string DocumentId { get; set; } = string.Empty;
+
+    public int DocumentVersion { get; set; }
+
+    /// <summary>Who answered: the guardian for a child, or the person themself.</summary>
+    public Guid AnsweredBy { get; set; }
+}
+
+/// <summary>Restricted. The answers are encrypted at rest; <see cref="HasFlags"/> is the only part broad roles may see.</summary>
+public class HealthDisclosure : BaseEntity
+{
+    public Guid RegistrationId { get; set; }
+
+    [JsonIgnore, TrailableIgnore]
+    public byte[] DataEncrypted { get; set; } = [];
+
+    /// <summary>True when any condition, allergy or note was given.</summary>
+    public bool HasFlags { get; set; }
 }

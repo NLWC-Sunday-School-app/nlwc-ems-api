@@ -5,10 +5,15 @@ namespace nlwc.ems.Data;
 // ---- Identity ----
 public interface IPersonDao : IBaseDao<Person>;
 
+public record AccountWithPerson(Account Account, Person Person);
+
 public interface IAccountDao : IBaseDao<Account>
 {
     Task<Account?> RetrieveByEmailAsync(string email);
     Task<bool> EmailExistsAsync(string email);
+
+    /// <summary>The account with its person's name, for staff pickers.</summary>
+    Task<AccountWithPerson?> RetrieveWithPersonByEmailAsync(string email);
 
     /// <summary>The person, their account, the unverified email contact and its verification token, in one transaction.</summary>
     Task InsertWithPersonAsync(Person person, Account account, VerifiedContact contact, EmailVerification verification);
@@ -57,6 +62,8 @@ public interface IMfaFactorDao : IBaseDao<MfaFactor>
     Task ReplacePendingAsync(MfaFactor factor);
 
     Task ConfirmAsync(Guid factorId);
+
+    Task<bool> HasConfirmedAsync(Guid accountId);
 }
 
 // ---- Access and audit ----
@@ -150,6 +157,9 @@ public interface IRatePlanVersionDao : IBaseDao<RatePlanVersion>
 
     /// <summary>The version if it belongs to the edition's plan, with its rules.</summary>
     Task<RatePlanVersion?> RetrieveForEditionAsync(Guid editionId, Guid versionId);
+
+    /// <summary>Every version of the edition's plan with its rules, newest first. Empty when the edition has no plan.</summary>
+    Task<List<RatePlanVersion>> RetrieveAllForEditionAsync(Guid editionId);
 
     /// <summary>Retires the plan's published version (if any) and publishes this one, in one transaction.</summary>
     Task PublishAsync(RatePlanVersion version);

@@ -10,6 +10,9 @@ public class SecurityOptions
     /// <summary>Marks the session cookie Secure. Only turn off for plain-http local development and tests.</summary>
     public bool CookieSecure { get; set; } = true;
 
+    public static bool IsValidMasterKey(string? key)
+        => key is { Length: 64 } && key.All(Uri.IsHexDigit);
+
     public byte[] MasterKeyBytes()
     {
         var key = Convert.FromHexString(MasterKey);

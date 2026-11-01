@@ -37,7 +37,11 @@ public interface ISessionService : IBaseService<AuthSession>
 public interface IMfaService : IBaseService<MfaFactor>
 {
     /// <summary>Starts (or restarts) TOTP enrolment and returns the <c>otpauth://</c> URI for the authenticator app.</summary>
+    /// <summary>Refused with <c>mfa_already_enrolled</c> once a factor is confirmed: replacing it would let a hijacked session
+    /// take over the second factor. A lost device is reset by an administrator.</summary>
     Task<string> EnrollAsync(Guid accountId);
+
+    Task<bool> IsEnrolledAsync(Guid accountId);
 
     /// <summary>Confirms a pending factor, or step-up verifies an existing one, and marks the session MFA-verified.</summary>
     Task VerifyAsync(Guid accountId, Guid sessionId, string code);
@@ -58,6 +62,9 @@ public interface IRoleGrantService : IBaseService<RoleGrant>
 
     Task<RoleGrant> GrantAsync(Guid actorAccountId, GrantRoleRequest request);
     Task RevokeAsync(Guid actorAccountId, Guid grantId, string reason);
+
+    /// <summary>Finds an account by exact email so a grant can name it. Null when there is none.</summary>
+    Task<StaffLookupDto?> LookupAsync(string email);
 }
 
 public interface IAuditService
@@ -107,6 +114,10 @@ public interface IEditionService : IBaseService<EventEdition>
     Task<IReadOnlyList<PublicEditionDto>> ListPublicAsync();
     Task<PublicEditionDto?> GetPublicAsync(string slug);
 
+    /// <summary>The editions a staff member can work in: all of them with a church-wide grant, otherwise those named by an
+    /// edition-scoped grant (<paramref name="scopedEditionIds"/>).</summary>
+    Task<IReadOnlyList<EditionSummaryDto>> ListForStaffAsync(bool churchWide, IReadOnlyCollection<Guid> scopedEditionIds);
+
     Task SetCapabilityAsync(Guid editionId, Capability capability, bool enabled, string? reason);
     Task TransitionAsync(Guid editionId, EditionStage to, string reason);
 }
@@ -116,6 +127,7 @@ public interface IRatePlanService : IBaseService<RatePlan>
     /// <summary>"free" only from an explicit published <c>Free</c> rule set; "pending" when nothing is published.</summary>
     Task<PriceState> GetPriceStateAsync(Guid editionId);
 
+    Task<IReadOnlyList<RateVersionDto>> ListVersionsAsync(Guid editionId);
     Task<Guid> DraftAsync(Guid actorAccountId, Guid editionId, string? note, IReadOnlyList<RateRuleInput> rules);
     Task ApproveAsync(Guid actorAccountId, Guid editionId, Guid versionId, string? note);
     Task PublishAsync(Guid actorAccountId, Guid editionId, Guid versionId, string? note);

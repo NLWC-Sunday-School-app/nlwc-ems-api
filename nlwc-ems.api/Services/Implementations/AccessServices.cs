@@ -10,7 +10,7 @@ public class RoleService(IRoleDao roleDao) : BaseService<Role>(roleDao), IRoleSe
     public Task<Role?> RetrieveByKeyAsync(string key) => roleDao.RetrieveByKeyAsync(key);
 }
 
-public class RoleGrantService(IRoleGrantDao grantDao, IRoleDao roleDao, IAuditEventPublisher auditPublisher)
+public class RoleGrantService(IRoleGrantDao grantDao, IRoleDao roleDao, IAccountDao accountDao, IAuditEventPublisher auditPublisher)
     : BaseService<RoleGrant>(grantDao), IRoleGrantService
 {
     public async Task<IReadOnlyList<string>> GetPermissionCodesAsync(Guid accountId)
@@ -22,6 +22,12 @@ public class RoleGrantService(IRoleGrantDao grantDao, IRoleDao roleDao, IAuditEv
                 .Select(code => g.EditionId is { } edition ? $"{code}@{edition}" : code))
             .Distinct()
             .ToList();
+    }
+
+    public async Task<StaffLookupDto?> LookupAsync(string email)
+    {
+        if (await accountDao.RetrieveWithPersonByEmailAsync(email.Trim()) is not { } found) return null;
+        return new StaffLookupDto { AccountId = found.Account.Id, Email = found.Account.Email, GivenName = found.Person.GivenName, FamilyName = found.Person.FamilyName };
     }
 
     public async Task<RoleGrant> GrantAsync(Guid actorAccountId, GrantRoleRequest request)

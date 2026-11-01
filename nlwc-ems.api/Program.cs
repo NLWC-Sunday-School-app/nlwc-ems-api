@@ -27,6 +27,9 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddEmsCors(builder.Configuration);
 builder.Services.AddSingleton(new OriginPolicy(builder.Configuration.GetAllowedOrigins()));
+// Checked before anything else (including migrations) so a wrong key stops the app with a clear message, not a 500 at first sign-up.
+if (!SecurityOptions.IsValidMasterKey(builder.Configuration[$"{SecurityOptions.SectionName}:MasterKey"]))
+    throw new InvalidOperationException("Security:MasterKey must be 64 hex characters (32 bytes). Generate one with: openssl rand -hex 32");
 builder.Services.Configure<SecurityOptions>(builder.Configuration.GetSection(SecurityOptions.SectionName));
 
 // Everything under these namespaces is registered against the interfaces it implements.

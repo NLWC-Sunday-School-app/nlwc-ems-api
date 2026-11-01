@@ -39,3 +39,11 @@ public class AccessMeDto
     public bool MfaVerified { get; set; }
     public IReadOnlyList<PermissionDto> Permissions { get; set; } = [];
 }
+
+public class StaffLookupDto
+{
+    public Guid AccountId { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string GivenName { get; set; } = string.Empty;
+    public string FamilyName { get; set; } = string.Empty;
+}

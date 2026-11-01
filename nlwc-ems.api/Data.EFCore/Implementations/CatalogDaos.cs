@@ -106,6 +106,13 @@ public class RatePlanVersionDao(EmsDbContext dbContext, IHttpContextAccessor htt
             where v.Id == versionId && p.EditionId == editionId
             select v).FirstOrDefaultAsync();
 
+    public Task<List<RatePlanVersion>> RetrieveAllForEditionAsync(Guid editionId)
+        => (from v in Query().Include(v => v.Rules)
+            join p in DbContext.Set<RatePlan>().AsNoTracking() on v.PlanId equals p.Id
+            where p.EditionId == editionId
+            orderby v.Version descending
+            select v).ToListAsync();
+
     public Task PublishAsync(RatePlanVersion version)
         => InTransactionAsync(async () =>
         {

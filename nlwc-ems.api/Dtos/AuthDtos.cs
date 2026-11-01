@@ -57,6 +57,9 @@ public class MeDto
     public string Surface { get; set; } = string.Empty;
     public bool MfaVerified { get; set; }
     public bool EmailVerified { get; set; }
+
+    /// <summary>True once an authenticator is confirmed. The client should ask for a code, not offer set-up.</summary>
+    public bool MfaEnrolled { get; set; }
 }
 
 public class MfaEnrollmentDto

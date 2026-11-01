@@ -12,6 +12,15 @@ public class AccountDao(EmsDbContext dbContext, IHttpContextAccessor httpContext
 {
     public Task<Account?> RetrieveByEmailAsync(string email) => Query().FirstOrDefaultAsync(a => a.Email == email);
 
+    public async Task<AccountWithPerson?> RetrieveWithPersonByEmailAsync(string email)
+    {
+        var found = await (from a in Query()
+                           join p in DbContext.Set<Person>().AsNoTracking() on a.PersonId equals p.Id
+                           where a.Email == email
+                           select new { Account = a, Person = p }).FirstOrDefaultAsync();
+        return found is null ? null : new AccountWithPerson(found.Account, found.Person);
+    }
+
     public Task<bool> EmailExistsAsync(string email) => DbContext.Set<Account>().AnyAsync(a => a.Email == email);
 
     public Task InsertWithPersonAsync(Person person, Account account, VerifiedContact contact, EmailVerification verification)
@@ -123,6 +132,8 @@ public class MfaFactorDao(EmsDbContext dbContext, IHttpContextAccessor httpConte
             await DbContext.Set<MfaFactor>().Where(f => f.AccountId == factor.AccountId && f.ConfirmedAt == null).ExecuteDeleteAsync();
             await InsertAsync(factor);
         });
+
+    public Task<bool> HasConfirmedAsync(Guid accountId) => Query().AnyAsync(f => f.AccountId == accountId && f.ConfirmedAt != null);
 
     public Task ConfirmAsync(Guid factorId)
     {

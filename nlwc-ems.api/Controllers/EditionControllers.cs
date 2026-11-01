@@ -51,6 +51,22 @@ public class EditionController(IEditionService editionService, IRatePlanService 
         return Task.CompletedTask;
     }
 
+    /// <summary>The editions the caller can work in, so a role that cannot list every edition still finds its own. A church-wide
+    /// grant covers all editions; an edition-scoped grant only that one.</summary>
+    [HttpGet("mine")]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<EditionSummaryDto>>>> Mine()
+    {
+        var codes = User.FindAll(EmsClaimTypes.Permissions).Select(c => c.Value).ToList();
+        if (codes.Count == 0)
+            return StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("You do not have permission to view this.", "forbidden"));
+        if (!User.IsMfaVerified())
+            return StatusCode(StatusCodes.Status403Forbidden, ApiResponse.Fail("Complete multi-factor sign-in first.", "mfa_required"));
+
+        var scoped = codes.Where(c => c.Contains('@')).Select(c => Guid.Parse(c[(c.IndexOf('@') + 1)..])).Distinct().ToList();
+        var churchWide = codes.Any(c => !c.Contains('@'));
+        return Ok(ApiResponse<IReadOnlyList<EditionSummaryDto>>.Ok(await Service.ListForStaffAsync(churchWide, scoped)));
+    }
+
     /// <summary>Switches a capability on or off for this edition. Off removes its screens and API for the edition.</summary>
     [HttpPut("{editionId:guid}/capability/{capability}")]
     [RequirePermission(EmsPermissions.Config.Edit)]
@@ -68,6 +84,12 @@ public class EditionController(IEditionService editionService, IRatePlanService 
         await Service.TransitionAsync(editionId, request.To!.Value, request.Reason);
         return Ok(ApiResponse.Ok("Stage updated."));
     }
+
+    /// <summary>Every version of the edition's rates, newest first, with its rules and who drafted and approved it.</summary>
+    [HttpGet("{editionId:guid}/rates")]
+    [RequirePermission(EmsPermissions.Pricing.Draft)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<RateVersionDto>>>> ListRates(Guid editionId)
+        => Ok(ApiResponse<IReadOnlyList<RateVersionDto>>.Ok(await ratePlanService.ListVersionsAsync(editionId)));
 
     /// <summary>Drafts a new version of the edition's rates. Free is an explicit <c>Free</c> rule, never a missing one.</summary>
     [HttpPost("{editionId:guid}/rates")]

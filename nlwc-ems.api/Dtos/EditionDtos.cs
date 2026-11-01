@@ -170,3 +170,27 @@ public class PublicEditionDto
     public PublicPriceDto Price { get; set; } = new();
     public IReadOnlyList<PublicDayDto> Days { get; set; } = [];
 }
+
+public class EditionSummaryDto
+{
+    public Guid Id { get; set; }
+    public string Slug { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public DateOnly StartsOn { get; set; }
+    public DateOnly EndsOn { get; set; }
+    public EditionStage? Stage { get; set; }
+}
+
+public class RateVersionDto
+{
+    public Guid VersionId { get; set; }
+    public int Version { get; set; }
+    public RateVersionState State { get; set; }
+    public Guid DraftedBy { get; set; }
+    public Guid? ApprovedBy { get; set; }
+    public DateTime? ApprovedAt { get; set; }
+    public DateTime? PublishedAt { get; set; }
+    public string? Note { get; set; }
+    public List<RateRuleInput> Rules { get; set; } = [];
+}

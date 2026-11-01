@@ -117,10 +117,14 @@ public class MfaService(IMfaFactorDao factorDao, IAccountDao accountDao, ISessio
     public async Task<string> EnrollAsync(Guid accountId)
     {
         var account = await accountDao.RetrieveByIdAsync(accountId) ?? throw new NotFoundException("Account not found.");
+        if (await factorDao.HasConfirmedAsync(accountId))
+            throw new AppException("An authenticator is already set up. Ask an administrator to reset it if the device is lost.", isConflict: true, code: "mfa_already_enrolled");
         var secret = KeyGeneration.GenerateRandomKey(20);
         await factorDao.ReplacePendingAsync(new MfaFactor { Id = Guid.NewGuid(), AccountId = accountId, SecretEncrypted = encryptor.Encrypt(secret) });
         return new OtpUri(OtpType.Totp, secret, account.Email, "NLWC EMS").ToString();
     }
+
+    public Task<bool> IsEnrolledAsync(Guid accountId) => factorDao.HasConfirmedAsync(accountId);
 
     public async Task VerifyAsync(Guid accountId, Guid sessionId, string code)
     {

@@ -59,6 +59,14 @@ public class RoleGrantController(IRoleGrantService grantService) : BaseApiContro
     [NonAction]
     public override Task<ActionResult<ApiResponse<RoleGrant>>> Disable(Guid id) => base.Disable(id);
 
+    /// <summary>Finds an account by exact email so a grant can name it. Needs the same permission as granting.</summary>
+    [HttpGet("lookup")]
+    [RequirePermission(EmsPermissions.Staff.Edit)]
+    public async Task<ActionResult<ApiResponse<StaffLookupDto>>> Lookup([FromQuery] string email)
+        => await Service.LookupAsync(email) is { } found
+            ? Ok(ApiResponse<StaffLookupDto>.Ok(found))
+            : NotFound(ApiResponse<StaffLookupDto>.Fail("No account with that email.", "account_not_found"));
+
     [HttpPost]
     [RequirePermission(EmsPermissions.Staff.Edit)]
     public async Task<ActionResult<ApiResponse<RoleGrant>>> Grant([FromBody] GrantRoleRequest request)

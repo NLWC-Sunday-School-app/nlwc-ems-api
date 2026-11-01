@@ -39,6 +39,15 @@ public class EditionService(IEditionDao editionDao, IRatePlanService ratePlanSer
             ? ServiceResponse.Fail<EventEdition>("The camp's minimum age can't exceed its maximum.")
             : ServiceResponse.Success(item));
 
+    public async Task<IReadOnlyList<EditionSummaryDto>> ListForStaffAsync(bool churchWide, IReadOnlyCollection<Guid> scopedEditionIds)
+    {
+        var editions = churchWide ? await editionDao.RetrieveAllAsync() : await editionDao.RetrieveByIdsAsync(scopedEditionIds);
+        return editions.OrderByDescending(e => e.StartsOn).Select(e => new EditionSummaryDto
+        {
+            Id = e.Id, Slug = e.Slug, Code = e.Code, Name = e.Name, StartsOn = e.StartsOn, EndsOn = e.EndsOn, Stage = e.Stage
+        }).ToList();
+    }
+
     public async Task<IReadOnlyList<PublicEditionDto>> ListPublicAsync()
     {
         var result = new List<PublicEditionDto>();
@@ -101,6 +110,18 @@ public class RatePlanService(IRatePlanDao ratePlanDao, IRatePlanVersionDao versi
     : BaseService<RatePlan>(ratePlanDao), IRatePlanService
 {
     public async Task<PriceState> GetPriceStateAsync(Guid editionId) => RateRules.StateOf(await ratePlanDao.RetrievePublishedKindsAsync(editionId));
+
+    public async Task<IReadOnlyList<RateVersionDto>> ListVersionsAsync(Guid editionId)
+        => (await versionDao.RetrieveAllForEditionAsync(editionId)).Select(v => new RateVersionDto
+        {
+            VersionId = v.Id, Version = v.Version, State = v.State, DraftedBy = v.DraftedBy, ApprovedBy = v.ApprovedBy, ApprovedAt = v.ApprovedAt,
+            PublishedAt = v.PublishedAt, Note = v.Note,
+            Rules = v.Rules.OrderBy(r => r.AgeMin).Select(r => new RateRuleInput
+            {
+                AgeMin = r.AgeMin, AgeMax = r.AgeMax, ParticipationMode = r.ParticipationMode, AccommodationCategory = r.AccommodationCategory,
+                Kind = r.Kind, AmountKobo = r.AmountKobo
+            }).ToList()
+        }).ToList();
 
     public async Task<Guid> DraftAsync(Guid actorAccountId, Guid editionId, string? note, IReadOnlyList<RateRuleInput> rules)
     {

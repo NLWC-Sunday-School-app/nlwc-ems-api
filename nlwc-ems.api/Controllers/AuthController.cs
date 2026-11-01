@@ -60,9 +60,10 @@ public class AuthController(IAccountService accountService, ISessionService sess
 
     [Authorize]
     [HttpGet("me")]
-    public ActionResult<ApiResponse<MeDto>> Me() => Ok(ApiResponse<MeDto>.Ok(new MeDto
+    public async Task<ActionResult<ApiResponse<MeDto>>> Me() => Ok(ApiResponse<MeDto>.Ok(new MeDto
     {
-        PersonId = User.GetPersonId(), Surface = User.GetSurface() ?? "web", MfaVerified = User.IsMfaVerified(), EmailVerified = User.IsEmailVerified()
+        PersonId = User.GetPersonId(), Surface = User.GetSurface() ?? "web", MfaVerified = User.IsMfaVerified(), EmailVerified = User.IsEmailVerified(),
+        MfaEnrolled = await mfaService.IsEnrolledAsync(User.GetAccountId())
     }));
 
     [Authorize]

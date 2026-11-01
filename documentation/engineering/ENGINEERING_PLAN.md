@@ -175,7 +175,7 @@ Each module owns its tables and exposes a service interface. Cross-module calls 
 | Module | Owns | Key rules (BRD ref) |
 |---|---|---|
 | **identity** | Person, Account, VerifiedContact, ClaimToken, Session, MFA | One stable Person ID; duplicates reviewed by a human, never auto-merged (PRO-02, PRO-01) |
-| **family** | PersonRelationship (spouse, guardian, dependant, collector), GuardianAuthorization | Dependants 0–12 are Persons; 13+ have their own profile; guardianship is separate from payment (PRO-03, PRO-04, PRO-05) |
+| **family** | PersonRelationship (spouse, guardian, dependant, collector), GuardianAuthorization | Dependants are guardian-managed minors (0–17, ADR-0009) and are Persons; people 13+ are independent attendees with their own registration and price; guardianship is separate from payment (PRO-03, PRO-04, PRO-05) |
 | **catalog** | Organization, EventTemplate, EventEdition, EventDay, Venue, EventPolicyVersion, FormDefinition, **EditionCapability**, edition lifecycle | Template ≠ edition; clone config only, never people (EVT-01 to EVT-03, AT-16). Capabilities gate screens **and** API per edition (5.11) |
 | **registration** | Registration (person × edition), RegistrationActor, StatusHistory, Invitation, Sponsor link | Partial unique index: one active registration per person per edition. Registrant ≠ beneficiary (REG-01 to REG-05) |
 | **consent** | ConsentDefinition(versioned), ConsentRecord, HealthDisclosure, MediaPreference | Per child, per event, versioned, actor and time recorded; media "no" never blocks registration; health data restricted (SEC-01, BB-06, AT-14) |

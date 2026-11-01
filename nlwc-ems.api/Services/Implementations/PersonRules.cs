@@ -5,8 +5,10 @@ namespace nlwc.ems.Services.Implementations;
 /// <summary>Pure rules for people and family data, kept out of the services so they can be tested on their own.</summary>
 public static partial class PersonRules
 {
-    /// <summary>Dependants are guardian-managed people with no account. 13 and over manage their own profile.</summary>
-    public const int MaxDependantAge = 12;
+    /// <summary>Dependants are guardian-managed minors with no account of their own: 0 to 17. A person aged 13 or over is still an
+    /// independent person with their own registration and price, but until they are 18 a guardian registers for them and gives
+    /// the consents (ADR-0009).</summary>
+    public const int MaxDependantAge = 17;
 
     /// <summary>Whole years on <paramref name="on"/>. A 29 February birthday counts as 28 February in a non-leap year
     /// (the <see cref="DateOnly.AddYears"/> convention), so a leap-day child is a year older one day earlier than under the

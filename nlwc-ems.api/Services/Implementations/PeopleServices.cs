@@ -66,7 +66,7 @@ public class DependantService(IGuardianAuthorizationDao guardianDao, IAuditEvent
     {
         var dob = PersonRules.ValidateDateOfBirth(request.DateOfBirth!.Value);
         if (PersonRules.AgeOn(dob, PersonRules.TodayLagos()) > PersonRules.MaxDependantAge)
-            throw new ValidationException(["Children aged 13 and over manage their own profile."], "too_old_for_dependant");
+            throw new ValidationException(["Only people under 18 can be added as a child. Adults manage their own profile."], "too_old_for_dependant");
 
         var dependant = new Person
         {

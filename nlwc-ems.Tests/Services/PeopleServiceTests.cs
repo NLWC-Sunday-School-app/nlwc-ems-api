@@ -35,9 +35,11 @@ public class PeopleServiceTests
     [Theory]
     [InlineData(0, true)]
     [InlineData(12, true)]
-    [InlineData(13, false)]
-    [InlineData(16, false)]
-    public async Task Only_children_up_to_twelve_can_be_dependants(int age, bool allowed)
+    [InlineData(13, true)]
+    [InlineData(17, true)]
+    [InlineData(18, false)]
+    [InlineData(30, false)]
+    public async Task Only_minors_up_to_seventeen_can_be_dependants(int age, bool allowed)
     {
         var act = () => Dependants().AddAsync(_guardian, new AddDependantRequest
         {

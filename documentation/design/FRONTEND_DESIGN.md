@@ -40,7 +40,7 @@ The ~10% that is deliberately different comes straight from the gap analysis:
 | 2 | Event page | Dates, modes, days, FAQ, price block (amount / Free / pending) | BB-01, PRICE-03 |
 | 3 | Log in, Sign up, Forgot password | Two separate pages, Google button on both, email required, layered terms, separate marketing opt-in. Sign-up does not reveal whether an email already has an account | PRO-02, SEC-01 |
 | 4 | Dashboard | Needs-your-attention tasks, my registrations with 4 status axes | REG-01, UX-02 |
-| 5 | Profile & family | Individuals only: own details (view/edit, incl. email; phone is optional contact only), spouse and link status, dependants 0–12 with guardians. No event, price or booking information on this page | PRO-01–05, §6 |
+| 5 | Profile & family | Individuals only: own details (view/edit, incl. email; phone is optional contact only), spouse and link status, dependants (minors 0–17) with guardians. No event, price or booking information on this page | PRO-01–05, §6 |
 | 6 | Bootcamp wizard | Multi-child; 17+ not blocked; camp = request; restricted health with exclusive "None"; collectors; per-child media consent; forum | BB-01–06 |
 | 7 | Singlz wizard + live cart | Mode, marital status → spouse, accommodation by eligibility, per-person price lines, hold timer, pay now/later | SS-01–08, INV-02 |
 | 8 | Register someone else | Recommended direct path vs invite; minimal data; non-revealing duplicate warning; result with statuses | REG-02, REG-03 |

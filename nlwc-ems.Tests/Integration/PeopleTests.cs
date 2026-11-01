@@ -59,17 +59,18 @@ public sealed class PeopleTests(TestApp app)
     }
 
     [Fact]
-    public async Task Dependants_are_limited_to_ages_0_to_12_and_have_no_account()
+    public async Task Dependants_are_minors_up_to_17_and_have_no_account()
     {
         var u = await h.NewUser();
         (await AddKid(u, 12)).StatusCode.Should().Be(HttpStatusCode.Created);
+        (await AddKid(u, 17, "Teen")).StatusCode.Should().Be(HttpStatusCode.Created);
 
-        var tooOld = await AddKid(u, 13);
+        var tooOld = await AddKid(u, 18);
         tooOld.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         (await Harness.Code(tooOld)).Should().Be("too_old_for_dependant");
 
         var list = await Harness.Data(await h.Send(HttpMethod.Get, "/api/v1/dependant", u.Headers));
-        list.GetArrayLength().Should().Be(1);
+        list.GetArrayLength().Should().Be(2);
         await using var c = await app.Db.OpenConnectionAsync();
         (await c.ExecuteScalarAsync<bool>("SELECT EXISTS (SELECT 1 FROM accounts WHERE person_id = @id)", new { id = list[0].GetProperty("personId").GetGuid() })).Should().BeFalse();
     }

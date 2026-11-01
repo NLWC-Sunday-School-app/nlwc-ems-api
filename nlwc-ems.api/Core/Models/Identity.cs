@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace nlwc.ems.Core.Models;
 
-/// <summary>One stable record per human. Dependants (ages 0–12) are people with no account.</summary>
+/// <summary>One stable record per human. Dependants (guardian-managed minors, 0–17) are people with no account.</summary>
 public class Person : BaseEntity
 {
     public string GivenName { get; set; } = string.Empty;

@@ -22,7 +22,7 @@ public class ProfileController(IProfileService profileService) : ControllerBase
     }
 }
 
-/// <summary>Children (ages 0–12) the caller is guardian of. Another guardian's child answers 404, never 403.</summary>
+/// <summary>Minors (ages 0–17) the caller is guardian of. Another guardian's child answers 404, never 403.</summary>
 [ApiController]
 [Authorize]
 [Route("api/v1/[controller]")]

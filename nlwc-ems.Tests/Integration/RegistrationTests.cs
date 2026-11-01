@@ -14,13 +14,13 @@ public sealed class RegistrationTests(TestApp app)
     private const string NineOnReference = "2017-05-01";
     private const string ElevenOnReference = "2015-06-01";
 
-    private async Task<(Guid Id, string Code)> NewEdition(bool open = true, int campMin = 10, int campMax = 16)
+    private async Task<(Guid Id, string Code)> NewEdition(bool open = true, int campMin = 10, int campMax = 16, DateOnly? startsOn = null)
     {
         var admin = await h.StaffWith("super_admin");
         var tag = Guid.NewGuid().ToString("N")[..4];
         var response = await h.Send(HttpMethod.Post, "/api/v1/edition", admin.Headers, new
         {
-            templateCode = "BB", slug = $"bb-{tag}", code = $"B{tag}", name = "Bible Bootcamp 2026", startsOn = "2026-12-21", endsOn = "2026-12-23",
+            templateCode = "BB", slug = $"bb-{tag}", code = $"B{tag}", name = "Bible Bootcamp 2026", startsOn = (startsOn ?? new DateOnly(2026, 12, 21)).ToString("yyyy-MM-dd"), endsOn = (startsOn ?? new DateOnly(2026, 12, 21)).AddDays(2).ToString("yyyy-MM-dd"),
             venueName = "Faith Plaza", campMinAge = campMin, campMaxAge = campMax
         });
         response.StatusCode.Should().Be(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
@@ -320,6 +320,40 @@ public sealed class RegistrationTests(TestApp app)
 
         var submitted = await Harness.Data(await h.Send(HttpMethod.Post, $"/api/v1/registration/{id}/submit", u.Headers, new { }));
         submitted.GetProperty("state").GetString().Should().Be("Submitted");
+    }
+
+    [Fact]
+    public async Task A_guardian_registers_a_teen_with_the_same_consents_and_camp_rules()
+    {
+        var (edition, _) = await NewEdition(campMin: 10, campMax: 16);
+        var u = await h.NewUser();
+        var teen = await Kid(u, "2012-05-01", "Teen");   // 14 on the reference date, still a minor for consent
+        var id = await Draft(u, edition, teen, "Camp");
+
+        var registration = await Harness.Data(await h.Send(HttpMethod.Get, $"/api/v1/registration/{id}", u.Headers));
+        registration.GetProperty("ageOnReferenceDate").GetInt32().Should().Be(14);
+        registration.GetProperty("ageBand").GetString().Should().Be("10-16");
+
+        await CompleteRequired(u, id, teen);   // the guardian answers the terms, authorisation and medical consents
+        (await Consent(u, id, "Media", true)).StatusCode.Should().Be(HttpStatusCode.OK);
+        var submitted = await Harness.Data(await h.Send(HttpMethod.Post, $"/api/v1/registration/{id}/submit", u.Headers, new { }));
+        submitted.GetProperty("state").GetString().Should().Be("Confirmed");
+
+        // The teen is a person in their own right: their own registration, reference and (later) price.
+        (await Harness.Data(await h.Send(HttpMethod.Get, "/api/v1/registration", u.Headers))).GetArrayLength().Should().Be(1);
+    }
+
+    [Fact]
+    public async Task A_child_who_is_18_on_the_reference_date_must_register_themself()
+    {
+        // 17 today, 18 sixty days from now when the event starts: a guardian can add them but not register or consent for them.
+        var (edition, _) = await NewEdition(startsOn: DateOnly.FromDateTime(DateTime.UtcNow.AddDays(60)));
+        var u = await h.NewUser();
+        var almostAdult = await Kid(u, DateTime.UtcNow.AddYears(-18).AddDays(30).ToString("yyyy-MM-dd"), "Ada");
+
+        var response = await Register(u, edition, almostAdult);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await Harness.Code(response)).Should().Be("adult_registers_themself");
     }
 
     private async Task<(Guid Edition, Guid Registration, Guid Child)> FlaggedRegistration()

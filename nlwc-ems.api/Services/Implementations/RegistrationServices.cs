@@ -32,10 +32,14 @@ public class RegistrationService(IRegistrationDao registrationDao, IConsentRecor
         var age = PersonRules.AgeOn(dob, edition.AgeReferenceDate);
         if (age < 0) throw new ValidationException(["The date of birth is after the event's age reference date."], "invalid_date_of_birth");
 
-        // A person under 18 registers through a guardian, who gives the consents. Teens with their own account and
-        // guardian controls are not built yet, so a self-registration under 18 is refused rather than left without consent.
+        // A person under 18 registers through a guardian, who gives the consents. A teen with their own login is not built yet,
+        // so a self-registration under 18 is refused rather than left without a guardian's consent.
         if (RegistrationRules.IsMinor(age) && subjectId == callerPersonId)
             throw new ValidationException(["A guardian must register a child under 18."], "guardian_required");
+
+        // Someone who is 18 on the reference date is an adult for this event: a guardian cannot answer consents for them.
+        if (!RegistrationRules.IsMinor(age) && subjectId != callerPersonId)
+            throw new ValidationException(["This person is 18 or over at this event and must register themself."], "adult_registers_themself");
 
         var mode = request.ParticipationMode!.Value;
         if (mode == ParticipationMode.Camp && !RegistrationRules.CampAgeAllowed(age, edition.CampMinAge, edition.CampMaxAge))

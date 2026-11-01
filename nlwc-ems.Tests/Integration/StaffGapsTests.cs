@@ -118,4 +118,19 @@ public sealed class StaffGapsTests(TestApp app)
         (await h.Send(HttpMethod.Get, $"/api/v1/rolegrant/lookup?email={Uri.EscapeDataString(person.Email)}", officer.Headers)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
         (await h.Send(HttpMethod.Get, $"/api/v1/rolegrant/lookup?email={Uri.EscapeDataString(person.Email)}", person.Headers)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
+
+    [Fact]
+    public async Task Coming_soon_lists_programmes_with_no_public_edition()
+    {
+        var before = (await Harness.Data(await h.Send(HttpMethod.Get, "/api/v1/public/coming-soon"))).EnumerateArray().Select(e => e.GetProperty("code").GetString()).ToList();
+        before.Should().Contain(["BB", "SS", "CP"]);   // seeded templates, none public yet in a fresh database or already public elsewhere
+
+        var admin = await h.StaffWith("super_admin");
+        var edition = await NewEdition(admin);
+        await using var c = await app.Db.OpenConnectionAsync();
+        await c.ExecuteAsync("UPDATE event_editions SET visibility = 'Public' WHERE id = @edition", new { edition });
+        var after = (await Harness.Data(await h.Send(HttpMethod.Get, "/api/v1/public/coming-soon"))).EnumerateArray().Select(e => e.GetProperty("code").GetString()).ToList();
+        after.Should().NotContain("BB");   // a template with a public edition is no longer "coming soon"
+        after.Should().Contain("SS");
+    }
 }

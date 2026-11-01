@@ -20,6 +20,11 @@ public class EditionDao(EmsDbContext dbContext, IHttpContextAccessor httpContext
     public Task<EventTemplate?> RetrieveTemplateByCodeAsync(string code)
         => DbContext.Set<EventTemplate>().AsNoTracking().FirstOrDefaultAsync(t => t.Code == code);
 
+    public Task<List<EventTemplate>> RetrieveTemplatesWithoutPublicEditionAsync()
+        => DbContext.Set<EventTemplate>().AsNoTracking()
+            .Where(t => !DbContext.Set<EventEdition>().Any(e => e.TemplateId == t.Id && e.Visibility == EditionVisibility.Public))
+            .OrderBy(t => t.Code).ToListAsync();
+
     public Task<bool> SlugOrCodeExistsAsync(string slug, string code)
         => DbContext.Set<EventEdition>().AnyAsync(e => e.Slug == slug || e.Code == code);
 

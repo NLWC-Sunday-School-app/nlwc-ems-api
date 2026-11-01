@@ -128,6 +128,11 @@ public class PublicEditionController(IEditionService editionService) : Controlle
     public async Task<ActionResult<ApiResponse<IReadOnlyList<PublicEditionDto>>>> List()
         => Ok(ApiResponse<IReadOnlyList<PublicEditionDto>>.Ok(await editionService.ListPublicAsync()));
 
+    /// <summary>Programmes that have no public edition yet, for the "coming soon" rows on the events page.</summary>
+    [HttpGet("~/api/v1/public/coming-soon")]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<ComingSoonEventDto>>>> ComingSoon()
+        => Ok(ApiResponse<IReadOnlyList<ComingSoonEventDto>>.Ok(await editionService.ListComingSoonAsync()));
+
     [HttpGet("{slug}")]
     public async Task<ActionResult<ApiResponse<PublicEditionDto>>> Get(string slug)
         => await editionService.GetPublicAsync(slug) is { } edition

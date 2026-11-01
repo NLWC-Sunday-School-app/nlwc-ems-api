@@ -55,6 +55,9 @@ public class EditionService(IEditionDao editionDao, IRatePlanService ratePlanSer
         return result;
     }
 
+    public async Task<IReadOnlyList<ComingSoonEventDto>> ListComingSoonAsync()
+        => (await editionDao.RetrieveTemplatesWithoutPublicEditionAsync()).Select(t => new ComingSoonEventDto { Code = t.Code, Name = t.Name }).ToList();
+
     public async Task<PublicEditionDto?> GetPublicAsync(string slug)
         => await editionDao.RetrievePublicBySlugAsync(slug) is { } e ? await ToPublicAsync(e) : null;
 

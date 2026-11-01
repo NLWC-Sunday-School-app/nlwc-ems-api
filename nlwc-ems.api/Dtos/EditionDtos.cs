@@ -194,3 +194,9 @@ public class RateVersionDto
     public string? Note { get; set; }
     public List<RateRuleInput> Rules { get; set; } = [];
 }
+
+public class ComingSoonEventDto
+{
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+}

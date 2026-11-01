@@ -114,6 +114,9 @@ public interface IEditionService : IBaseService<EventEdition>
     Task<IReadOnlyList<PublicEditionDto>> ListPublicAsync();
     Task<PublicEditionDto?> GetPublicAsync(string slug);
 
+    /// <summary>Programmes with no public edition yet. Names only: dates and prices appear once an edition is public.</summary>
+    Task<IReadOnlyList<ComingSoonEventDto>> ListComingSoonAsync();
+
     /// <summary>The editions a staff member can work in: all of them with a church-wide grant, otherwise those named by an
     /// edition-scoped grant (<paramref name="scopedEditionIds"/>).</summary>
     Task<IReadOnlyList<EditionSummaryDto>> ListForStaffAsync(bool churchWide, IReadOnlyCollection<Guid> scopedEditionIds);

@@ -131,6 +131,9 @@ public interface IEditionDao : IBaseDao<EventEdition>
     Task<List<EventEdition>> RetrievePublicAsync();
     Task<EventEdition?> RetrievePublicBySlugAsync(string slug);
     Task<EventTemplate?> RetrieveTemplateByCodeAsync(string code);
+
+    /// <summary>Templates that have no public edition yet, so the portal can list them as "coming soon".</summary>
+    Task<List<EventTemplate>> RetrieveTemplatesWithoutPublicEditionAsync();
     Task<bool> SlugOrCodeExistsAsync(string slug, string code);
 
     /// <summary>The edition with its venue, days, off-by-default capabilities and reference counter, in one transaction.</summary>

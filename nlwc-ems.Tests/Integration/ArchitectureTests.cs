@@ -19,7 +19,7 @@ public sealed class ArchitectureTests(TestApp app)
     private static readonly string[] AnonymousAllowList =
     [
         "POST api/v1/auth/signup", "POST api/v1/auth/verify-email", "POST api/v1/auth/login",
-        "GET api/v1/public/edition", "GET api/v1/public/edition/{slug}",
+        "GET api/v1/public/edition", "GET api/v1/public/edition/{slug}", "GET api/v1/public/coming-soon",
     ];
 
     private IReadOnlyList<ApiDescription> Actions() =>

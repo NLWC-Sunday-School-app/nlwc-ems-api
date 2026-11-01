@@ -51,7 +51,7 @@ public class EditionService(IEditionDao editionDao, IRatePlanService ratePlanSer
 
     private async Task<PublicEditionDto> ToPublicAsync(EventEdition e) => new()
     {
-        Slug = e.Slug, Code = e.Code, Name = e.Name, Timezone = e.Timezone, StartsOn = e.StartsOn, EndsOn = e.EndsOn,
+        Id = e.Id, Slug = e.Slug, Code = e.Code, Name = e.Name, Timezone = e.Timezone, StartsOn = e.StartsOn, EndsOn = e.EndsOn,
         Venue = e.Venue is null ? null : new PublicVenueDto { Name = e.Venue.Name, Address = e.Venue.Address },
         Camp = e.CampMinAge is null ? null : new PublicCampDto { MinAge = e.CampMinAge, MaxAge = e.CampMaxAge },
         PickupWindow = e.PickupWindowStart is { } s && e.PickupWindowEnd is { } t ? new PublicPickupWindowDto { Start = s, End = t } : null,

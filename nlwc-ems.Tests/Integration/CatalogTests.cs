@@ -119,8 +119,9 @@ public sealed class CatalogTests(TestApp app)
         publicEdition.GetProperty("registrationWindow").GetString().Should().Be("Open");
         publicEdition.GetProperty("venue").GetProperty("name").GetString().Should().Be("Faith Plaza");
         publicEdition.GetProperty("pickupWindow").GetProperty("start").GetString().Should().Be("16:00:00");
-        // Internal ids and the camp's capacity stay out of public output.
-        publicEdition.TryGetProperty("id", out _).Should().BeFalse();
+        // The id is public because a registration is started with it; it grants nothing, every action is permission-checked.
+        // The camp's capacity stays out of public output.
+        publicEdition.GetProperty("id").GetGuid().Should().Be(id);
         publicEdition.GetProperty("camp").TryGetProperty("capacity", out _).Should().BeFalse();
 
         var list = await Harness.Data(await h.Send(HttpMethod.Get, "/api/v1/public/edition"));

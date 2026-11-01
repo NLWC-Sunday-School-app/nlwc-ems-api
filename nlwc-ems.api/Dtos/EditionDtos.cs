@@ -152,6 +152,9 @@ public class PublicDayDto
 /// <summary>What the public may see of an edition: no ids, no camp capacity, no internal state.</summary>
 public class PublicEditionDto
 {
+    /// <summary>Needed to start a registration; the public pages are addressed by slug.</summary>
+    public Guid Id { get; set; }
+
     public string Slug { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;

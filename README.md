@@ -27,6 +27,12 @@ dotnet run --project nlwc-ems.api              # migrates the database on startu
 Development settings (local Postgres, a throwaway master key, non-secure cookie) are in `appsettings.Development.json`.
 Anywhere else, supply `ConnectionStrings__EmsDatabase`, `Security__MasterKey` (64 hex chars) and `Cors__AllowedOrigins__0…` (production defaults to `https://events.nlwc.church`; the localhost origins live in `appsettings.Development.json`).
 
+### Production deployment
+
+The production workflow builds pull requests targeting `main` without deploying. A push to `main` or a manual run on `main` builds and publishes a commit-tagged GHCR image, then deploys it to the `prod` GitHub environment. Configure any required environment approval rules in GitHub.
+
+Set `SERVER_HOST`, `SERVER_USERNAME`, `SERVER_KEY`, `SERVER_KEY_PASSPHRASE`, `DOPPLER_TOKEN`, and `GHCR_PAT` as secrets for the `prod` environment. `SERVER_KEY_PASSPHRASE` is the passphrase protecting the SSH private key. The PAT must allow the server to read the GHCR package, and the GitHub Actions token must have permission to publish it. Install Docker Compose and the Doppler CLI on the server; Doppler must provide the production application settings, including a reachable PostgreSQL connection. The API is exposed on server port `8082` for the reverse proxy; confirm that port is free and restrict direct access using the server firewall. The workflow stores the downloaded settings in `~/nlwc-ems-api/.env`.
+
 - Health: `GET /health`. API contract: `GET /swagger/v1/swagger.json` (Development), which the frontends generate clients from.
 - First super admin: sign up, then `dotnet run --project nlwc-ems.api --no-launch-profile -- --bootstrap-admin you@example.com`.
 

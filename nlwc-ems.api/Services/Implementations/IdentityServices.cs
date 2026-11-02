@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using OtpNet;
 using nlwc.ems.Core.Models;
+using nlwc.ems.Core.Security;
 using nlwc.ems.Dtos;
 using nlwc.ems.Services.Options;
 
@@ -81,9 +82,8 @@ public class AccountService(IAccountDao accountDao, IEmailVerificationDao verifi
 public class SessionService(IAuthSessionDao sessionDao, IRoleGrantService grantService, ITokenGenerator tokens, IOptions<SecurityOptions> security)
     : BaseService<AuthSession>(sessionDao), ISessionService
 {
-    // Staff and gate sessions are short on purpose: a console left open, or a lost phone, should expire quickly.
-    private static TimeSpan Idle(Surface s) => s switch { Surface.Admin => TimeSpan.FromMinutes(30), Surface.Checkin => TimeSpan.FromMinutes(15), _ => TimeSpan.FromHours(8) };
-    private static TimeSpan Absolute(Surface s) => s == Surface.Web ? TimeSpan.FromDays(30) : TimeSpan.FromHours(12);
+    private static TimeSpan Idle(Surface s) => SessionPolicy.Idle(s);
+    private static TimeSpan Absolute(Surface s) => SessionPolicy.Absolute(s);
 
     public async Task<(string Token, SessionPrincipal Principal)> CreateAsync(Guid accountId, Surface surface)
     {

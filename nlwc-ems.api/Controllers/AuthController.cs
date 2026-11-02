@@ -45,7 +45,7 @@ public class AuthController(IAccountService accountService, ISessionService sess
 
         var (token, principal) = await accountService.LogInAsync(request.Email, request.Password, request.Surface);
 
-        var csrf = StartSession(token);
+        var csrf = StartSession(token, principal.Surface);
 
         return Ok(ApiResponse<LoginResultDto>.Ok(new LoginResultDto { CsrfToken = csrf, MfaVerified = principal.MfaVerified, EmailVerified = principal.EmailVerified }));
     }
@@ -82,14 +82,16 @@ public class AuthController(IAccountService accountService, ISessionService sess
     }
 
     /// <summary>Sets the httpOnly session cookie and the readable CSRF cookie. Returns the CSRF value.</summary>
-    private string StartSession(string token)
+    private string StartSession(string token, Surface surface)
     {
         var csrf = tokens.NewToken();
-        var session = new CookieOptions { HttpOnly = true, Secure = security.Value.CookieSecure, SameSite = SameSiteMode.Lax, Path = "/" };
+        // A portal sign-in survives closing the browser for as long as the session lives; staff and gate cookies stay session-only.
+        var lifetime = SessionPolicy.CookieLifetime(surface);
+        var session = new CookieOptions { HttpOnly = true, Secure = security.Value.CookieSecure, SameSite = SameSiteMode.Lax, Path = "/", MaxAge = lifetime };
         Response.Cookies.Append(SessionAuthenticationHandler.SessionCookie, token, session);
         // Readable by the page so it can echo the value in X-CSRF-Token (double-submit).
         Response.Cookies.Append(SessionAuthenticationHandler.CsrfCookie, csrf,
-            new CookieOptions { HttpOnly = false, Secure = security.Value.CookieSecure, SameSite = SameSiteMode.Lax, Path = "/" });
+            new CookieOptions { HttpOnly = false, Secure = security.Value.CookieSecure, SameSite = SameSiteMode.Lax, Path = "/", MaxAge = lifetime });
         return csrf;
     }
 
@@ -133,7 +135,7 @@ public class AuthController(IAccountService accountService, ISessionService sess
         {
             var identity = await google.CompleteAsync(code, saved.Verifier, saved.Nonce);
             var (token, _) = await googleSignIn.SignInAsync(identity);
-            StartSession(token);
+            StartSession(token, Surface.Web);
             return Redirect(googleOptions.Value.WebBaseUrl.TrimEnd('/') + next);
         }
         catch (UnauthorizedException e)

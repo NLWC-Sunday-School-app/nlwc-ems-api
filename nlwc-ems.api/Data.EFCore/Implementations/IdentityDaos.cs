@@ -43,6 +43,38 @@ public class AccountDao(EmsDbContext dbContext, IHttpContextAccessor httpContext
             .ExecuteUpdateAsync(set => set.SetProperty(a => a.LockedUntil, lockUntil));
     }
 
+    public Task<Account?> RetrieveByGoogleSubAsync(string sub) => Query().FirstOrDefaultAsync(a => a.GoogleSub == sub);
+
+    public Task<bool> HasVerifiedEmailAsync(Guid accountId)
+        => (from c in DbContext.Set<VerifiedContact>()
+            join a in DbContext.Set<Account>() on c.PersonId equals a.PersonId
+            where a.Id == accountId && c.Kind == ContactKind.Email && c.Value == a.Email && c.VerifiedAt != null
+            select c.Id).AnyAsync();
+
+    public async Task<bool> LinkGoogleAsync(Guid accountId, string sub)
+    {
+        var now = DateTime.UtcNow;
+        try
+        {
+            return await DbContext.Set<Account>().Where(a => a.Id == accountId && a.GoogleSub == null)
+                .ExecuteUpdateAsync(set => set.SetProperty(a => a.GoogleSub, sub).SetProperty(a => a.DateModified, now)) == 1;
+        }
+        catch (DbUpdateException)
+        {
+            return false; // the unique index: this Google identity already belongs to another account
+        }
+    }
+
+    public Task InsertGoogleAccountAsync(Person person, Account account, VerifiedContact verifiedContact)
+        => InTransactionAsync(async () =>
+        {
+            foreach (var e in new BaseEntity[] { person, account, verifiedContact }) StampNew(e);
+            DbContext.Set<Person>().Add(person);
+            DbContext.Set<Account>().Add(account);
+            DbContext.Set<VerifiedContact>().Add(verifiedContact);
+            await DbContext.SaveChangesAsync();
+        });
+
     public Task ResetFailedLoginsAsync(Guid accountId)
         => DbContext.Set<Account>().Where(a => a.Id == accountId && (a.FailedLogins != 0 || a.LockedUntil != null))
             .ExecuteUpdateAsync(set => set.SetProperty(a => a.FailedLogins, 0).SetProperty(a => a.LockedUntil, (DateTime?)null));

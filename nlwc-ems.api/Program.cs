@@ -32,6 +32,9 @@ if (!SecurityOptions.IsValidMasterKey(builder.Configuration[$"{SecurityOptions.S
     throw new InvalidOperationException("Security:MasterKey must be 64 hex characters (32 bytes). Generate one with: openssl rand -hex 32");
 builder.Services.Configure<SecurityOptions>(builder.Configuration.GetSection(SecurityOptions.SectionName));
 
+builder.Services.Configure<GoogleOptions>(builder.Configuration.GetSection(GoogleOptions.SectionName));
+builder.Services.AddHttpClient();
+
 // Everything under these namespaces is registered against the interfaces it implements.
 builder.Services
     .AddImplementationsFromNamespace<EmsDbContext>("nlwc.ems.Data.EFCore.Implementations")

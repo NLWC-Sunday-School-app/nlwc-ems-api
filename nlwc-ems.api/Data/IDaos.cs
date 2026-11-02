@@ -23,6 +23,17 @@ public interface IAccountDao : IBaseDao<Account>
     Task RegisterFailedLoginAsync(Guid accountId, int maxFailures, DateTime lockUntil);
 
     Task ResetFailedLoginsAsync(Guid accountId);
+
+    Task<Account?> RetrieveByGoogleSubAsync(string sub);
+
+    /// <summary>True once the account's own email address has been confirmed (by link or by Google).</summary>
+    Task<bool> HasVerifiedEmailAsync(Guid accountId);
+
+    /// <summary>Sets the Google subject on an account that has none. False if it already has one or the subject is taken.</summary>
+    Task<bool> LinkGoogleAsync(Guid accountId, string sub);
+
+    /// <summary>A Google-only account: the person, the account without a password, and its already-verified email contact.</summary>
+    Task InsertGoogleAccountAsync(Person person, Account account, VerifiedContact verifiedContact);
 }
 
 public interface IEmailVerificationDao : IBaseDao<EmailVerification>

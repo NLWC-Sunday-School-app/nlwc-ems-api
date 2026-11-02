@@ -72,3 +72,9 @@ public class CreatedDto
 {
     public Guid Id { get; set; }
 }
+
+/// <summary>Which sign-in methods are switched on. The web app hides what is off.</summary>
+public class ProvidersDto
+{
+    public bool Google { get; set; }
+}

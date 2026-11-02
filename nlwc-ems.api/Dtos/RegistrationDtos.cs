@@ -111,3 +111,99 @@ public class StaffRegistrationDto
 
     public DateTime DateCreated { get; set; }
 }
+
+public class StaffRegistrationDetailDto
+{
+    public Guid Id { get; set; }
+    public string Reference { get; set; } = string.Empty;
+    public Guid EditionId { get; set; }
+    public RegistrationState State { get; set; }
+    public ParticipationMode ParticipationMode { get; set; }
+    public string? AgeBand { get; set; }
+    public int? AgeOnReferenceDate { get; set; }
+    public DateTime DateCreated { get; set; }
+    public StaffPersonDto Person { get; set; } = new();
+
+    /// <summary>Null unless the caller holds <c>health:flags</c>.</summary>
+    public bool? HasHealthFlags { get; set; }
+
+    public List<StaffActorDto> Actors { get; set; } = [];
+    public List<StaffConsentDto> Consents { get; set; } = [];
+    public StaffEmergencyContactDto? EmergencyContact { get; set; }
+    public List<StaffHistoryDto> History { get; set; } = [];
+    public bool Cancellable { get; set; }
+}
+
+public class StaffPersonDto
+{
+    public Guid PersonId { get; set; }
+    public string GivenName { get; set; } = string.Empty;
+    public string FamilyName { get; set; } = string.Empty;
+    public DateOnly? DateOfBirth { get; set; }
+    public Gender? Gender { get; set; }
+    public string? Country { get; set; }
+    public string? City { get; set; }
+}
+
+public class StaffActorDto { public Guid PersonId { get; set; } public string Name { get; set; } = string.Empty; public RegistrationRole Role { get; set; } }
+
+public class StaffConsentDto { public ConsentKind Kind { get; set; } public bool Accepted { get; set; } public int DocumentVersion { get; set; } public DateTime At { get; set; } }
+
+/// <summary>Name and relationship only. The phone number stays encrypted and is not part of the staff view.</summary>
+public class StaffEmergencyContactDto { public string FullName { get; set; } = string.Empty; public string Relationship { get; set; } = string.Empty; }
+
+public class StaffHistoryDto
+{
+    public RegistrationState? From { get; set; }
+    public RegistrationState To { get; set; }
+    public string? Actor { get; set; }
+    public string? Reason { get; set; }
+    public DateTime At { get; set; }
+}
+
+public class StaffDashboardDto
+{
+    public int Total { get; set; }
+    public Dictionary<RegistrationState, int> ByState { get; set; } = [];
+    public Dictionary<ParticipationMode, int> ByMode { get; set; } = [];
+    public Dictionary<string, int> ByAgeBand { get; set; } = [];
+
+    /// <summary>Things a person should look at: registrations that need action, and drafts untouched for a week.</summary>
+    public int NeedsAction { get; set; }
+    public int StaleDrafts { get; set; }
+}
+
+// ---- Staff: camp review ----
+public class CampQueueDto
+{
+    /// <summary>Null until staff set the edition's camp capacity; approvals are refused until then.</summary>
+    public int? Capacity { get; set; }
+    public int Approved { get; set; }
+    public List<CampQueueItemDto> Rows { get; set; } = [];
+}
+
+public class CampQueueItemDto
+{
+    public Guid RegistrationId { get; set; }
+    public string Reference { get; set; } = string.Empty;
+    public Guid PersonId { get; set; }
+    public string GivenName { get; set; } = string.Empty;
+    public string FamilyName { get; set; } = string.Empty;
+    public int? Age { get; set; }
+    public RegistrationState State { get; set; }
+    public bool GuardianConsentGiven { get; set; }
+
+    /// <summary>Null unless the caller holds <c>health:flags</c>.</summary>
+    public bool? HasHealthFlags { get; set; }
+
+    /// <summary>Null while pending.</summary>
+    public CampDecisionKind? Decision { get; set; }
+    public string? DecisionReason { get; set; }
+    public DateTime? DecidedAt { get; set; }
+}
+
+public class CampDecisionRequest
+{
+    [Required] public CampDecisionKind? Decision { get; set; }
+    [Required, MaxLength(500)] public string Reason { get; set; } = string.Empty;
+}

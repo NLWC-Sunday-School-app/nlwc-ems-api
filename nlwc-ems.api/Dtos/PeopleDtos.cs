@@ -117,3 +117,49 @@ public class EmergencyContactRequest
     [Required]
     public string Phone { get; set; } = string.Empty;
 }
+
+// ---- Staff: people, duplicates, spouses ----
+public class StaffPersonSummaryDto
+{
+    public Guid Id { get; set; }
+    public string GivenName { get; set; } = string.Empty;
+    public string FamilyName { get; set; } = string.Empty;
+    public DateOnly? DateOfBirth { get; set; }
+    public string? City { get; set; }
+    public string? Country { get; set; }
+    public int Registrations { get; set; }
+}
+
+public class StaffPersonDetailDto
+{
+    public StaffPersonSummaryDto Person { get; set; } = new();
+    public Gender? Gender { get; set; }
+    public List<StaffPersonRelationDto> Relations { get; set; } = [];
+    public List<StaffPersonRegistrationDto> Registrations { get; set; } = [];
+}
+
+public class StaffPersonRelationDto { public string Relation { get; set; } = string.Empty; public Guid PersonId { get; set; } public string Name { get; set; } = string.Empty; }
+
+public class StaffPersonRegistrationDto
+{
+    public Guid Id { get; set; }
+    public string Reference { get; set; } = string.Empty;
+    public string EditionName { get; set; } = string.Empty;
+    public RegistrationState State { get; set; }
+    public ParticipationMode Mode { get; set; }
+}
+
+public class DuplicatePairDto { public StaffPersonSummaryDto A { get; set; } = new(); public StaffPersonSummaryDto B { get; set; } = new(); }
+
+public class DismissDuplicateRequest
+{
+    [Required] public Guid? PersonAId { get; set; }
+    [Required] public Guid? PersonBId { get; set; }
+    [Required, MaxLength(500)] public string Reason { get; set; } = string.Empty;
+}
+
+public class PairSpouseRequest
+{
+    [Required] public Guid? SpousePersonId { get; set; }
+    [Required, MaxLength(500)] public string Reason { get; set; } = string.Empty;
+}

@@ -440,4 +440,103 @@ public sealed class RegistrationTests(TestApp app)
         (actor, resource, reason, edition2).Should().Be((medical.AccountId, "health", "Camp fitness review", edition));
         (await h.Send(HttpMethod.Get, $"/api/v1/admin/registration/{Guid.NewGuid()}/health?reason=x", medical.Headers)).StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
+
+    [Fact]
+    public async Task The_queue_filters_by_name_reference_mode_and_age_band()
+    {
+        var (edition, registration, _) = await FlaggedRegistration();   // Tobi, Day, drafted by the family
+        var officer = await h.StaffWith("registration_officer");
+        async Task<int> Count(string query) => (await Harness.Data(await h.Send(HttpMethod.Get, $"/api/v1/admin/registration?editionId={edition}{query}", officer.Headers))).GetProperty("count").GetInt32();
+
+        (await Count("&q=tob")).Should().Be(1);        // part of the name, any case
+        (await Count("&q=Nobody")).Should().Be(0);
+        (await Count("&q=%25")).Should().Be(0);         // a literal percent sign is not a wildcard
+        (await Count("&mode=Day")).Should().Be(1);
+        (await Count("&mode=Camp")).Should().Be(0);
+        var reference = await h.StaffWith("super_admin");
+        var detail = await Harness.Data(await h.Send(HttpMethod.Get, $"/api/v1/admin/registration/{registration}", reference.Headers));
+        (await Count($"&q={detail.GetProperty("reference").GetString()}")).Should().Be(1);
+        (await Count($"&ageBand={detail.GetProperty("ageBand").GetString()}")).Should().Be(1);
+        (await Count("&ageBand=NoSuchBand")).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Detail_shows_the_registration_without_health_answers_or_phone_numbers()
+    {
+        var (edition, registration, _) = await FlaggedRegistration();
+        var medical = await h.StaffWith("medical_welfare");
+        var finance = await h.StaffWith("finance_officer");
+
+        var response = await h.Send(HttpMethod.Get, $"/api/v1/admin/registration/{registration}", medical.Headers);
+        var detail = await Harness.Data(response);
+        detail.GetProperty("person").GetProperty("givenName").GetString().Should().Be("Tobi");
+        detail.GetProperty("hasHealthFlags").GetBoolean().Should().BeTrue();
+        detail.GetProperty("actors").GetArrayLength().Should().BeGreaterThan(0);
+        detail.GetProperty("history").GetArrayLength().Should().BeGreaterThan(0);
+        detail.ToString().Should().NotContain("asthma").And.NotContain("Inhaler").And.NotContain("phone");
+
+        (await Harness.Data(await h.Send(HttpMethod.Get, $"/api/v1/admin/registration/{registration}", finance.Headers)))
+            .GetProperty("hasHealthFlags").ValueKind.Should().Be(System.Text.Json.JsonValueKind.Null);
+        (await h.Send(HttpMethod.Get, $"/api/v1/admin/registration/{registration}", (await h.NewUser()).Headers)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await h.Send(HttpMethod.Get, $"/api/v1/admin/registration/{Guid.NewGuid()}", medical.Headers)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Staff_can_cancel_with_a_reason_that_lands_in_the_history()
+    {
+        var (_, registration, _) = await FlaggedRegistration();
+        var url = $"/api/v1/admin/registration/{registration}/cancel";
+        var viewer = await h.StaffWith("finance_officer");   // can view, cannot edit
+        var admin = await h.StaffWith("super_admin");
+
+        (await h.Send(HttpMethod.Post, url, viewer.Headers, new { reason = "Duplicate" })).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await h.Send(HttpMethod.Post, url, admin.Headers, new { reason = "" })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        (await h.Send(HttpMethod.Post, url, admin.Headers, new { reason = "Registered twice by mistake" })).StatusCode.Should().Be(HttpStatusCode.OK);
+        var detail = await Harness.Data(await h.Send(HttpMethod.Get, $"/api/v1/admin/registration/{registration}", admin.Headers));
+        detail.GetProperty("state").GetString().Should().Be("Cancelled");
+        detail.GetProperty("cancellable").GetBoolean().Should().BeFalse();
+        var last = detail.GetProperty("history").EnumerateArray().Last();
+        last.GetProperty("to").GetString().Should().Be("Cancelled");
+        last.GetProperty("reason").GetString().Should().Be("Registered twice by mistake");
+
+        var again = await h.Send(HttpMethod.Post, url, admin.Headers, new { reason = "Again" });
+        again.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await Harness.Code(again)).Should().Be("registration_not_cancellable");
+    }
+
+    [Fact]
+    public async Task The_dashboard_counts_live_registrations_and_needs_view_access()
+    {
+        var (edition, _, _) = await FlaggedRegistration();
+        var officer = await h.StaffWith("registration_officer");
+        var dash = await Harness.Data(await h.Send(HttpMethod.Get, $"/api/v1/admin/registration/dashboard?editionId={edition}", officer.Headers));
+        dash.GetProperty("total").GetInt32().Should().Be(1);
+        dash.GetProperty("byState").GetProperty("Draft").GetInt32().Should().Be(1);
+        dash.GetProperty("byMode").GetProperty("Day").GetInt32().Should().Be(1);
+        dash.GetProperty("staleDrafts").GetInt32().Should().Be(0);   // a draft made just now is not stale
+        (await h.Send(HttpMethod.Get, $"/api/v1/admin/registration/dashboard?editionId={edition}", (await h.NewUser()).Headers)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Export_needs_a_reason_is_audited_and_never_carries_health_content()
+    {
+        var (edition, _, _) = await FlaggedRegistration();
+        var medical = await h.StaffWith("medical_welfare");
+        var url = $"/api/v1/admin/registration/export?editionId={edition}";
+
+        var noReason = await h.Send(HttpMethod.Get, url, medical.Headers);
+        noReason.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await Harness.Code(noReason)).Should().Be("reason_required");
+        (await h.Send(HttpMethod.Get, $"{url}&reason=Camp%20list", (await h.NewUser()).Headers)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        var ok = await h.Send(HttpMethod.Get, $"{url}&reason=Camp%20list", medical.Headers);
+        ok.StatusCode.Should().Be(HttpStatusCode.OK);
+        ok.Content.Headers.ContentType!.MediaType.Should().Be("text/csv");
+        var csv = await ok.Content.ReadAsStringAsync();
+        csv.Should().Contain("Reference,Given name").And.Contain("\"Tobi\"").And.Contain("Health flags");
+        csv.Should().NotContain("asthma").And.NotContain("Inhaler");
+        await using var c = await app.Db.OpenConnectionAsync();
+        (await c.ExecuteScalarAsync<int>("SELECT count(*) FROM audit_events WHERE action = 'registration.exported'")).Should().BeGreaterThan(0);
+    }
 }

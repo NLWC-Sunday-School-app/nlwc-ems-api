@@ -194,6 +194,43 @@ public class StaffRegistrationRow
     public DateTime DateCreated { get; set; }
 }
 
+public class StaffRegistrationFilter
+{
+    public RegistrationState? State { get; set; }
+    public ParticipationMode? Mode { get; set; }
+    public string? AgeBand { get; set; }
+
+    /// <summary>Matches a name or part of the reference, case-insensitively.</summary>
+    public string? Text { get; set; }
+}
+
+public class StaffRegistrationStats
+{
+    public Dictionary<RegistrationState, int> ByState { get; set; } = [];
+    public Dictionary<ParticipationMode, int> ByMode { get; set; } = [];
+    public Dictionary<string, int> ByAgeBand { get; set; } = [];
+    public int StaleDrafts { get; set; }
+}
+
+public class StaffActorRow { public Guid PersonId { get; set; } public string Name { get; set; } = string.Empty; public RegistrationRole Role { get; set; } }
+
+public class StaffHistoryRow
+{
+    public RegistrationState? FromState { get; set; }
+    public RegistrationState ToState { get; set; }
+    public string? ActorName { get; set; }
+    public string? Reason { get; set; }
+    public DateTime At { get; set; }
+}
+
+public class StaffRegistrationDetailRow
+{
+    public Registration Registration { get; set; } = null!;
+    public Person Person { get; set; } = null!;
+    public List<StaffActorRow> Actors { get; set; } = [];
+    public List<StaffHistoryRow> History { get; set; } = [];
+}
+
 public interface IRegistrationDao : IBaseDao<Registration>
 {
     /// <summary>Registrations the person is an actor on (as registrant or beneficiary), newest first.</summary>
@@ -210,7 +247,13 @@ public interface IRegistrationDao : IBaseDao<Registration>
     Task<bool> InsertNewAsync(Registration registration, string editionCode, IReadOnlyList<RegistrationActor> actors);
 
     /// <summary>One edition's registrations for the staff queue, newest first. Health is never read here, only whether flags exist.</summary>
-    Task<PagerEntity<StaffRegistrationRow>> RetrieveStaffPagedAsync(Guid editionId, RegistrationState? state, int page, int max);
+    Task<PagerEntity<StaffRegistrationRow>> RetrieveStaffPagedAsync(Guid editionId, StaffRegistrationFilter filter, int page, int max);
+
+    /// <summary>Counts for the staff dashboard. Stale drafts are untouched drafts older than <paramref name="staleBefore"/>.</summary>
+    Task<StaffRegistrationStats> RetrieveStaffStatsAsync(Guid editionId, DateTime staleBefore);
+
+    /// <summary>The registration with the names around it (person, actors, history), or null.</summary>
+    Task<StaffRegistrationDetailRow?> RetrieveStaffDetailAsync(Guid registrationId);
 
     /// <summary>Updates the registration and appends the history row, in one transaction.</summary>
     Task TransitionAsync(Registration registration, RegistrationState from, string? reason, Guid actorPersonId);
@@ -235,3 +278,75 @@ public interface IHealthDisclosureDao : IBaseDao<HealthDisclosure>
 
 /// <summary>Reads of restricted data. Append-only; written before the data is returned.</summary>
 public interface IAccessLogDao : IBaseDao<AccessLog>;
+
+// ---- Staff: people, duplicates, spouses ----
+public class StaffPersonRow
+{
+    public Guid Id { get; set; }
+    public string GivenName { get; set; } = string.Empty;
+    public string FamilyName { get; set; } = string.Empty;
+    public DateOnly? DateOfBirth { get; set; }
+    public string? City { get; set; }
+    public string? Country { get; set; }
+    public int Registrations { get; set; }
+}
+
+public class StaffPersonRelationRow { public string Relation { get; set; } = string.Empty; public Guid PersonId { get; set; } public string Name { get; set; } = string.Empty; }
+
+public class StaffPersonRegistrationRow
+{
+    public Guid Id { get; set; }
+    public string Reference { get; set; } = string.Empty;
+    public string EditionName { get; set; } = string.Empty;
+    public RegistrationState State { get; set; }
+    public ParticipationMode Mode { get; set; }
+}
+
+public class StaffPersonDetailRow
+{
+    public Person Person { get; set; } = null!;
+    public List<StaffPersonRelationRow> Relations { get; set; } = [];
+    public List<StaffPersonRegistrationRow> Registrations { get; set; } = [];
+}
+
+public class DuplicatePairRow { public StaffPersonRow A { get; set; } = null!; public StaffPersonRow B { get; set; } = null!; }
+
+public interface IStaffPeopleDao : IBaseDao<PersonRelationship>
+{
+    Task<PagerEntity<StaffPersonRow>> SearchAsync(string? text, int page, int max);
+    Task<StaffPersonDetailRow?> RetrieveDetailAsync(Guid personId);
+
+    /// <summary>Pairs with the same date of birth and family name and a matching first name, minus pairs staff already cleared.</summary>
+    Task<List<DuplicatePairRow>> RetrieveDuplicatesAsync(int max);
+
+    Task InsertDismissalAsync(DuplicateDismissal dismissal);
+    Task<Guid?> RetrieveSpouseIdAsync(Guid personId);
+
+    /// <summary>Writes both directions in one transaction.</summary>
+    Task PairSpousesAsync(Guid a, Guid b);
+
+    Task UnpairSpousesAsync(Guid a, Guid b);
+}
+
+// ---- Staff: camp review ----
+public class CampQueueRow
+{
+    public Guid RegistrationId { get; set; }
+    public string Reference { get; set; } = string.Empty;
+    public Guid PersonId { get; set; }
+    public string GivenName { get; set; } = string.Empty;
+    public string FamilyName { get; set; } = string.Empty;
+    public int? AgeOnReferenceDate { get; set; }
+    public RegistrationState State { get; set; }
+    public bool GuardianConsentGiven { get; set; }
+    public bool HasHealthFlags { get; set; }
+    public CampDecisionKind? Decision { get; set; }
+    public string? DecisionReason { get; set; }
+    public DateTime? DecidedAt { get; set; }
+}
+
+public interface ICampDecisionDao : IBaseDao<CampDecision>
+{
+    /// <summary>Every live camp registration of the edition with its current decision (null while pending), oldest first.</summary>
+    Task<List<CampQueueRow>> RetrieveQueueAsync(Guid editionId);
+}

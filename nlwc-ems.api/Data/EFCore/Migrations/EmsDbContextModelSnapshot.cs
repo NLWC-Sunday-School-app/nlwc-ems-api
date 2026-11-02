@@ -524,6 +524,79 @@ namespace nlwc.ems.Data.EFCore.Migrations
                     b.ToTable("authorized_collectors", (string)null);
                 });
 
+            modelBuilder.Entity("nlwc.ems.Core.Models.CampDecision", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("CreatedByIp")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("created_by_ip");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_modified");
+
+                    b.Property<Guid>("DecidedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("decided_by");
+
+                    b.Property<string>("Decision")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("decision");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("modified_by");
+
+                    b.Property<string>("ModifiedByIp")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("modified_by_ip");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<Guid>("RegistrationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("registration_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_camp_decisions");
+
+                    b.HasIndex("DecidedBy")
+                        .HasDatabaseName("ix_camp_decisions_decided_by");
+
+                    b.HasIndex("RegistrationId", "DateCreated")
+                        .HasDatabaseName("ix_camp_decisions_registration_id_date_created");
+
+                    b.ToTable("camp_decisions", (string)null);
+                });
+
             modelBuilder.Entity("nlwc.ems.Core.Models.ConsentRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -674,6 +747,84 @@ namespace nlwc.ems.Data.EFCore.Migrations
                         .HasDatabaseName("ix_devices_account_id");
 
                     b.ToTable("devices", (string)null);
+                });
+
+            modelBuilder.Entity("nlwc.ems.Core.Models.DuplicateDismissal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("CreatedByIp")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("created_by_ip");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_modified");
+
+                    b.Property<Guid>("DismissedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("dismissed_by");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("modified_by");
+
+                    b.Property<string>("ModifiedByIp")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("modified_by_ip");
+
+                    b.Property<Guid>("PersonAId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("person_a_id");
+
+                    b.Property<Guid>("PersonBId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("person_b_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_duplicate_dismissals");
+
+                    b.HasIndex("DismissedBy")
+                        .HasDatabaseName("ix_duplicate_dismissals_dismissed_by");
+
+                    b.HasIndex("PersonBId")
+                        .HasDatabaseName("ix_duplicate_dismissals_person_b_id");
+
+                    b.HasIndex("PersonAId", "PersonBId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_duplicate_dismissals_person_a_id_person_b_id");
+
+                    b.ToTable("duplicate_dismissals", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_duplicate_dismissals_ordered", "person_a_id < person_b_id");
+                        });
                 });
 
             modelBuilder.Entity("nlwc.ems.Core.Models.EditionCapability", b =>
@@ -3303,6 +3454,23 @@ namespace nlwc.ems.Data.EFCore.Migrations
                         .HasConstraintName("fk_authorized_collectors_people_child_person_id");
                 });
 
+            modelBuilder.Entity("nlwc.ems.Core.Models.CampDecision", b =>
+                {
+                    b.HasOne("nlwc.ems.Core.Models.Person", null)
+                        .WithMany()
+                        .HasForeignKey("DecidedBy")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_camp_decisions_people_decided_by");
+
+                    b.HasOne("nlwc.ems.Core.Models.Registration", null)
+                        .WithMany()
+                        .HasForeignKey("RegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_camp_decisions_registrations_registration_id");
+                });
+
             modelBuilder.Entity("nlwc.ems.Core.Models.ConsentRecord", b =>
                 {
                     b.HasOne("nlwc.ems.Core.Models.Person", null)
@@ -3335,6 +3503,30 @@ namespace nlwc.ems.Data.EFCore.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_devices_accounts_account_id");
+                });
+
+            modelBuilder.Entity("nlwc.ems.Core.Models.DuplicateDismissal", b =>
+                {
+                    b.HasOne("nlwc.ems.Core.Models.Person", null)
+                        .WithMany()
+                        .HasForeignKey("DismissedBy")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_duplicate_dismissals_people_dismissed_by");
+
+                    b.HasOne("nlwc.ems.Core.Models.Person", null)
+                        .WithMany()
+                        .HasForeignKey("PersonAId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_duplicate_dismissals_people_person_a_id");
+
+                    b.HasOne("nlwc.ems.Core.Models.Person", null)
+                        .WithMany()
+                        .HasForeignKey("PersonBId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_duplicate_dismissals_people_person_b_id");
                 });
 
             modelBuilder.Entity("nlwc.ems.Core.Models.EditionCapability", b =>

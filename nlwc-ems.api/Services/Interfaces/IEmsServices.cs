@@ -167,11 +167,45 @@ public interface IHealthService : IBaseService<HealthDisclosure>
 /// <summary>Staff views of registrations. The controller checks permissions against the registration's edition.</summary>
 public interface IStaffRegistrationService : IBaseService<Registration>
 {
-    Task<PagerEntity<StaffRegistrationDto>> ListAsync(Guid editionId, RegistrationState? state, int page, int max, bool includeHealthFlags);
+    Task<PagerEntity<StaffRegistrationDto>> ListAsync(Guid editionId, StaffRegistrationFilter filter, int page, int max, bool includeHealthFlags);
+
+    Task<StaffDashboardDto> GetDashboardAsync(Guid editionId);
+
+    /// <summary>The whole filtered list as CSV (no health content; flags only when allowed). Cells that start like a formula are neutralised.</summary>
+    Task<string> ExportCsvAsync(Guid editionId, StaffRegistrationFilter filter, bool includeHealthFlags, string reason);
+
+    /// <summary>Everything staff need to understand one registration, without health answers or phone numbers.</summary>
+    Task<StaffRegistrationDetailDto> GetDetailAsync(Guid registrationId, bool includeHealthFlags);
+
+    /// <summary>Cancels on staff's behalf: the reason is kept in the history and the audit log.</summary>
+    Task CancelAsync(Guid staffPersonId, Guid registrationId, string reason);
 
     /// <summary>The edition a registration belongs to, or 404.</summary>
     Task<Guid> GetEditionIdAsync(Guid registrationId);
 
     /// <summary>Writes the access-log row first, then returns the decrypted answers (null when none were given).</summary>
     Task<HealthDto?> RevealHealthAsync(Guid actorAccountId, Guid registrationId, string reason);
+}
+
+public interface IStaffPeopleService : IBaseService<PersonRelationship>
+{
+    Task<PagerEntity<StaffPersonSummaryDto>> SearchAsync(string? text, int page, int max);
+    Task<StaffPersonDetailDto> GetDetailAsync(Guid personId);
+    Task<IReadOnlyList<DuplicatePairDto>> GetDuplicatesAsync();
+
+    /// <summary>"These are different people": the pair is not offered again. The reason is audited.</summary>
+    Task DismissDuplicateAsync(Guid staffPersonId, Guid personAId, Guid personBId, string reason);
+
+    /// <summary>Both must be adults and unmarried in our records; the link goes both ways.</summary>
+    Task PairSpousesAsync(Guid staffPersonId, Guid personId, Guid spouseId, string reason);
+
+    Task UnpairSpousesAsync(Guid staffPersonId, Guid personId, string reason);
+}
+
+public interface ICampReviewService : IBaseService<CampDecision>
+{
+    Task<CampQueueDto> GetQueueAsync(Guid editionId, bool includeHealthFlags);
+
+    /// <summary>A human decision. Approval needs a camp capacity and room in it.</summary>
+    Task DecideAsync(Guid staffPersonId, Guid registrationId, CampDecisionKind decision, string reason);
 }

@@ -46,6 +46,8 @@ public class EmsDbContext(DbContextOptions<EmsDbContext> options) : DbContext(op
 
     // Registration
     public DbSet<Registration> Registrations => Set<Registration>();
+    public DbSet<CampDecision> CampDecisions => Set<CampDecision>();
+    public DbSet<DuplicateDismissal> DuplicateDismissals => Set<DuplicateDismissal>();
     public DbSet<RegistrationActor> RegistrationActors => Set<RegistrationActor>();
     public DbSet<RegistrationStatusHistory> RegistrationStatusHistories => Set<RegistrationStatusHistory>();
     public DbSet<Invitation> Invitations => Set<Invitation>();

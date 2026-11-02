@@ -250,11 +250,96 @@ public class HealthService(IHealthDisclosureDao healthDao, IRegistrationDao regi
 }
 
 public class StaffRegistrationService(IRegistrationDao registrationDao, IHealthDisclosureDao healthDao, IAccessLogDao accessLogDao,
-    IFieldEncryptor encryptor) : BaseService<Registration>(registrationDao), IStaffRegistrationService
+    IFieldEncryptor encryptor, IConsentRecordDao consentDao, IEmergencyContactDao contactDao, IAuditEventPublisher auditPublisher)
+    : BaseService<Registration>(registrationDao), IStaffRegistrationService
 {
-    public async Task<PagerEntity<StaffRegistrationDto>> ListAsync(Guid editionId, RegistrationState? state, int page, int max, bool includeHealthFlags)
+    public async Task<StaffRegistrationDetailDto> GetDetailAsync(Guid registrationId, bool includeHealthFlags)
     {
-        var rows = await registrationDao.RetrieveStaffPagedAsync(editionId, state, page, max);
+        var d = await registrationDao.RetrieveStaffDetailAsync(registrationId) ?? throw new NotFoundException("Not found.");
+        var r = d.Registration;
+        var contact = await contactDao.RetrieveForPersonAsync(r.PersonId);
+        var consents = await consentDao.RetrieveCurrentAsync(r.Id);
+        return new StaffRegistrationDetailDto
+        {
+            Id = r.Id, Reference = r.Reference, EditionId = r.EditionId, State = r.State, ParticipationMode = r.ParticipationMode,
+            AgeBand = r.AgeBand, AgeOnReferenceDate = r.AgeOnReferenceDate, DateCreated = r.DateCreated,
+            Person = new StaffPersonDto
+            {
+                PersonId = d.Person.Id, GivenName = d.Person.GivenName, FamilyName = d.Person.FamilyName, DateOfBirth = d.Person.DateOfBirth,
+                Gender = d.Person.Gender, Country = d.Person.Country, City = d.Person.City
+            },
+            HasHealthFlags = includeHealthFlags ? (await healthDao.RetrieveForRegistrationAsync(r.Id))?.HasFlags ?? false : null,
+            Actors = d.Actors.Select(a => new StaffActorDto { PersonId = a.PersonId, Name = a.Name, Role = a.Role }).ToList(),
+            Consents = consents.OrderBy(c => c.Kind).Select(c => new StaffConsentDto { Kind = c.Kind, Accepted = c.Accepted, DocumentVersion = c.DocumentVersion, At = c.DateCreated }).ToList(),
+            EmergencyContact = contact is null ? null : new StaffEmergencyContactDto { FullName = contact.FullName, Relationship = contact.Relationship },
+            History = d.History.Select(h => new StaffHistoryDto { From = h.FromState, To = h.ToState, Actor = h.ActorName, Reason = h.Reason, At = h.At }).ToList(),
+            Cancellable = RegistrationRules.Cancellable(r.State)
+        };
+    }
+
+    public async Task<StaffDashboardDto> GetDashboardAsync(Guid editionId)
+    {
+        var stats = await registrationDao.RetrieveStaffStatsAsync(editionId, DateTime.UtcNow.AddDays(-7));
+        return new StaffDashboardDto
+        {
+            Total = stats.ByState.Values.Sum(), ByState = stats.ByState, ByMode = stats.ByMode, ByAgeBand = stats.ByAgeBand,
+            NeedsAction = stats.ByState.GetValueOrDefault(RegistrationState.NeedsAction), StaleDrafts = stats.StaleDrafts
+        };
+    }
+
+    public async Task<string> ExportCsvAsync(Guid editionId, StaffRegistrationFilter filter, bool includeHealthFlags, string reason)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.Append("Reference,Given name,Family name,State,Mode,Age band,Created");
+        if (includeHealthFlags) sb.Append(",Health flags");
+        sb.Append("\r\n");
+        var total = 0;
+        for (var page = 0; ; page++)
+        {
+            var rows = await registrationDao.RetrieveStaffPagedAsync(editionId, filter, page, 500);
+            var batch = rows.Data.ToList();
+            foreach (var r in batch)
+            {
+                sb.Append(string.Join(',', Csv(r.Reference), Csv(r.GivenName), Csv(r.FamilyName), r.State, r.ParticipationMode, Csv(r.AgeBand ?? ""), r.DateCreated.ToString("yyyy-MM-dd HH:mm")));
+                if (includeHealthFlags) sb.Append(',').Append(r.HasHealthFlags ? "Yes" : "No");
+                sb.Append("\r\n");
+            }
+            total += batch.Count;
+            if (batch.Count == 0 || total >= rows.Count) break;
+        }
+        await auditPublisher.PublishAsync(new EntityAuditEvent
+        {
+            EntityType = nameof(Registration), RecordId = editionId.ToString(), DisplayName = "Registration export",
+            Action = "registration.exported", Reason = $"{reason.Trim()} ({total} rows)", EditionId = editionId
+        });
+        return sb.ToString();
+    }
+
+    // Quotes every cell, and defuses a leading = + - @ so a spreadsheet never runs a name as a formula.
+    private static string Csv(string value)
+    {
+        if (value.Length > 0 && "=+-@\t\r".Contains(value[0])) value = "'" + value;
+        return "\"" + value.Replace("\"", "\"\"") + "\"";
+    }
+
+    public async Task CancelAsync(Guid staffPersonId, Guid registrationId, string reason)
+    {
+        var registration = await registrationDao.RetrieveByIdAsync(registrationId) ?? throw new NotFoundException("Not found.");
+        if (!RegistrationRules.Cancellable(registration.State))
+            throw new AppException("This registration can no longer be cancelled.", isConflict: true, code: "registration_not_cancellable");
+        var from = registration.State;
+        registration.State = RegistrationState.Cancelled;
+        await registrationDao.TransitionAsync(registration, from, reason.Trim(), staffPersonId);
+        await auditPublisher.PublishAsync(new EntityAuditEvent
+        {
+            EntityType = nameof(Registration), RecordId = registration.Id.ToString(), DisplayName = registration.Reference,
+            Action = "registration.cancelled_by_staff", Reason = reason.Trim(), EditionId = registration.EditionId
+        });
+    }
+
+    public async Task<PagerEntity<StaffRegistrationDto>> ListAsync(Guid editionId, StaffRegistrationFilter filter, int page, int max, bool includeHealthFlags)
+    {
+        var rows = await registrationDao.RetrieveStaffPagedAsync(editionId, filter, page, max);
         return new PagerEntity<StaffRegistrationDto>
         {
             Page = rows.Page, Max = rows.Max, Count = rows.Count,

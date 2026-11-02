@@ -44,4 +44,7 @@ public enum GuardianRelationship { Parent, LegalGuardian, Grandparent, OtherRela
 public enum PriceState { Pending, Free, Amount }
 
 /// <summary>What a guardian or adult answers per registration. <see cref="Media"/> never blocks; the others are required.</summary>
+/// <summary>Staff's answer to a camp request. No decision yet means pending.</summary>
+public enum CampDecisionKind { Approved, Waitlisted, Declined }
+
 public enum ConsentKind { Terms, GuardianAuthorization, MedicalEmergency, Media }

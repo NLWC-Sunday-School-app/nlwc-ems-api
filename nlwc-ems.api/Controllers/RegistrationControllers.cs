@@ -96,12 +96,53 @@ public class StaffRegistrationController(IStaffRegistrationService staffService)
 
     [HttpGet]
     public async Task<ActionResult<ApiResponse<PagerEntity<StaffRegistrationDto>>>> List(
-        [FromQuery] Guid editionId, [FromQuery] RegistrationState? state, [FromQuery] int page = 0, [FromQuery] int max = 50)
+        [FromQuery] Guid editionId, [FromQuery] RegistrationState? state, [FromQuery] ParticipationMode? mode, [FromQuery] string? ageBand,
+        [FromQuery] string? q, [FromQuery] int page = 0, [FromQuery] int max = 50)
     {
         if (!User.HasPermissionWithMfa(EmsPermissions.Registrations.View, editionId)) return Denied(EmsPermissions.Registrations.View, editionId);
         var flags = User.HasPermissionWithMfa(EmsPermissions.Health.Flags, editionId);
+        var filter = new StaffRegistrationFilter { State = state, Mode = mode, AgeBand = string.IsNullOrWhiteSpace(ageBand) ? null : ageBand, Text = q };
         return Ok(ApiResponse<PagerEntity<StaffRegistrationDto>>.Ok(
-            await staffService.ListAsync(editionId, state, Math.Max(page, 0), Math.Clamp(max, 1, MaxPageSize), flags)));
+            await staffService.ListAsync(editionId, filter, Math.Max(page, 0), Math.Clamp(max, 1, MaxPageSize), flags)));
+    }
+
+    [HttpGet("dashboard")]
+    public async Task<ActionResult<ApiResponse<StaffDashboardDto>>> Dashboard([FromQuery] Guid editionId)
+    {
+        if (!User.HasPermissionWithMfa(EmsPermissions.Registrations.View, editionId)) return Denied(EmsPermissions.Registrations.View, editionId);
+        return Ok(ApiResponse<StaffDashboardDto>.Ok(await staffService.GetDashboardAsync(editionId)));
+    }
+
+    /// <summary>An audited export of the filtered list: needs <c>registrations:view</c> and a reason.</summary>
+    [HttpGet("export")]
+    public async Task<IActionResult> Export([FromQuery] Guid editionId, [FromQuery] RegistrationState? state, [FromQuery] ParticipationMode? mode,
+        [FromQuery] string? ageBand, [FromQuery] string? q, [FromQuery] string? reason)
+    {
+        if (!User.HasPermissionWithMfa(EmsPermissions.Registrations.View, editionId)) return Denied(EmsPermissions.Registrations.View, editionId);
+        if (string.IsNullOrWhiteSpace(reason) || reason.Length > 500)
+            throw new ValidationException(["Say why you are exporting this list (up to 500 characters)."], "reason_required");
+        var filter = new StaffRegistrationFilter { State = state, Mode = mode, AgeBand = string.IsNullOrWhiteSpace(ageBand) ? null : ageBand, Text = q };
+        var csv = await staffService.ExportCsvAsync(editionId, filter, User.HasPermissionWithMfa(EmsPermissions.Health.Flags, editionId), reason);
+        return File(System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(csv)).ToArray(), "text/csv", $"registrations-{DateTime.UtcNow:yyyyMMdd-HHmm}.csv");
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<ApiResponse<StaffRegistrationDetailDto>>> Detail(Guid id)
+    {
+        var editionId = await staffService.GetEditionIdAsync(id);
+        if (!User.HasPermissionWithMfa(EmsPermissions.Registrations.View, editionId)) return Denied(EmsPermissions.Registrations.View, editionId);
+        var flags = User.HasPermissionWithMfa(EmsPermissions.Health.Flags, editionId);
+        return Ok(ApiResponse<StaffRegistrationDetailDto>.Ok(await staffService.GetDetailAsync(id, flags)));
+    }
+
+    /// <summary>Staff cancel on someone's behalf. Needs <c>registrations:edit</c> and a reason, which is audited.</summary>
+    [HttpPost("{id:guid}/cancel")]
+    public async Task<ActionResult<ApiResponse>> Cancel(Guid id, [FromBody] ReasonRequest request)
+    {
+        var editionId = await staffService.GetEditionIdAsync(id);
+        if (!User.HasPermissionWithMfa(EmsPermissions.Registrations.Edit, editionId)) return Denied(EmsPermissions.Registrations.Edit, editionId);
+        await staffService.CancelAsync(User.GetPersonId(), id, request.Reason);
+        return Ok(ApiResponse.Ok("Registration cancelled."));
     }
 
     /// <summary>A deliberate reveal: needs <c>health:view</c>, a reason, and leaves an access-log row.</summary>

@@ -10,6 +10,9 @@ public record AccountWithPerson(Account Account, Person Person);
 public interface IAccountDao : IBaseDao<Account>
 {
     Task<Account?> RetrieveByEmailAsync(string email);
+
+    /// <summary>The sign-in account that belongs to a person, or null (a dependant has none).</summary>
+    Task<Account?> RetrieveByPersonIdAsync(Guid personId);
     Task<bool> EmailExistsAsync(string email);
 
     /// <summary>The account with its person's name, for staff pickers.</summary>
@@ -142,6 +145,9 @@ public interface IEditionDao : IBaseDao<EventEdition>
     Task<List<EventEdition>> RetrievePublicAsync();
     Task<EventEdition?> RetrievePublicBySlugAsync(string slug);
     Task<EventTemplate?> RetrieveTemplateByCodeAsync(string code);
+
+    /// <summary>The code of the programme the edition belongs to (<c>BB</c>, <c>SS</c>, <c>CP</c>), or null.</summary>
+    Task<string?> RetrieveTemplateCodeAsync(Guid editionId);
 
     /// <summary>Templates that have no public edition yet, so the portal can list them as "coming soon".</summary>
     Task<List<EventTemplate>> RetrieveTemplatesWithoutPublicEditionAsync();

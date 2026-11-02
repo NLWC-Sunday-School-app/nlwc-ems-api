@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using OtpNet;
 using nlwc.ems.Core.Models;
 using nlwc.ems.Dtos;
+using nlwc.ems.Services.Options;
 
 namespace nlwc.ems.Services.Implementations;
 
@@ -76,7 +78,7 @@ public class AccountService(IAccountDao accountDao, IEmailVerificationDao verifi
     private static UnauthorizedException InvalidCredentials() => new("Invalid email or password.", "invalid_credentials");
 }
 
-public class SessionService(IAuthSessionDao sessionDao, IRoleGrantService grantService, ITokenGenerator tokens)
+public class SessionService(IAuthSessionDao sessionDao, IRoleGrantService grantService, ITokenGenerator tokens, IOptions<SecurityOptions> security)
     : BaseService<AuthSession>(sessionDao), ISessionService
 {
     // Staff and gate sessions are short on purpose: a console left open, or a lost phone, should expire quickly.
@@ -103,7 +105,7 @@ public class SessionService(IAuthSessionDao sessionDao, IRoleGrantService grantS
         var s = resolved.Session;
         await sessionDao.TouchAsync(s.Id, DateTime.UtcNow + Idle(s.Surface));
         var permissions = await grantService.GetPermissionCodesAsync(s.AccountId);
-        return new SessionPrincipal(s.Id, s.AccountId, resolved.PersonId, s.Surface, s.MfaVerifiedAt is not null, resolved.EmailVerified, permissions);
+        return new SessionPrincipal(s.Id, s.AccountId, resolved.PersonId, s.Surface, !security.Value.RequireMfa || s.MfaVerifiedAt is not null, resolved.EmailVerified, permissions);
     }
 
     public Task LogOutAsync(Guid sessionId) => sessionDao.RevokeAsync(sessionId);

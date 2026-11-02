@@ -7,6 +7,7 @@ using nlwc.ems.Core.Security;
 using nlwc.ems.Data.EFCore;
 using nlwc.ems.Dtos;
 using nlwc.ems.Services.Implementations;
+using nlwc.ems.Services.Messaging;
 using nlwc.ems.Services.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,10 +36,16 @@ builder.Services.Configure<SecurityOptions>(builder.Configuration.GetSection(Sec
 builder.Services.Configure<GoogleOptions>(builder.Configuration.GetSection(GoogleOptions.SectionName));
 builder.Services.AddHttpClient();
 
+// Email: Mailgun sends it; EmailTemplateMailer turns the app's named messages into emails (and only logs while Mailgun is unconfigured).
+builder.Services.Configure<MailgunOptions>(builder.Configuration.GetSection(MailgunOptions.SectionName));
+builder.Services.AddSingleton<IEmailService, MailgunEmailService>();
+
 // Everything under these namespaces is registered against the interfaces it implements.
 builder.Services
     .AddImplementationsFromNamespace<EmsDbContext>("nlwc.ems.Data.EFCore.Implementations")
     .AddImplementationsFromNamespace<EditionService>("nlwc.ems.Services.Implementations");
+// Registered after the scan so it replaces the placeholder ConsoleMailer.
+builder.Services.AddScoped<IMailer, EmailTemplateMailer>();
 
 // Cookie-session authentication; permissions arrive as claims, so RequirePermission and the base controllers read one thing.
 builder.Services.AddAuthentication(SessionAuthenticationHandler.SchemeName)
@@ -62,6 +69,9 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+if (!app.Configuration.GetValue("Security:RequireMfa", true))
+    app.Logger.LogWarning("Security:RequireMfa is OFF: every session counts as MFA-verified. Never run production like this.");
 
 using (var scope = app.Services.CreateScope())
 {

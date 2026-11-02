@@ -30,4 +30,8 @@
     <ProjectReference Include="..\nlwc-ems.Base\nlwc-ems.Base.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Templates\*.html" LogicalName="Templates/%(Filename)%(Extension)" />
+  </ItemGroup>
+
 </Project>

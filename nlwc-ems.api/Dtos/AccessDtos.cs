@@ -47,3 +47,18 @@ public class StaffLookupDto
     public string GivenName { get; set; } = string.Empty;
     public string FamilyName { get; set; } = string.Empty;
 }
+
+public class EmailTestRequest
+{
+    [Required, EmailAddress, MaxLength(254)]
+    public string To { get; set; } = string.Empty;
+}
+
+public class EmailTestDto
+{
+    /// <summary>False when Mailgun's domain or API key is missing, so nothing could be sent.</summary>
+    public bool Configured { get; set; }
+    public bool Sent { get; set; }
+    public string To { get; set; } = string.Empty;
+    public string? From { get; set; }
+}

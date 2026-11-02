@@ -1,3 +1,4 @@
+using nlwc.ems.Services.Messaging;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,22 @@ public sealed class CapturingMailer : IMailer
     {
         lock (Sent) Sent.Add((To: to, Template: template, Data: data));
         return Task.CompletedTask;
+    }
+}
+
+public sealed class CapturingEmailService : IEmailService
+{
+    public readonly List<(string To, string Subject, string Html)> Sent = [];
+
+    public Task<bool> SendEmailAsync(Mailer emailto, Mailer? emailfrom, string subject, string htmlcontent, Dictionary<string, byte[]>? attachments = null)
+    {
+        lock (Sent) Sent.Add((emailto.Address, subject, htmlcontent));
+        return Task.FromResult(true);
+    }
+
+    public async Task SendEmailAsync(List<Mailer> emailto, Mailer? emailfrom, string subject, string htmlcontent, Dictionary<string, byte[]>? attachments = null)
+    {
+        foreach (var to in emailto) await SendEmailAsync(to, emailfrom, subject, htmlcontent, attachments);
     }
 }
 
@@ -43,6 +60,7 @@ public sealed class TestApp : IAsyncLifetime
     private WebApplicationFactory<Program> _factory = null!;
 
     public CapturingMailer Mail { get; } = new();
+    public CapturingEmailService Email { get; } = new();
     public NpgsqlDataSource Db { get; private set; } = null!;
     public HttpClient Client { get; private set; } = null!;
     public FakeGoogle Google { get; } = new();
@@ -66,6 +84,7 @@ public sealed class TestApp : IAsyncLifetime
             b.ConfigureTestServices(s =>
             {
                 s.RemoveAll<IMailer>(); s.AddSingleton<IMailer>(Mail);
+                s.RemoveAll<IEmailService>(); s.AddSingleton<IEmailService>(Email);
                 s.RemoveAll<IGoogleOidcClient>(); s.AddSingleton<IGoogleOidcClient>(Google);
             }));
         NoRedirectClient = _factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false, AllowAutoRedirect = false });

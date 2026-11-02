@@ -1,5 +1,8 @@
+using Microsoft.Extensions.Options;
 using nlwc.ems.Core.Models;
 using nlwc.ems.Dtos;
+using nlwc.ems.Services.Messaging;
+using nlwc.ems.Services.Options;
 
 namespace nlwc.ems.Services.Implementations;
 
@@ -133,5 +136,73 @@ public class CampReviewService(ICampDecisionDao decisionDao, IRegistrationDao re
             EntityType = nameof(Registration), RecordId = registrationId.ToString(), DisplayName = row.Reference, Action = $"camp.{decision.ToString().ToLowerInvariant()}",
             Reason = reason.Trim(), EditionId = registration.EditionId
         });
+    }
+}
+
+public class RegistrationNotifier(IRegistrationDao registrationDao, IPersonDao personDao, IAccountDao accountDao, IEditionDao editionDao, IRatePlanService ratePlanService,
+    ICampDecisionDao campDecisionDao, IEmailService email, IOptions<MailgunOptions> options, ILogger<RegistrationNotifier> logger) : IRegistrationNotifier
+{
+    private static readonly RegistrationState[] Live = [RegistrationState.Submitted, RegistrationState.NeedsAction, RegistrationState.Confirmed, RegistrationState.Completed];
+
+    public async Task NotifyRegisteredAsync(Guid guardianPersonId, Guid registrationId)
+    {
+        try
+        {
+            var registration = await registrationDao.RetrieveByIdAsync(registrationId);
+            if (registration is null || registration.PersonId == guardianPersonId) return;   // an adult registering themself is not this email
+
+            // Only Bible Bootcamp has a confirmation template so far; other programmes get theirs when it is designed.
+            if (await editionDao.RetrieveTemplateCodeAsync(registration.EditionId) != "BB")
+            {
+                logger.LogInformation("No confirmation email template for the programme of registration {Registration}; nothing sent.", registration.Reference);
+                return;
+            }
+            var account = await accountDao.RetrieveByPersonIdAsync(guardianPersonId);
+            var guardian = await personDao.RetrieveByIdAsync(guardianPersonId);
+            var edition = await editionDao.RetrieveByIdAsync(registration.EditionId);
+            if (account is null || guardian is null || edition is null) return;
+
+            // Every child this guardian has registered for the event, so a second child's email lists both.
+            var camp = (await campDecisionDao.RetrieveQueueAsync(edition.Id)).ToDictionary(r => r.RegistrationId);
+            var children = new List<ConfirmationChild>();
+            foreach (var r in (await registrationDao.RetrieveForActorAsync(guardianPersonId))
+                         .Where(r => r.EditionId == edition.Id && r.PersonId != guardianPersonId && Live.Contains(r.State)).OrderBy(r => r.DateCreated))
+            {
+                var child = await personDao.RetrieveByIdAsync(r.PersonId);
+                if (child is null) continue;
+                var (label, pending) = Status(r, camp.GetValueOrDefault(r.Id));
+                children.Add(new ConfirmationChild(child.GivenName, $"{child.GivenName} {child.FamilyName}", r.AgeOnReferenceDate, r.Reference, r.ParticipationMode, label, pending));
+            }
+            if (children.Count == 0) return;
+
+            var venue = edition.Venue;
+            var html = RegistrationConfirmationEmail.Render(guardian.GivenName,
+                new ConfirmationEdition(edition.Name, edition.StartsOn, edition.EndsOn, venue?.Name, venue?.Address,
+                    await ratePlanService.GetPriceStateAsync(edition.Id) == PriceState.Free, edition.PickupWindowStart, edition.PickupWindowEnd),
+                children, options.Value.WebBaseUrl);
+            await email.SendEmailAsync(new Mailer(account.Email, guardian.GivenName), null, RegistrationConfirmationEmail.Subject(edition.Name), html);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "The registration confirmation email for {Registration} could not be sent.", registrationId);
+        }
+    }
+
+    private static (string Label, bool Pending) Status(Registration r, CampQueueRow? camp)
+    {
+        if (r.ParticipationMode == ParticipationMode.Camp)
+            return camp?.Decision switch
+            {
+                CampDecisionKind.Approved => ("Camp place confirmed", false),
+                CampDecisionKind.Waitlisted => ("On the camp waitlist", true),
+                CampDecisionKind.Declined => ("Camp is not available", true),
+                _ => ("Pending our team's review", true)
+            };
+        return r.State switch
+        {
+            RegistrationState.Confirmed or RegistrationState.Completed => ("Confirmed", false),
+            RegistrationState.NeedsAction => ("Needs your attention", true),
+            _ => ("Awaiting payment", true)
+        };
     }
 }

@@ -187,6 +187,12 @@ public interface IStaffRegistrationService : IBaseService<Registration>
     Task<HealthDto?> RevealHealthAsync(Guid actorAccountId, Guid registrationId, string reason);
 }
 
+/// <summary>Emails the parent or guardian once a child's registration is in. It never throws: a missing or failed email must not undo a registration.</summary>
+public interface IRegistrationNotifier
+{
+    Task NotifyRegisteredAsync(Guid guardianPersonId, Guid registrationId);
+}
+
 public interface IStaffPeopleService : IBaseService<PersonRelationship>
 {
     Task<PagerEntity<StaffPersonSummaryDto>> SearchAsync(string? text, int page, int max);

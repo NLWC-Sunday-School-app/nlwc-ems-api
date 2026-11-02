@@ -6,7 +6,7 @@ namespace nlwc.ems.Services.Implementations;
 
 public class RegistrationService(IRegistrationDao registrationDao, IConsentRecordDao consentDao, IHealthDisclosureDao healthDao,
     IPersonDao personDao, IEditionDao editionDao, IGuardianAuthorizationDao guardianDao, IEmergencyContactDao contactDao,
-    IAuditEventPublisher auditPublisher) : BaseService<Registration>(registrationDao), IRegistrationService
+    IAuditEventPublisher auditPublisher, IRegistrationNotifier notifier) : BaseService<Registration>(registrationDao), IRegistrationService
 {
     private const int MaxDraftBytes = 20_000;
 
@@ -95,6 +95,7 @@ public class RegistrationService(IRegistrationDao registrationDao, IConsentRecor
             EntityType = nameof(Registration), RecordId = registration.Id.ToString(), DisplayName = registration.Reference,
             Action = "registration.submitted", EditionId = registration.EditionId
         });
+        await notifier.NotifyRegisteredAsync(callerPersonId, registration.Id);   // never throws; a failed email must not undo the registration
         review.State = registration.State;
         return review;
     }

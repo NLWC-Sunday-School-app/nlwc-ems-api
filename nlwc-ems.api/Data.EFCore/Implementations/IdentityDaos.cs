@@ -12,6 +12,8 @@ public class AccountDao(EmsDbContext dbContext, IHttpContextAccessor httpContext
 {
     public Task<Account?> RetrieveByEmailAsync(string email) => Query().FirstOrDefaultAsync(a => a.Email == email);
 
+    public Task<Account?> RetrieveByPersonIdAsync(Guid personId) => Query().FirstOrDefaultAsync(a => a.PersonId == personId);
+
     public async Task<AccountWithPerson?> RetrieveWithPersonByEmailAsync(string email)
     {
         var found = await (from a in Query()

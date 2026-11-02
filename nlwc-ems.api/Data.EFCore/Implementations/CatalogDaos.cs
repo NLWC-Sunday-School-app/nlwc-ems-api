@@ -20,6 +20,10 @@ public class EditionDao(EmsDbContext dbContext, IHttpContextAccessor httpContext
     public Task<EventTemplate?> RetrieveTemplateByCodeAsync(string code)
         => DbContext.Set<EventTemplate>().AsNoTracking().FirstOrDefaultAsync(t => t.Code == code);
 
+    public Task<string?> RetrieveTemplateCodeAsync(Guid editionId)
+        => (from e in DbContext.Set<EventEdition>().AsNoTracking() join t in DbContext.Set<EventTemplate>().AsNoTracking() on e.TemplateId equals t.Id
+            where e.Id == editionId select t.Code).FirstOrDefaultAsync();
+
     public Task<List<EventTemplate>> RetrieveTemplatesWithoutPublicEditionAsync()
         => DbContext.Set<EventTemplate>().AsNoTracking()
             .Where(t => !DbContext.Set<EventEdition>().Any(e => e.TemplateId == t.Id && e.Visibility == EditionVisibility.Public))

@@ -10,6 +10,10 @@ public class SecurityOptions
     /// <summary>Marks the session cookie Secure. Only turn off for plain-http local development and tests.</summary>
     public bool CookieSecure { get; set; } = true;
 
+    /// <summary>Staff permissions only work on a session that has entered an authenticator code. Turning this off treats every
+    /// session as MFA-verified, so it is for local development only and must stay on in production.</summary>
+    public bool RequireMfa { get; set; } = true;
+
     public static bool IsValidMasterKey(string? key)
         => key is { Length: 64 } && key.All(Uri.IsHexDigit);
 

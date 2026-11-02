@@ -26,6 +26,14 @@ public class RegistrationRulesTests
     public void Camp_ages_treat_a_null_bound_as_open(int age, int? min, int? max, bool allowed)
         => RegistrationRules.CampAgeAllowed(age, min, max).Should().Be(allowed);
 
+    [Theory]
+    [InlineData(20, 20, true)]
+    [InlineData(21, 20, false)]
+    [InlineData(32, 20, false)]
+    [InlineData(32, null, true)]
+    public void An_edition_age_limit_applies_to_everyone_and_null_means_no_limit(int age, int? max, bool allowed)
+        => RegistrationRules.WithinEditionAge(age, max).Should().Be(allowed);
+
     [Fact]
     public void A_child_needs_three_consents_and_an_adult_only_the_terms()
     {

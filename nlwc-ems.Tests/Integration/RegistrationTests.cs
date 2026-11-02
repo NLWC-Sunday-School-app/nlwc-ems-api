@@ -14,14 +14,14 @@ public sealed class RegistrationTests(TestApp app)
     private const string NineOnReference = "2017-05-01";
     private const string ElevenOnReference = "2015-06-01";
 
-    private async Task<(Guid Id, string Code)> NewEdition(bool open = true, int campMin = 10, int campMax = 16, DateOnly? startsOn = null)
+    private async Task<(Guid Id, string Code)> NewEdition(bool open = true, int campMin = 10, int campMax = 16, DateOnly? startsOn = null, int? maxAge = null)
     {
         var admin = await h.StaffWith("super_admin");
         var tag = Guid.NewGuid().ToString("N")[..4];
         var response = await h.Send(HttpMethod.Post, "/api/v1/edition", admin.Headers, new
         {
             templateCode = "BB", slug = $"bb-{tag}", code = $"B{tag}", name = "Bible Bootcamp 2026", startsOn = (startsOn ?? new DateOnly(2026, 12, 21)).ToString("yyyy-MM-dd"), endsOn = (startsOn ?? new DateOnly(2026, 12, 21)).AddDays(2).ToString("yyyy-MM-dd"),
-            venueName = "Faith Plaza", campMinAge = campMin, campMaxAge = campMax
+            venueName = "Faith Plaza", campMinAge = campMin, campMaxAge = campMax, maxAge
         });
         response.StatusCode.Should().Be(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
         var id = (await Harness.Data(response)).GetProperty("id").GetGuid();
@@ -183,6 +183,20 @@ public sealed class RegistrationTests(TestApp app)
         (await Harness.Code(tooYoung)).Should().Be("camp_age_ineligible");
         (await Register(u, edition, nine, "Day")).StatusCode.Should().Be(HttpStatusCode.Created);   // day attendance is not age-gated
         (await Register(u, edition, eleven, "Camp")).StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task An_edition_age_limit_refuses_anyone_older_in_every_mode()
+    {
+        var (edition, _) = await NewEdition(maxAge: 20);
+        var adult = await h.NewUser();
+        (await h.Send(HttpMethod.Put, "/api/v1/profile", adult.Headers, new { givenName = "Ada", familyName = "Obi", dateOfBirth = "1994-01-01" })).StatusCode.Should().Be(HttpStatusCode.OK);
+        foreach (var mode in new[] { "Online", "Day" })
+        {
+            var refused = await Register(adult, edition, null, mode);
+            refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            (await Harness.Code(refused)).Should().Be("age_ineligible");
+        }
     }
 
     [Fact]

@@ -45,6 +45,9 @@ public class EventEdition : BaseEntity, IFilterable<EventEdition, EditionFilter>
     /// <summary>Age bands and eligibility are evaluated on this date. Defaults to <see cref="StartsOn"/>.</summary>
     public DateOnly AgeReferenceDate { get; set; }
 
+    /// <summary>Oldest age (on the reference date) that may register for this edition in any mode. Null means no limit.</summary>
+    public int? MaxAge { get; set; }
+
     public int? CampMinAge { get; set; }
     public int? CampMaxAge { get; set; }
     public int? CampCapacity { get; set; }

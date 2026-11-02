@@ -13,6 +13,7 @@ public class EditionService(IEditionDao editionDao, IRatePlanService ratePlanSer
         var ends = request.EndsOn!.Value;
         if (ends < starts) return ServiceResponse.Fail<EventEdition>("The event can't end before it starts.");
         if (request.CampMinAge > request.CampMaxAge) return ServiceResponse.Fail<EventEdition>("The camp's minimum age can't exceed its maximum.");
+        if (request.MaxAge < request.CampMaxAge) return ServiceResponse.Fail<EventEdition>("The camp's maximum age can't exceed the event's maximum age.");
 
         var template = await editionDao.RetrieveTemplateByCodeAsync(request.TemplateCode);
         if (template is null) return ServiceResponse.Fail<EventEdition>("Unknown event template.");
@@ -37,7 +38,9 @@ public class EditionService(IEditionDao editionDao, IRatePlanService ratePlanSer
     public override Task<ServiceResponse<EventEdition>> PreUpdateAsync(EventEdition item)
         => Task.FromResult(item.CampMinAge > item.CampMaxAge
             ? ServiceResponse.Fail<EventEdition>("The camp's minimum age can't exceed its maximum.")
-            : ServiceResponse.Success(item));
+            : item.MaxAge < item.CampMaxAge
+                ? ServiceResponse.Fail<EventEdition>("The camp's maximum age can't exceed the event's maximum age.")
+                : ServiceResponse.Success(item));
 
     public async Task<IReadOnlyList<EditionSummaryDto>> ListForStaffAsync(bool churchWide, IReadOnlyCollection<Guid> scopedEditionIds)
     {
@@ -65,6 +68,7 @@ public class EditionService(IEditionDao editionDao, IRatePlanService ratePlanSer
     {
         Id = e.Id, Slug = e.Slug, Code = e.Code, Name = e.Name, Timezone = e.Timezone, StartsOn = e.StartsOn, EndsOn = e.EndsOn,
         Venue = e.Venue is null ? null : new PublicVenueDto { Name = e.Venue.Name, Address = e.Venue.Address },
+        MaxAge = e.MaxAge,
         Camp = e.CampMinAge is null ? null : new PublicCampDto { MinAge = e.CampMinAge, MaxAge = e.CampMaxAge },
         PickupWindow = e.PickupWindowStart is { } s && e.PickupWindowEnd is { } t ? new PublicPickupWindowDto { Start = s, End = t } : null,
         Stage = e.Stage, RegistrationWindow = e.RegistrationWindow,

@@ -10,6 +10,9 @@ public static class RegistrationRules
 
     public static bool IsMinor(int age) => age < AdultAge;
 
+    /// <summary>An edition's own age limit applies to every mode. Null means no limit.</summary>
+    public static bool WithinEditionAge(int age, int? maxAge) => maxAge is null || age <= maxAge;
+
     /// <summary>A null bound means unbounded. Only camp has an age range; day and online attendance are not age-gated.</summary>
     public static bool CampAgeAllowed(int age, int? min, int? max) => (min is null || age >= min) && (max is null || age <= max);
 

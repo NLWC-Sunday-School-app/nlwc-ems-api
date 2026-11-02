@@ -32,7 +32,7 @@ public class EditionController(IEditionService editionService, IRatePlanService 
     {
         Slug = request.Slug, Code = request.Code.ToUpperInvariant(), Name = request.Name.Trim(),
         StartsOn = request.StartsOn!.Value, EndsOn = request.EndsOn!.Value,
-        CampMinAge = request.CampMinAge, CampMaxAge = request.CampMaxAge, CampCapacity = request.CampCapacity,
+        MaxAge = request.MaxAge, CampMinAge = request.CampMinAge, CampMaxAge = request.CampMaxAge, CampCapacity = request.CampCapacity,
         PickupWindowStart = request.PickupWindowStart, PickupWindowEnd = request.PickupWindowEnd
     });
 
@@ -43,6 +43,7 @@ public class EditionController(IEditionService editionService, IRatePlanService 
     protected override Task ApplyUpdateAsync(EventEdition edition, UpdateEditionRequest request)
     {
         edition.Name = request.Name.Trim();
+        edition.MaxAge = request.MaxAge;
         edition.CampMinAge = request.CampMinAge;
         edition.CampMaxAge = request.CampMaxAge;
         edition.CampCapacity = request.CampCapacity;

@@ -30,6 +30,9 @@ public class CreateEditionRequest
     public string? VenueAddress { get; set; }
 
     [Range(0, 120)]
+    public int? MaxAge { get; set; }
+
+    [Range(0, 120)]
     public int? CampMinAge { get; set; }
 
     [Range(0, 120)]
@@ -46,6 +49,9 @@ public class UpdateEditionRequest
 {
     [Required, MaxLength(200)]
     public string Name { get; set; } = string.Empty;
+
+    [Range(0, 120)]
+    public int? MaxAge { get; set; }
 
     [Range(0, 120)]
     public int? CampMinAge { get; set; }
@@ -162,6 +168,8 @@ public class PublicEditionDto
     public DateOnly StartsOn { get; set; }
     public DateOnly EndsOn { get; set; }
     public PublicVenueDto? Venue { get; set; }
+    /// <summary>Oldest age that may register, on the day the event starts. Null means no limit.</summary>
+    public int? MaxAge { get; set; }
     public PublicCampDto? Camp { get; set; }
     public PublicPickupWindowDto? PickupWindow { get; set; }
     public EditionStage? Stage { get; set; }

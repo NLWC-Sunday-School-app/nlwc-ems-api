@@ -41,6 +41,9 @@ public class RegistrationService(IRegistrationDao registrationDao, IConsentRecor
         if (!RegistrationRules.IsMinor(age) && subjectId != callerPersonId)
             throw new ValidationException(["This person is 18 or over at this event and must register themself."], "adult_registers_themself");
 
+        if (!RegistrationRules.WithinEditionAge(age, edition.MaxAge))
+            throw new ValidationException([$"This event is for people up to {edition.MaxAge} years old."], "age_ineligible");
+
         var mode = request.ParticipationMode!.Value;
         if (mode == ParticipationMode.Camp && !RegistrationRules.CampAgeAllowed(age, edition.CampMinAge, edition.CampMaxAge))
             throw new ValidationException(["This person is outside the camp age range."], "camp_age_ineligible");

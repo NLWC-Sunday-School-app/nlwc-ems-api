@@ -1076,6 +1076,10 @@ namespace nlwc.ems.Data.EFCore.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("live_state");
 
+                    b.Property<int?>("MaxAge")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_age");
+
                     b.Property<string>("ModifiedBy")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")

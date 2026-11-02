@@ -57,6 +57,7 @@ public sealed class TestApp : IAsyncLifetime
         Environment.SetEnvironmentVariable("ConnectionStrings__EmsDatabase", _pg.GetConnectionString());
         Environment.SetEnvironmentVariable("Security__MasterKey", new string('a', 64));
         Environment.SetEnvironmentVariable("Security__CookieSecure", "false");
+        Environment.SetEnvironmentVariable("Cors__AllowedOrigins__0", "http://localhost:3000");
         Environment.SetEnvironmentVariable("Google__ClientId", "test-client");
         Environment.SetEnvironmentVariable("Google__ClientSecret", "test-secret");
         Environment.SetEnvironmentVariable("Google__RedirectUri", "http://localhost:3000/api/v1/auth/google/callback");

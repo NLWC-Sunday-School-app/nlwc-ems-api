@@ -25,7 +25,7 @@ docker compose up -d postgres
 dotnet run --project nlwc-ems.api              # migrates the database on startup; http://localhost:4000
 ```
 Development settings (local Postgres, a throwaway master key, non-secure cookie) are in `appsettings.Development.json`.
-Anywhere else, supply `ConnectionStrings__EmsDatabase`, `Security__MasterKey` (64 hex chars) and `Cors__AllowedOrigins__0…`.
+Anywhere else, supply `ConnectionStrings__EmsDatabase`, `Security__MasterKey` (64 hex chars) and `Cors__AllowedOrigins__0…` (production defaults to `https://events.nlwc.church`; the localhost origins live in `appsettings.Development.json`).
 
 - Health: `GET /health`. API contract: `GET /swagger/v1/swagger.json` (Development), which the frontends generate clients from.
 - First super admin: sign up, then `dotnet run --project nlwc-ems.api --no-launch-profile -- --bootstrap-admin you@example.com`.

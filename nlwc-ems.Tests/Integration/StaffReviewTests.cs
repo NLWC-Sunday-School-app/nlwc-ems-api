@@ -224,7 +224,12 @@ public sealed class StaffReviewTests(TestApp app)
     {
         var (edition, family, a, _) = await CampEdition(capacity: 5, kids: 1);
         var officer = await h.StaffWith("registration_officer");
-        (await h.Send(HttpMethod.Post, $"/api/v1/registration/{a}/cancel", family.Headers, new { reason = "Changed mind" })).StatusCode.Should().Be(HttpStatusCode.OK);
+        // A confirmed registration can't be cancelled by its owner any more; staff still can.
+        var owner = await h.Send(HttpMethod.Post, $"/api/v1/registration/{a}/cancel", family.Headers, new { reason = "Changed mind" });
+        owner.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await Harness.Code(owner)).Should().Be("registration_not_cancellable");
+        var admin = await h.StaffWith("super_admin");
+        (await h.Send(HttpMethod.Post, $"/api/v1/admin/registration/{a}/cancel", admin.Headers, new { reason = "Changed mind" })).StatusCode.Should().Be(HttpStatusCode.OK);
         var response = await h.Send(HttpMethod.Post, $"/api/v1/admin/camp/{a}/decision", officer.Headers, new { decision = "Approved", reason = "Fit" });
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
         (await Harness.Code(response)).Should().Be("camp_not_reviewable");

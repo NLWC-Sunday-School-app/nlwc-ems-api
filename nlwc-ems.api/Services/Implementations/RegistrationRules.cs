@@ -28,6 +28,9 @@ public static class RegistrationRules
     public static bool Cancellable(RegistrationState state) =>
         state is RegistrationState.Draft or RegistrationState.ProvisionalPendingClaim or RegistrationState.Submitted
             or RegistrationState.NeedsAction or RegistrationState.Confirmed;
+
+    /// <summary>What the person who registered may cancel themself: nothing once it is confirmed. Staff can still cancel a confirmed one.</summary>
+    public static bool CancellableByOwner(RegistrationState state) => state != RegistrationState.Confirmed && Cancellable(state);
 }
 
 /// <summary>The disclosure form's vocabulary and its one hard rule: "none" is exclusive.</summary>

@@ -53,6 +53,21 @@ public class UpdateEditionRequest
     [Required, MaxLength(200)]
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>The web address name. Null leaves it as it is. Changing it changes the event's public link.</summary>
+    [MaxLength(100), RegularExpression("^[a-z0-9]+(-[a-z0-9]+)*$", ErrorMessage = "Slug must be lower-case words joined by hyphens.")]
+    public string? Slug { get; set; }
+
+    /// <summary>Null leaves the date as it is. Days are added or removed to match the new range.</summary>
+    public DateOnly? StartsOn { get; set; }
+    public DateOnly? EndsOn { get; set; }
+
+    /// <summary>Null leaves the venue as it is.</summary>
+    [MaxLength(200)]
+    public string? VenueName { get; set; }
+
+    [MaxLength(500)]
+    public string? VenueAddress { get; set; }
+
     [Range(0, 120)]
     public int? MinAge { get; set; }
 

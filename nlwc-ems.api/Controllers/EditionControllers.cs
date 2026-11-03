@@ -40,7 +40,7 @@ public class EditionController(IEditionService editionService, IRatePlanService 
     protected override Task<ServiceResponse<EventEdition>> InsertAsync(EventEdition entity, CreateEditionRequest request)
         => Service.CreateAsync(entity, request);
 
-    protected override Task ApplyUpdateAsync(EventEdition edition, UpdateEditionRequest request)
+    protected override async Task ApplyUpdateAsync(EventEdition edition, UpdateEditionRequest request)
     {
         edition.Name = request.Name.Trim();
         edition.MinAge = request.MinAge;
@@ -50,8 +50,11 @@ public class EditionController(IEditionService editionService, IRatePlanService 
         edition.CampCapacity = request.CampCapacity;
         edition.PickupWindowStart = request.PickupWindowStart;
         edition.PickupWindowEnd = request.PickupWindowEnd;
-        return Task.CompletedTask;
+        await Service.ApplyDetailsAsync(edition, request);
     }
+
+    protected override async Task<EventEdition?> AfterUpdateAsync(EventEdition updated, UpdateEditionRequest request)
+        => await Service.RetrieveByIdAsync(updated.Id);
 
     /// <summary>The editions the caller can work in, so a role that cannot list every edition still finds its own. A church-wide
     /// grant covers all editions; an edition-scoped grant only that one.</summary>

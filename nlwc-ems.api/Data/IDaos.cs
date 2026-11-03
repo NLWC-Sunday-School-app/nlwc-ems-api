@@ -152,6 +152,10 @@ public interface IEditionDao : IBaseDao<EventEdition>
     /// <summary>Templates that have no public edition yet, so the portal can list them as "coming soon".</summary>
     Task<List<EventTemplate>> RetrieveTemplatesWithoutPublicEditionAsync();
     Task<bool> SlugOrCodeExistsAsync(string slug, string code);
+    Task<bool> SlugTakenByOtherAsync(string slug, Guid editionId);
+
+    /// <summary>Creates or updates the venue and brings the edition's days in line with its date range.</summary>
+    Task SyncVenueAndDaysAsync(EventEdition edition, string? venueName, string? venueAddress);
 
     /// <summary>The edition with its venue, days, off-by-default capabilities and reference counter, in one transaction.</summary>
     Task InsertWithChildrenAsync(EventEdition edition, Venue? venue, IReadOnlyList<EventDay> days,

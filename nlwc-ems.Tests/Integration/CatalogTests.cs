@@ -85,6 +85,29 @@ public sealed class CatalogTests(TestApp app)
     }
 
     [Fact]
+    public async Task An_edition_s_address_dates_and_venue_can_be_edited_and_its_days_follow()
+    {
+        var admin = await h.StaffWith("super_admin");
+        var id = await CreateEdition(admin, "ed17");
+        var other = await CreateEdition(admin, "ed18");
+
+        var ok = await h.Send(HttpMethod.Put, $"/api/v1/edition/{id}", admin.Headers,
+            new { name = "Moved", slug = "moved-bootcamp", startsOn = "2026-12-22", endsOn = "2026-12-26", venueName = "New Hall", venueAddress = "1 Church Rd" });
+        ok.StatusCode.Should().Be(HttpStatusCode.OK, await ok.Content.ReadAsStringAsync());
+        var e = await Harness.Data(ok);
+        e.GetProperty("slug").GetString().Should().Be("moved-bootcamp");
+        e.GetProperty("venue").GetProperty("name").GetString().Should().Be("New Hall");
+        e.GetProperty("days").EnumerateArray().Select(d => d.GetProperty("day").GetString()).Should()
+            .Equal("2026-12-22", "2026-12-23", "2026-12-24", "2026-12-25", "2026-12-26");
+        e.GetProperty("ageReferenceDate").GetString().Should().Be("2026-12-22");
+
+        var clash = await h.Send(HttpMethod.Put, $"/api/v1/edition/{other}", admin.Headers, new { name = "X", slug = "moved-bootcamp" });
+        clash.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var backwards = await h.Send(HttpMethod.Put, $"/api/v1/edition/{id}", admin.Headers, new { name = "X", startsOn = "2026-12-30", endsOn = "2026-12-26" });
+        backwards.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task Capabilities_are_per_edition_switches()
     {
         var admin = await h.StaffWith("super_admin");

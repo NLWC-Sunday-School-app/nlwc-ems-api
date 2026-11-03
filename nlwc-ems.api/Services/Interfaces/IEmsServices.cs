@@ -112,6 +112,9 @@ public interface IEditionService : IBaseService<EventEdition>
     /// and its reference counter.</summary>
     Task<ServiceResponse<EventEdition>> CreateAsync(EventEdition edition, CreateEditionRequest request);
 
+    /// <summary>Applies the editable details (web address, dates, venue and their days) of an update onto the edition.</summary>
+    Task ApplyDetailsAsync(EventEdition edition, UpdateEditionRequest request);
+
     Task<IReadOnlyList<PublicEditionDto>> ListPublicAsync();
     Task<PublicEditionDto?> GetPublicAsync(string slug);
 

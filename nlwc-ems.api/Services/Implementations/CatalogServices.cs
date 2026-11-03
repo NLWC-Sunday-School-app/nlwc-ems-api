@@ -37,6 +37,26 @@ public class EditionService(IEditionDao editionDao, IRatePlanService ratePlanSer
         return ServiceResponse.Success((await editionDao.RetrieveByIdAsync(edition.Id))!);
     }
 
+    public async Task ApplyDetailsAsync(EventEdition edition, UpdateEditionRequest request)
+    {
+        if (request.Slug is { } slug && slug != edition.Slug)
+        {
+            if (await editionDao.SlugTakenByOtherAsync(slug, edition.Id))
+                throw new AppException("Another edition already uses this web address name.", isConflict: true, code: "duplicate");
+            edition.Slug = slug;
+        }
+
+        var starts = request.StartsOn ?? edition.StartsOn;
+        var ends = request.EndsOn ?? edition.EndsOn;
+        if (ends < starts) throw new ValidationException(["The event can't end before it starts."], "validation_failed");
+        // Ages are worked out on the reference date, which follows the start date unless someone set it apart from it.
+        if (edition.AgeReferenceDate == edition.StartsOn) edition.AgeReferenceDate = starts;
+        edition.StartsOn = starts;
+        edition.EndsOn = ends;
+
+        await editionDao.SyncVenueAndDaysAsync(edition, string.IsNullOrWhiteSpace(request.VenueName) ? null : request.VenueName, request.VenueAddress);
+    }
+
     public override Task<ServiceResponse<EventEdition>> PreUpdateAsync(EventEdition item)
         => Task.FromResult(item.CampMinAge > item.CampMaxAge
             ? ServiceResponse.Fail<EventEdition>("The camp's minimum age can't exceed its maximum.")

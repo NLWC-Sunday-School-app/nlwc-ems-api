@@ -29,6 +29,44 @@ public class EditionDao(EmsDbContext dbContext, IHttpContextAccessor httpContext
             .Where(t => !DbContext.Set<EventEdition>().Any(e => e.TemplateId == t.Id && e.Visibility == EditionVisibility.Public))
             .OrderBy(t => t.Code).ToListAsync();
 
+    public Task<bool> SlugTakenByOtherAsync(string slug, Guid editionId)
+        => DbContext.Set<EventEdition>().AnyAsync(e => e.Slug == slug && e.Id != editionId);
+
+    public Task SyncVenueAndDaysAsync(EventEdition edition, string? venueName, string? venueAddress)
+        => InTransactionAsync(async () =>
+        {
+            if (venueName is not null)
+            {
+                var name = venueName.Trim();
+                var address = string.IsNullOrWhiteSpace(venueAddress) ? null : venueAddress.Trim();
+                var now = DateTime.UtcNow;
+                if (edition.VenueId is { } venueId)
+                    await DbContext.Set<Venue>().Where(v => v.Id == venueId)
+                        .ExecuteUpdateAsync(set => set.SetProperty(v => v.Name, name).SetProperty(v => v.Address, address).SetProperty(v => v.DateModified, now));
+                else
+                {
+                    var venue = new Venue { Id = Guid.NewGuid(), Name = name, Address = address };
+                    StampNew(venue);
+                    DbContext.Set<Venue>().Add(venue);
+                    await DbContext.SaveChangesAsync();
+                    edition.VenueId = venue.Id;
+                }
+            }
+
+            var existing = await DbContext.Set<EventDay>().Where(d => d.EditionId == edition.Id).ToListAsync();
+            var outside = existing.Where(d => d.Day < edition.StartsOn || d.Day > edition.EndsOn).ToList();
+            DbContext.Set<EventDay>().RemoveRange(outside);
+            var have = existing.Select(d => d.Day).ToHashSet();
+            for (var d = edition.StartsOn; d <= edition.EndsOn; d = d.AddDays(1))
+            {
+                if (have.Contains(d)) continue;
+                var day = new EventDay { Id = Guid.NewGuid(), EditionId = edition.Id, Day = d };
+                StampNew(day);
+                DbContext.Set<EventDay>().Add(day);
+            }
+            await DbContext.SaveChangesAsync();
+        });
+
     public Task<bool> SlugOrCodeExistsAsync(string slug, string code)
         => DbContext.Set<EventEdition>().AnyAsync(e => e.Slug == slug || e.Code == code);
 

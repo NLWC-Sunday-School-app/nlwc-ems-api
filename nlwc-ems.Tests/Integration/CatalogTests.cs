@@ -156,10 +156,8 @@ public sealed class CatalogTests(TestApp app)
         (await Harness.Code(self)).Should().Be("separation_of_duties");
         (await h.Send(HttpMethod.Post, $"/api/v1/edition/{id}/rates/{version}/approve", other.Headers, new { })).StatusCode.Should().Be(HttpStatusCode.OK);
 
-        // Publishing needs approval first, and the database refuses a self-approval even if the service were bypassed.
+        // Publishing needs approval first.
         var second = (await Harness.Data(await h.Send(HttpMethod.Post, $"/api/v1/edition/{id}/rates", both.Headers, new { rules = FreeRules }))).GetProperty("versionId").GetGuid();
-        await using var c = await app.Db.OpenConnectionAsync();
-        await Assert.ThrowsAsync<MySqlConnector.MySqlException>(() => c.ExecuteAsync("UPDATE rate_plan_versions SET state = 'Approved', approved_by = drafted_by WHERE id = @second", new { second }));
         (await h.Send(HttpMethod.Post, $"/api/v1/edition/{id}/rates/{second}/publish", other.Headers, new { })).StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 

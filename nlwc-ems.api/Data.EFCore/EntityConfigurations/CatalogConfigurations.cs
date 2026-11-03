@@ -28,11 +28,11 @@ public class EventTemplateConfiguration : IEntityTypeConfiguration<EventTemplate
         builder.HasIndex(t => t.Code).IsUnique();
         builder.HasOne<Organization>().WithMany().HasForeignKey(t => t.OrganizationId);
 
-        // The Couples display name stays neutral until Q19 (Programme vs Retreat) is answered.
+        // Q19 is answered: the display name is "Couples Retreat".
         builder.HasData(
             Template("0192f5a0-0000-7000-8000-0000000000b1", "BB", "Bible Bootcamp"),
             Template("0192f5a0-0000-7000-8000-0000000000b2", "SS", "Singlz Summit"),
-            Template("0192f5a0-0000-7000-8000-0000000000b3", "CP", "Couples"));
+            Template("0192f5a0-0000-7000-8000-0000000000b3", "CP", "Couples Retreat"));
     }
 
     private static EventTemplate Template(string id, string code, string name) => new()

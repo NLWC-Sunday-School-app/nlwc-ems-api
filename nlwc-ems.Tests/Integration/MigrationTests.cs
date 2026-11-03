@@ -82,6 +82,6 @@ public sealed class MigrationTests(TestApp app)
     {
         await using var c = await app.Db.OpenConnectionAsync();
         var checks = (await c.QueryAsync<string>("SELECT constraint_name FROM information_schema.check_constraints WHERE constraint_schema = DATABASE() AND constraint_name LIKE 'ck_rate_%'")).ToList();
-        checks.Should().Contain(["ck_rate_rules_kind", "ck_rate_rules_ages", "ck_rate_plan_versions_separation", "ck_rate_plan_versions_approved"]);
+        checks.Should().Contain(["ck_rate_rules_kind", "ck_rate_rules_ages", "ck_rate_plan_versions_approved"]);
     }
 }

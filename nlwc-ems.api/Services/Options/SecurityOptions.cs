@@ -14,6 +14,10 @@ public class SecurityOptions
     /// session as MFA-verified, so it is for local development only and must stay on in production.</summary>
     public bool RequireMfa { get; set; } = true;
 
+    /// <summary>When on, the person who drafted a rate plan cannot approve it, so two people are always involved in a price change.
+    /// Off by default: a small team may draft and approve its own prices. Every approval is still audited with who did it.</summary>
+    public bool RequireSeparationOfDuties { get; set; } = false;
+
     public static bool IsValidMasterKey(string? key)
         => key is { Length: 64 } && key.All(Uri.IsHexDigit);
 

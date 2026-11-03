@@ -34,7 +34,6 @@ public class RatePlanVersionConfiguration : IEntityTypeConfiguration<RatePlanVer
         builder.ToTable(t =>
         {
             // The drafter cannot approve their own plan, even if the service layer were bypassed.
-            t.HasCheckConstraint("ck_rate_plan_versions_separation", "approved_by IS NULL OR approved_by <> drafted_by");
             t.HasCheckConstraint("ck_rate_plan_versions_approved", "state = 'Draft' OR approved_by IS NOT NULL");
         });
         // Immutability once published is enforced by a trigger in the migration.

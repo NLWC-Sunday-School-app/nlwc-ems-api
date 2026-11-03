@@ -1422,7 +1422,7 @@ namespace nlwc.ems.Data.EFCore.Migrations
                             Config = "{}",
                             DateCreated = new DateTime(2026, 10, 31, 0, 0, 0, 0, DateTimeKind.Utc),
                             DateModified = new DateTime(2026, 10, 31, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Couples",
+                            Name = "Couples Retreat",
                             OrganizationId = new Guid("0192f5a0-0000-7000-8000-000000000001"),
                             Status = "Active"
                         });
@@ -2176,8 +2176,6 @@ namespace nlwc.ems.Data.EFCore.Migrations
                     b.ToTable("rate_plan_versions", null, t =>
                         {
                             t.HasCheckConstraint("ck_rate_plan_versions_approved", "state = 'Draft' OR approved_by IS NOT NULL");
-
-                            t.HasCheckConstraint("ck_rate_plan_versions_separation", "approved_by IS NULL OR approved_by <> drafted_by");
                         });
                 });
 

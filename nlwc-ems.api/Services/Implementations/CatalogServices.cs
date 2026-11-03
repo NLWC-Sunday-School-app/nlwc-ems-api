@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Options;
+using nlwc.ems.Services.Options;
 using nlwc.ems.Core;
 using nlwc.ems.Core.Models;
 using nlwc.ems.Dtos;
@@ -113,7 +115,7 @@ public class EditionService(IEditionDao editionDao, IRatePlanService ratePlanSer
     }
 }
 
-public class RatePlanService(IRatePlanDao ratePlanDao, IRatePlanVersionDao versionDao, IAuditEventPublisher auditPublisher)
+public class RatePlanService(IRatePlanDao ratePlanDao, IRatePlanVersionDao versionDao, IAuditEventPublisher auditPublisher, IOptions<SecurityOptions> security)
     : BaseService<RatePlan>(ratePlanDao), IRatePlanService
 {
     public async Task<PriceState> GetPriceStateAsync(Guid editionId) => RateRules.StateOf(await ratePlanDao.RetrievePublishedKindsAsync(editionId));
@@ -147,8 +149,8 @@ public class RatePlanService(IRatePlanDao ratePlanDao, IRatePlanVersionDao versi
     {
         var version = await versionDao.RetrieveForEditionAsync(editionId, versionId) ?? throw new NotFoundException("Rate version not found.");
         if (version.State != RateVersionState.Draft) throw new AppException("Only a draft can be approved.", isConflict: true, code: "invalid_transition");
-        // Separation of duties: the person who drafted a price cannot be the one who approves it.
-        if (version.DraftedBy == actorAccountId) throw new ForbiddenException("You can't approve rates you drafted.", "separation_of_duties");
+        // Separation of duties (Security:RequireSeparationOfDuties, off by default): the drafter cannot be the one who approves.
+        if (security.Value.RequireSeparationOfDuties && version.DraftedBy == actorAccountId) throw new ForbiddenException("You can't approve rates you drafted.", "separation_of_duties");
 
         version.State = RateVersionState.Approved;
         version.ApprovedBy = actorAccountId;

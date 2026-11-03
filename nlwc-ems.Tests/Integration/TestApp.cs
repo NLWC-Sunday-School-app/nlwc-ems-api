@@ -77,6 +77,7 @@ public sealed class TestApp : IAsyncLifetime
         Environment.SetEnvironmentVariable("ConnectionStrings__EmsDatabase", _pg.GetConnectionString());
         Environment.SetEnvironmentVariable("Security__MasterKey", new string('a', 64));
         Environment.SetEnvironmentVariable("Security__CookieSecure", "false");
+        Environment.SetEnvironmentVariable("Security__RequireSeparationOfDuties", "true");   // off by default; the rule itself is tested
         Environment.SetEnvironmentVariable("Cors__AllowedOrigins__0", "http://localhost:3000");
         Environment.SetEnvironmentVariable("Google__ClientId", "test-client");
         Environment.SetEnvironmentVariable("Google__ClientSecret", "test-secret");

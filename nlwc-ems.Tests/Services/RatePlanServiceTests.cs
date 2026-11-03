@@ -1,7 +1,9 @@
 using nlwc.ems.Base.Core.Audit;
 using nlwc.ems.Core.Models;
 using nlwc.ems.Dtos;
+using Microsoft.Extensions.Options;
 using nlwc.ems.Services.Implementations;
+using nlwc.ems.Services.Options;
 
 namespace nlwc.ems.Tests.Services;
 
@@ -15,7 +17,10 @@ public class RatePlanServiceTests
     private readonly Guid _drafter = Guid.NewGuid();
     private readonly Guid _approver = Guid.NewGuid();
 
-    public RatePlanServiceTests() => _sut = new RatePlanService(_plans.Object, _versions.Object, _audit.Object);
+    private static RatePlanService Service(IRatePlanDao plans, IRatePlanVersionDao versions, IAuditEventPublisher audit, bool separation)
+        => new(plans, versions, audit, Options.Create(new SecurityOptions { RequireSeparationOfDuties = separation }));
+
+    public RatePlanServiceTests() => _sut = Service(_plans.Object, _versions.Object, _audit.Object, separation: true);
 
     private RatePlanVersion Version(RateVersionState state)
     {
@@ -32,6 +37,18 @@ public class RatePlanServiceTests
 
         (await act.Should().ThrowAsync<ForbiddenException>()).Which.Code.Should().Be("separation_of_duties");
         _versions.Verify(d => d.UpdateAsync(It.IsAny<RatePlanVersion>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task With_the_rule_off_the_drafter_can_approve_their_own_rates()
+    {
+        var v = Version(RateVersionState.Draft);
+        var sut = Service(_plans.Object, _versions.Object, _audit.Object, separation: false);
+
+        await sut.ApproveAsync(_drafter, _edition, v.Id, null);
+
+        v.State.Should().Be(RateVersionState.Approved);
+        v.ApprovedBy.Should().Be(_drafter);
     }
 
     [Fact]

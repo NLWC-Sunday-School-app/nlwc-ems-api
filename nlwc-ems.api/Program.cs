@@ -89,9 +89,24 @@ if (bootstrap >= 0)
     using var scope = app.Services.CreateScope();
     var account = await scope.ServiceProvider.GetRequiredService<IAccountDao>().RetrieveByEmailAsync(email)
         ?? throw new InvalidOperationException("No account with that email. Sign up first.");
-    await scope.ServiceProvider.GetRequiredService<IRoleGrantService>()
-        .GrantAsync(account.Id, new GrantRoleRequest { AccountId = account.Id, Role = "super_admin", Reason = "bootstrap" });
-    Console.WriteLine($"Granted super_admin to {email}");
+    // --password-only: the role is already granted; just set the password (below) without adding a second grant.
+    if (!args.Contains("--password-only"))
+    {
+        await scope.ServiceProvider.GetRequiredService<IRoleGrantService>()
+            .GrantAsync(account.Id, new GrantRoleRequest { AccountId = account.Id, Role = "super_admin", Reason = "bootstrap" });
+        Console.WriteLine($"Granted super_admin to {email}");
+    }
+
+    // A Google-only account has no password, and the staff console signs in with one. BOOTSTRAP_PASSWORD (an environment variable, so it
+    // never lands in shell history or the process list) sets it for this account.
+    var newPassword = Environment.GetEnvironmentVariable("BOOTSTRAP_PASSWORD");
+    if (!string.IsNullOrEmpty(newPassword))
+    {
+        if (newPassword.Length < 12) throw new InvalidOperationException("BOOTSTRAP_PASSWORD must be at least 12 characters.");
+        account.PasswordHash = scope.ServiceProvider.GetRequiredService<IPasswordHasher>().Hash(newPassword);
+        await scope.ServiceProvider.GetRequiredService<IAccountDao>().UpdateAsync(account);
+        Console.WriteLine($"Password set for {email}");
+    }
     return;
 }
 

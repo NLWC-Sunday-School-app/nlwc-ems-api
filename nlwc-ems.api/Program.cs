@@ -20,7 +20,7 @@ builder.Services
     .AddEmsInvalidModelResponse();
 
 // MySQL via Pomelo. The server version is read once at startup (AutoDetect opens a connection, so it must not run per request).
-var emsConnection = builder.Configuration.GetConnectionString("EmsDatabase");
+var emsConnection = nlwc.ems.Data.EFCore.ConnectionStrings.Normalize(builder.Configuration.GetConnectionString("EmsDatabase"));
 var emsServerVersion = ServerVersion.AutoDetect(emsConnection);
 builder.Services.AddDbContext<EmsDbContext>(options => options
     .UseMySql(emsConnection, emsServerVersion)

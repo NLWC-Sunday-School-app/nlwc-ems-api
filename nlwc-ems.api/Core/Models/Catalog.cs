@@ -46,6 +46,7 @@ public class EventEdition : BaseEntity, IFilterable<EventEdition, EditionFilter>
     public DateOnly AgeReferenceDate { get; set; }
 
     /// <summary>Oldest age (on the reference date) that may register for this edition in any mode. Null means no limit.</summary>
+    public int? MinAge { get; set; }
     public int? MaxAge { get; set; }
 
     public int? CampMinAge { get; set; }

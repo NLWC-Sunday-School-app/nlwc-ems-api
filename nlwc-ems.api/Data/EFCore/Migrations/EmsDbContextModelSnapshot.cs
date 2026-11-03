@@ -1227,6 +1227,10 @@ namespace nlwc.ems.Data.EFCore.Migrations
                         .HasColumnType("int")
                         .HasColumnName("max_age");
 
+                    b.Property<int?>("MinAge")
+                        .HasColumnType("int")
+                        .HasColumnName("min_age");
+
                     b.Property<string>("ModifiedBy")
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)")

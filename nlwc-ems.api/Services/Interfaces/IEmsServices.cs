@@ -85,6 +85,7 @@ public interface IDependantService : IBaseService<GuardianAuthorization>
 {
     Task<IReadOnlyList<DependantDto>> ListAsync(Guid guardianPersonId);
     Task<Guid> AddAsync(Guid guardianPersonId, AddDependantRequest request);
+    Task UpdateAsync(Guid guardianPersonId, Guid dependantPersonId, UpdateDependantRequest request);
     Task RemoveAsync(Guid guardianPersonId, Guid dependantPersonId, string reason);
 }
 

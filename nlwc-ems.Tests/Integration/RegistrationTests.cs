@@ -281,7 +281,7 @@ public sealed class RegistrationTests(TestApp app)
         (await Harness.Code(early)).Should().Be("registration_incomplete");
         (await Harness.Data(await h.Send(HttpMethod.Get, $"/api/v1/registration/{id}/review", u.Headers))).GetProperty("openTasks").EnumerateArray()
             .Where(t => t.GetProperty("blocking").GetBoolean()).Select(t => t.GetProperty("code").GetString()).Should()
-            .BeEquivalentTo("emergency_contact", "health", "consent_terms", "consent_guardian_authorization", "consent_medical_emergency");
+            .BeEquivalentTo("health", "consent_terms", "consent_guardian_authorization", "consent_medical_emergency");
 
         await CompleteRequired(u, id, child);
         var review = await Harness.Data(await h.Send(HttpMethod.Get, $"/api/v1/registration/{id}/review", u.Headers));

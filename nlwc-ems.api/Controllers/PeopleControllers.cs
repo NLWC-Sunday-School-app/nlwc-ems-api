@@ -39,6 +39,13 @@ public class DependantController(IDependantService dependantService) : Controlle
         return StatusCode(StatusCodes.Status201Created, ApiResponse<CreatedDto>.Ok(new CreatedDto { Id = id }, "Child added."));
     }
 
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<ApiResponse>> Update(Guid id, [FromBody] UpdateDependantRequest request)
+    {
+        await dependantService.UpdateAsync(User.GetPersonId(), id, request);
+        return Ok(ApiResponse.Ok("Child updated."));
+    }
+
     /// <summary>Ends the caller's guardianship. Needs a reason; the record is kept.</summary>
     [HttpPost("{id:guid}/remove")]
     public async Task<ActionResult<ApiResponse>> Remove(Guid id, [FromBody] ReasonRequest request)

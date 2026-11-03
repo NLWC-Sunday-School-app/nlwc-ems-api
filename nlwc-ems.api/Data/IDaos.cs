@@ -289,6 +289,7 @@ public interface IAccessLogDao : IBaseDao<AccessLog>;
 public class StaffPersonRow
 {
     public Guid Id { get; set; }
+    public DateTime DateCreated { get; set; }
     public string GivenName { get; set; } = string.Empty;
     public string FamilyName { get; set; } = string.Empty;
     public DateOnly? DateOfBirth { get; set; }

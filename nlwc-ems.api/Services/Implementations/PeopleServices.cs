@@ -52,7 +52,7 @@ public class ProfileService(IPersonDao personDao, IAccountDao accountDao, IEmerg
     }
 }
 
-public class DependantService(IGuardianAuthorizationDao guardianDao, IAuditEventPublisher auditPublisher)
+public class DependantService(IGuardianAuthorizationDao guardianDao, IPersonDao personDao, IAuditEventPublisher auditPublisher)
     : BaseService<GuardianAuthorization>(guardianDao), IDependantService
 {
     public async Task<IReadOnlyList<DependantDto>> ListAsync(Guid guardianPersonId)
@@ -79,6 +79,31 @@ public class DependantService(IGuardianAuthorizationDao guardianDao, IAuditEvent
         var relationship = new PersonRelationship { Id = Guid.NewGuid(), FromPersonId = dependant.Id, ToPersonId = guardianPersonId, Kind = RelationshipKind.DependantOf };
         await guardianDao.InsertDependantAsync(dependant, authorization, relationship);
         return dependant.Id;
+    }
+
+    public async Task UpdateAsync(Guid guardianPersonId, Guid dependantPersonId, UpdateDependantRequest request)
+    {
+        var authorization = await guardianDao.RetrieveActiveAsync(guardianPersonId, dependantPersonId) ?? throw new NotFoundException("Not found.");
+        var person = await personDao.RetrieveByIdAsync(dependantPersonId) ?? throw new NotFoundException("Not found.");
+
+        if (request.DateOfBirth is { } dob)
+        {
+            PersonRules.ValidateDateOfBirth(dob);
+            // Set once: a later change moves age bands, prices and eligibility, so it is reviewed rather than self-served.
+            if (person.DateOfBirth is { } existing && existing != dob)
+                throw new AppException("The date of birth can't be changed here. Contact the church office.", isConflict: true, code: "dob_locked");
+            if (PersonRules.AgeOn(dob, PersonRules.TodayLagos()) > PersonRules.MaxDependantAge)
+                throw new ValidationException(["Only people under 18 can be added as a child. Adults manage their own profile."], "too_old_for_dependant");
+            person.DateOfBirth = dob;
+        }
+
+        person.GivenName = request.GivenName.Trim();
+        person.FamilyName = request.FamilyName.Trim();
+        person.Gender = request.Gender;
+        await personDao.UpdateAsync(person);
+
+        authorization.DeclaredRelationship = request.Relationship!.Value.ToString();
+        await UpdateOrThrowAsync(authorization);
     }
 
     public async Task RemoveAsync(Guid guardianPersonId, Guid dependantPersonId, string reason)

@@ -63,7 +63,7 @@ public class StaffPeopleDao(EmsDbContext dbContext, IHttpContextAccessor httpCon
 {
     private IQueryable<StaffPersonRow> Rows() => DbContext.Set<Person>().AsNoTracking().Select(p => new StaffPersonRow
     {
-        Id = p.Id, GivenName = p.GivenName, FamilyName = p.FamilyName, DateOfBirth = p.DateOfBirth, City = p.City, Country = p.Country,
+        Id = p.Id, DateCreated = p.DateCreated, GivenName = p.GivenName, FamilyName = p.FamilyName, DateOfBirth = p.DateOfBirth, City = p.City, Country = p.Country,
         Registrations = DbContext.Set<Registration>().Count(r => r.PersonId == p.Id)
     });
 
@@ -76,7 +76,7 @@ public class StaffPeopleDao(EmsDbContext dbContext, IHttpContextAccessor httpCon
             query = query.Where(p => EF.Functions.Like(p.GivenName + " " + p.FamilyName, pattern));
         }
         var count = await query.CountAsync();
-        var data = await query.OrderBy(p => p.FamilyName).ThenBy(p => p.GivenName).ThenBy(p => p.Id).Skip(page * max).Take(max).ToListAsync();
+        var data = await query.OrderByDescending(p => p.DateCreated).ThenBy(p => p.Id).Skip(page * max).Take(max).ToListAsync();
         return new PagerEntity<StaffPersonRow> { Page = page, Max = max, Count = count, Data = data };
     }
 

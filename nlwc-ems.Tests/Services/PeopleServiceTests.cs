@@ -28,7 +28,7 @@ public class PeopleServiceTests
 
     private static string Dob(int ageYears) => DateTime.UtcNow.AddYears(-ageYears).AddDays(-30).ToString("yyyy-MM-dd");
 
-    private DependantService Dependants() => new(_guardians.Object, _audit.Object);
+    private DependantService Dependants() => new(_guardians.Object, new Mock<IPersonDao>().Object, _audit.Object);
     private CollectorService Collectors() => new(_collectors.Object, _guardians.Object, _encryptor.Object);
 
     // ---- dependants ----

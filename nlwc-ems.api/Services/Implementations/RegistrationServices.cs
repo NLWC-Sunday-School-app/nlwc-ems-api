@@ -123,7 +123,8 @@ public class RegistrationService(IRegistrationDao registrationDao, IConsentRecor
 
         if (RegistrationRules.IsPhysical(registration.ParticipationMode))
         {
-            if (await contactDao.RetrieveForPersonAsync(registration.PersonId) is null) tasks.Add(new() { Code = "emergency_contact", Blocking = true });
+            // A child's contacts are their guardian's: only an adult is asked for their own emergency contact.
+            if (!RegistrationRules.IsMinor(age) && await contactDao.RetrieveForPersonAsync(registration.PersonId) is null) tasks.Add(new() { Code = "emergency_contact", Blocking = true });
             if (await healthDao.RetrieveForRegistrationAsync(registration.Id) is null) tasks.Add(new() { Code = "health", Blocking = true });
         }
 

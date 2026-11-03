@@ -72,6 +72,23 @@ public class AddDependantRequest
     public GuardianRelationship? Relationship { get; set; }
 }
 
+public class UpdateDependantRequest
+{
+    [Required, MaxLength(100)]
+    public string GivenName { get; set; } = string.Empty;
+
+    [Required, MaxLength(100)]
+    public string FamilyName { get; set; } = string.Empty;
+
+    /// <summary>Only accepted while the child has none, or when it matches the stored one.</summary>
+    public DateOnly? DateOfBirth { get; set; }
+
+    public Gender? Gender { get; set; }
+
+    [Required]
+    public GuardianRelationship? Relationship { get; set; }
+}
+
 public class DependantDto
 {
     public Guid PersonId { get; set; }

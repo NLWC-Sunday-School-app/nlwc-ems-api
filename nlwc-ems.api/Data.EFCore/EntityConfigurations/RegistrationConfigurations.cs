@@ -13,12 +13,13 @@ public class RegistrationConfiguration : IEntityTypeConfiguration<Registration>
         builder.Property(r => r.State).HasConversion<string>().HasMaxLength(30);
         builder.Property(r => r.ParticipationMode).HasConversion<string>().HasMaxLength(20);
         builder.Property(r => r.AgeBand).HasMaxLength(30);
-        builder.Property(r => r.Draft).IsRequired().HasColumnType("jsonb");
+        builder.Property(r => r.Draft).IsRequired().HasColumnType("json");
         builder.HasIndex(r => r.Reference).IsUnique();
-        // One active registration per person per edition.
-        builder.HasIndex(r => new { r.PersonId, r.EditionId })
+        // One active registration per person per edition. MySQL has no partial index, so a stored column is NULL once the
+        // registration is cancelled, rejected or expired, and the unique index ignores NULLs.
+        builder.Property<int?>("ActiveKey").HasComputedColumnSql("IF(`state` IN ('Cancelled', 'Rejected', 'Expired'), NULL, 1)", stored: true);
+        builder.HasIndex("PersonId", "EditionId", "ActiveKey")
             .IsUnique()
-            .HasFilter("state NOT IN ('Cancelled', 'Rejected', 'Expired')")
             .HasDatabaseName("ix_registrations_one_active");
         builder.HasOne<EventEdition>().WithMany().HasForeignKey(r => r.EditionId);
         builder.HasOne<Person>().WithMany().HasForeignKey(r => r.PersonId);
@@ -56,7 +57,7 @@ public class InvitationConfiguration : IEntityTypeConfiguration<Invitation>
     {
         builder.ConfigureBase("invitations");
         builder.Property(i => i.TokenHash).IsRequired().HasMaxLength(100);
-        builder.Property(i => i.Email).IsRequired().HasColumnType("citext");
+        builder.Property(i => i.Email).IsRequired().HasMaxLength(320);
         builder.HasIndex(i => i.TokenHash).IsUnique();
         builder.HasOne<Registration>().WithMany().HasForeignKey(i => i.RegistrationId);
         builder.HasOne<Person>().WithMany().HasForeignKey(i => i.InvitedBy);

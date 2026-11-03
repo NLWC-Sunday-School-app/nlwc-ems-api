@@ -19,8 +19,11 @@ builder.Services
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()))
     .AddEmsInvalidModelResponse();
 
+// MySQL via Pomelo. The server version is read once at startup (AutoDetect opens a connection, so it must not run per request).
+var emsConnection = builder.Configuration.GetConnectionString("EmsDatabase");
+var emsServerVersion = ServerVersion.AutoDetect(emsConnection);
 builder.Services.AddDbContext<EmsDbContext>(options => options
-    .UseNpgsql(builder.Configuration.GetConnectionString("EmsDatabase"))
+    .UseMySql(emsConnection, emsServerVersion)
     .UseSnakeCaseNamingConvention());
 
 // Read by BaseDao to stamp CreatedBy/CreatedByIp/ModifiedBy/ModifiedByIp on every save.

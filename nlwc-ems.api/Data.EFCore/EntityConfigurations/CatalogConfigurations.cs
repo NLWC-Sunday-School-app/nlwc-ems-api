@@ -24,7 +24,7 @@ public class EventTemplateConfiguration : IEntityTypeConfiguration<EventTemplate
         builder.ConfigureBase("event_templates");
         builder.Property(t => t.Code).IsRequired().HasMaxLength(10);
         builder.Property(t => t.Name).IsRequired().HasMaxLength(200);
-        builder.Property(t => t.Config).IsRequired().HasColumnType("jsonb");
+        builder.Property(t => t.Config).IsRequired().HasColumnType("json");
         builder.HasIndex(t => t.Code).IsUnique();
         builder.HasOne<Organization>().WithMany().HasForeignKey(t => t.OrganizationId);
 
@@ -104,7 +104,7 @@ public class EditionContentConfiguration : IEntityTypeConfiguration<EditionConte
     {
         builder.ConfigureBase("edition_contents");
         builder.Property(c => c.Key).IsRequired().HasMaxLength(100);
-        builder.Property(c => c.Body).IsRequired().HasColumnType("jsonb");
+        builder.Property(c => c.Body).IsRequired().HasColumnType("json");
         builder.HasIndex(c => new { c.EditionId, c.Key }).IsUnique();
         builder.HasOne<EventEdition>().WithMany().HasForeignKey(c => c.EditionId);
     }

@@ -237,10 +237,10 @@ public sealed class RegistrationTests(TestApp app)
 
         await using var c = await app.Db.OpenConnectionAsync();
         var (text, flags) = await c.QuerySingleAsync<(string, bool)>(
-            "SELECT encode(data_encrypted, 'escape'), has_flags FROM health_disclosures WHERE registration_id = @id", new { id });
+            "SELECT CAST(data_encrypted AS CHAR), has_flags FROM health_disclosures WHERE registration_id = @id", new { id });
         text.Should().NotContain("asthma").And.NotContain("peanuts");
         flags.Should().BeTrue();
-        (await c.ExecuteScalarAsync<string>("SELECT detail::text FROM audit_events WHERE action = 'health.updated' AND record_id = @id ORDER BY seq DESC LIMIT 1", new { id = id.ToString() }))
+        (await c.ExecuteScalarAsync<string>("SELECT detail FROM audit_events WHERE action = 'health.updated' AND record_id = @id ORDER BY seq DESC LIMIT 1", new { id = id.ToString() }))
             .Should().NotContain("asthma");   // the event says health changed, never what it says
     }
 
@@ -264,8 +264,8 @@ public sealed class RegistrationTests(TestApp app)
 
         await using var c = await app.Db.OpenConnectionAsync();
         (await c.ExecuteScalarAsync<int>("SELECT count(*) FROM consent_records WHERE registration_id = @id", new { id })).Should().Be(2);
-        var update = await Assert.ThrowsAsync<Npgsql.PostgresException>(() => c.ExecuteAsync("UPDATE consent_records SET accepted = false"));
-        update.MessageText.Should().Contain("append-only");
+        var update = await Assert.ThrowsAsync<MySqlConnector.MySqlException>(() => c.ExecuteAsync("UPDATE consent_records SET accepted = false"));
+        update.Message.Should().Contain("append-only");
     }
 
     [Fact]

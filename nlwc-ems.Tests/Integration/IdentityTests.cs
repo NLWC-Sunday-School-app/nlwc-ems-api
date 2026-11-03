@@ -126,7 +126,7 @@ public sealed class IdentityTests(TestApp app)
     {
         var user = await h.NewUser();
         await using var c = await app.Db.OpenConnectionAsync();
-        await c.ExecuteAsync("UPDATE auth_sessions SET revoked_at = now() WHERE account_id = @id", new { id = user.AccountId });
+        await c.ExecuteAsync("UPDATE auth_sessions SET revoked_at = UTC_TIMESTAMP(6) WHERE account_id = @id", new { id = user.AccountId });
         (await h.Send(HttpMethod.Get, "/api/v1/auth/me", user.Headers)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 

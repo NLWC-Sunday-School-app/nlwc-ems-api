@@ -159,7 +159,7 @@ public sealed class CatalogTests(TestApp app)
         // Publishing needs approval first, and the database refuses a self-approval even if the service were bypassed.
         var second = (await Harness.Data(await h.Send(HttpMethod.Post, $"/api/v1/edition/{id}/rates", both.Headers, new { rules = FreeRules }))).GetProperty("versionId").GetGuid();
         await using var c = await app.Db.OpenConnectionAsync();
-        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => c.ExecuteAsync("UPDATE rate_plan_versions SET state = 'Approved', approved_by = drafted_by WHERE id = @second", new { second }));
+        await Assert.ThrowsAsync<MySqlConnector.MySqlException>(() => c.ExecuteAsync("UPDATE rate_plan_versions SET state = 'Approved', approved_by = drafted_by WHERE id = @second", new { second }));
         (await h.Send(HttpMethod.Post, $"/api/v1/edition/{id}/rates/{second}/publish", other.Headers, new { })).StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
@@ -173,9 +173,9 @@ public sealed class CatalogTests(TestApp app)
         await PublishFree(id, drafter, finance);
 
         await using var c = await app.Db.OpenConnectionAsync();
-        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => c.ExecuteAsync(
+        await Assert.ThrowsAsync<MySqlConnector.MySqlException>(() => c.ExecuteAsync(
             "UPDATE rate_rules SET age_min = 4 WHERE version_id IN (SELECT v.id FROM rate_plan_versions v JOIN rate_plans p ON p.id = v.plan_id WHERE p.edition_id = @id)", new { id }));
-        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => c.ExecuteAsync(
+        await Assert.ThrowsAsync<MySqlConnector.MySqlException>(() => c.ExecuteAsync(
             "UPDATE rate_plan_versions SET note = 'x' WHERE state = 'Published' AND plan_id IN (SELECT id FROM rate_plans WHERE edition_id = @id)", new { id }));
 
         await PublishFree(id, drafter, finance);

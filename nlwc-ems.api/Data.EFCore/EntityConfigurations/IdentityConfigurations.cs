@@ -25,7 +25,7 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
     public void Configure(EntityTypeBuilder<Account> builder)
     {
         builder.ConfigureBase("accounts");
-        builder.Property(a => a.Email).IsRequired().HasColumnType("citext");
+        builder.Property(a => a.Email).IsRequired().HasMaxLength(320);
         builder.Property(a => a.PasswordHash).HasMaxLength(300);
         builder.Property(a => a.GoogleSub).HasMaxLength(100);
         builder.HasIndex(a => a.Email).IsUnique();
@@ -43,7 +43,7 @@ public class VerifiedContactConfiguration : IEntityTypeConfiguration<VerifiedCon
     {
         builder.ConfigureBase("verified_contacts");
         builder.Property(c => c.Kind).HasConversion<string>().HasMaxLength(20);
-        builder.Property(c => c.Value).IsRequired().HasColumnType("citext");
+        builder.Property(c => c.Value).IsRequired().HasMaxLength(320);
         builder.HasIndex(c => new { c.Kind, c.Value }).IsUnique();
         builder.HasOne<Person>().WithMany().HasForeignKey(c => c.PersonId);
     }
@@ -66,7 +66,7 @@ public class AccountClaimConfiguration : IEntityTypeConfiguration<AccountClaim>
     {
         builder.ConfigureBase("account_claims");
         builder.Property(c => c.TokenHash).IsRequired().HasMaxLength(100);
-        builder.Property(c => c.InvitedEmail).IsRequired().HasColumnType("citext");
+        builder.Property(c => c.InvitedEmail).IsRequired().HasMaxLength(320);
         builder.Property(c => c.State).HasConversion<string>().HasMaxLength(30);
         builder.HasIndex(c => c.TokenHash).IsUnique();
         builder.HasOne<Person>().WithMany().HasForeignKey(c => c.PersonId);
@@ -81,7 +81,7 @@ public class AuthSessionConfiguration : IEntityTypeConfiguration<AuthSession>
         builder.Property(s => s.TokenHash).IsRequired().HasMaxLength(100);
         builder.Property(s => s.Surface).HasConversion<string>().HasMaxLength(20);
         builder.HasIndex(s => s.TokenHash).IsUnique();
-        builder.HasIndex(s => s.AccountId).HasFilter("revoked_at IS NULL");
+        builder.HasIndex(s => s.AccountId);
         builder.HasOne<Account>().WithMany().HasForeignKey(s => s.AccountId);
     }
 }

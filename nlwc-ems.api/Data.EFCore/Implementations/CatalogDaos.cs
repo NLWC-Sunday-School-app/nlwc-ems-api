@@ -96,8 +96,8 @@ public class RatePlanVersionDao(EmsDbContext dbContext, IHttpContextAccessor htt
                 await DbContext.SaveChangesAsync();
             }
 
-            // Serialise version numbering per plan.
-            await DbContext.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(hashtext({0}))", plan.Id.ToString());
+            // Serialise version numbering per plan: a row lock on the plan, held until this transaction ends.
+            await DbContext.Database.ExecuteSqlInterpolatedAsync($"SELECT id FROM rate_plans WHERE id = {plan.Id} FOR UPDATE");
             var next = (await DbContext.Set<RatePlanVersion>().Where(v => v.PlanId == plan.Id).MaxAsync(v => (int?)v.Version) ?? 0) + 1;
 
             var version = new RatePlanVersion { Id = Guid.NewGuid(), PlanId = plan.Id, Version = next, DraftedBy = draftedBy, Note = note };

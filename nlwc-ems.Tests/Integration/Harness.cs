@@ -60,7 +60,7 @@ public sealed class Harness(TestApp app)
         await conn.ExecuteAsync(
             """
             INSERT INTO role_grants(id, account_id, role_id, edition_id, granted_by, reason, status, date_created, date_modified)
-            SELECT gen_random_uuid(), @accountId, id, @editionId, @accountId, 'test', 'Active', now(), now() FROM roles WHERE key = @role
+            SELECT UUID(), @accountId, id, @editionId, @accountId, 'test', 'Active', UTC_TIMESTAMP(6), UTC_TIMESTAMP(6) FROM roles WHERE `key` = @role
             """, new { accountId, editionId, role });
     }
 

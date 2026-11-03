@@ -41,7 +41,6 @@ public class RoleGrantDao(EmsDbContext dbContext, IHttpContextAccessor httpConte
 
 public class AuditEventDao(EmsDbContext dbContext) : IAuditEventDao
 {
-    private const long ChainLock = 727002;
     public const string Genesis = "genesis";
 
     /// <summary>Each row's hash covers the previous hash, so an edit or removal anywhere breaks every later link.</summary>
@@ -54,11 +53,13 @@ public class AuditEventDao(EmsDbContext dbContext) : IAuditEventDao
         // Joins the caller's transaction when there is one (a DAO writing several rows), so the audit row commits or rolls back
         // with the change it describes.
         var ownTransaction = dbContext.Database.CurrentTransaction is null;
-        await using var tx = ownTransaction ? await dbContext.Database.BeginTransactionAsync() : null;
-        await dbContext.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock({0})", ChainLock);
+        await using var tx = ownTransaction ? await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.ReadCommitted) : null;
+        // One row lock, held until the transaction ends, so two appends can never read the same previous hash. (READ COMMITTED,
+        // set by every transaction in this app, makes the read below see the latest committed row once the lock is ours.)
+        await dbContext.Database.ExecuteSqlRawAsync("SELECT id FROM audit_chain_lock WHERE id = 1 FOR UPDATE");
         var prev = await dbContext.Set<AuditEvent>().AsNoTracking().OrderByDescending(a => a.Seq).Select(a => a.Hash).FirstOrDefaultAsync() ?? Genesis;
 
-        // timestamptz keeps microseconds, so truncate to keep the stored value hashing the same as the one computed here.
+        // datetime(6) keeps microseconds, so truncate to keep the stored value hashing the same as the one computed here.
         auditEvent.OccurredAt = new DateTime(DateTime.UtcNow.Ticks / 10 * 10, DateTimeKind.Utc);
         auditEvent.PrevHash = prev;
         auditEvent.Hash = ComputeHash(prev, auditEvent);

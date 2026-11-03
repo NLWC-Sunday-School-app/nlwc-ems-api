@@ -142,7 +142,8 @@ public class CampReviewService(ICampDecisionDao decisionDao, IRegistrationDao re
 public class RegistrationNotifier(IRegistrationDao registrationDao, IPersonDao personDao, IAccountDao accountDao, IEditionDao editionDao, IRatePlanService ratePlanService,
     ICampDecisionDao campDecisionDao, IEmailService email, IOptions<MailgunOptions> options, ILogger<RegistrationNotifier> logger) : IRegistrationNotifier
 {
-    private static readonly RegistrationState[] Live = [RegistrationState.Submitted, RegistrationState.NeedsAction, RegistrationState.Confirmed, RegistrationState.Completed];
+    // A List, not an array: on C# 14 an array's Contains binds to the span overload, which EF Core 9 cannot translate inside a query.
+    private static readonly List<RegistrationState> Live = [RegistrationState.Submitted, RegistrationState.NeedsAction, RegistrationState.Confirmed, RegistrationState.Completed];
 
     public async Task NotifyRegisteredAsync(Guid guardianPersonId, Guid registrationId)
     {

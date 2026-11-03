@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using nlwc.ems.Core.Models;
 
@@ -23,7 +25,9 @@ public class GuardianAuthorizationConfiguration : IEntityTypeConfiguration<Guard
     {
         builder.ConfigureBase("guardian_authorizations");
         builder.Property(g => g.DeclaredRelationship).IsRequired().HasMaxLength(50);
-        builder.HasIndex(g => new { g.GuardianPersonId, g.DependantPersonId }).HasFilter("revoked_at IS NULL").IsUnique();
+        // NULL once revoked, so only a live authorization is unique per pair.
+        builder.Property<int?>("LiveKey").HasComputedColumnSql("IF(`revoked_at` IS NULL, 1, NULL)", stored: true);
+        builder.HasIndex("GuardianPersonId", "DependantPersonId", "LiveKey").IsUnique();
         builder.HasOne<Person>().WithMany().HasForeignKey(g => g.GuardianPersonId);
         builder.HasOne<Person>().WithMany().HasForeignKey(g => g.DependantPersonId);
         builder.ToTable(t => t.HasCheckConstraint("ck_guardian_authorizations_distinct", "guardian_person_id <> dependant_person_id"));
@@ -38,8 +42,14 @@ public class AuthorizedCollectorConfiguration : IEntityTypeConfiguration<Authori
         builder.Property(c => c.FullName).IsRequired().HasMaxLength(100);
         builder.Property(c => c.Relationship).IsRequired().HasMaxLength(100);
         builder.Property(c => c.PhoneEncrypted).IsRequired();
-        builder.Property(c => c.ValidDays).HasColumnType("date[]");
-        builder.HasIndex(c => c.ChildPersonId).HasFilter("removed_at IS NULL");
+        builder.Property(c => c.ValidDays).HasColumnType("json").HasConversion(
+            v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+            v => v == null ? null : JsonSerializer.Deserialize<List<DateOnly>>(v, (JsonSerializerOptions?)null),
+            new ValueComparer<List<DateOnly>?>(
+                (a, b) => a == null ? b == null : b != null && a.SequenceEqual(b),
+                v => v == null ? 0 : v.Aggregate(0, (h, d) => HashCode.Combine(h, d)),
+                v => v == null ? null : v.ToList()));
+        builder.HasIndex(c => c.ChildPersonId);
         builder.HasOne<Person>().WithMany().HasForeignKey(c => c.ChildPersonId);
     }
 }

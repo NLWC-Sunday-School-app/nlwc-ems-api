@@ -1,7 +1,12 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using nlwc.ems.Core.Models;
 
 namespace nlwc.ems.Data.EFCore;
+
+public sealed class UtcDateTimeConverter() : ValueConverter<DateTime, DateTime>(
+    v => v.Kind == DateTimeKind.Local ? v.ToUniversalTime() : v,
+    v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
 
 public class EmsDbContext(DbContextOptions<EmsDbContext> options) : DbContext(options)
 {
@@ -54,12 +59,19 @@ public class EmsDbContext(DbContextOptions<EmsDbContext> options) : DbContext(op
     public DbSet<ConsentRecord> ConsentRecords => Set<ConsentRecord>();
     public DbSet<HealthDisclosure> HealthDisclosures => Set<HealthDisclosure>();
 
+    /// <summary>MySQL stores a DATETIME with no zone and hands it back as <see cref="DateTimeKind.Unspecified"/>, which
+    /// <c>ToUniversalTime()</c> would treat as local time (breaking the audit hash). Every instant in this app is UTC,
+    /// so every DateTime is read back as UTC.</summary>
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.Properties<DateTime>()
+            .HaveColumnType("datetime(6)")
+            .HaveConversion<UtcDateTimeConverter>();
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        modelBuilder.HasPostgresExtension("citext");
-        modelBuilder.HasPostgresExtension("pg_trgm");
-        modelBuilder.HasPostgresExtension("btree_gist");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(EmsDbContext).Assembly);
     }
 }

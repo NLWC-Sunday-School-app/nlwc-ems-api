@@ -26,7 +26,7 @@ public abstract class BaseDao<TContext, T>(
         if (predicate is not null) query = query.Where(predicate);
 
         var count = await query.CountAsync();
-        // The Id tiebreaker is not cosmetic: rows with the same DateCreated otherwise fall back to Postgres's
+        // The Id tiebreaker is not cosmetic: rows with the same DateCreated otherwise fall back to the engine's
         // physical order, which an UPDATE silently reshuffles. Id is stable and unique.
         var data = await query
             .OrderByDescending(x => x.DateCreated)
@@ -110,7 +110,7 @@ public abstract class BaseDao<TContext, T>(
         var strategy = DbContext.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>
         {
-            await using var transaction = await DbContext.Database.BeginTransactionAsync();
+            await using var transaction = await DbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.ReadCommitted);
             await work();
             await transaction.CommitAsync();
         });

@@ -120,10 +120,10 @@ public sealed class AccessTests(TestApp app)
         (await h.Send(HttpMethod.Get, "/api/v1/audit", user.Headers)).StatusCode.Should().Be(HttpStatusCode.OK);
 
         await using var c = await app.Db.OpenConnectionAsync();
-        await c.ExecuteAsync("UPDATE role_grants SET expires_at = now() - interval '1 minute' WHERE account_id = @id", new { id = user.AccountId });
+        await c.ExecuteAsync("UPDATE role_grants SET expires_at = UTC_TIMESTAMP(6) - INTERVAL 1 MINUTE WHERE account_id = @id", new { id = user.AccountId });
         (await h.Send(HttpMethod.Get, "/api/v1/audit", user.Headers)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
-        await c.ExecuteAsync("UPDATE role_grants SET expires_at = NULL, revoked_at = now() WHERE account_id = @id", new { id = user.AccountId });
+        await c.ExecuteAsync("UPDATE role_grants SET expires_at = NULL, revoked_at = UTC_TIMESTAMP(6) WHERE account_id = @id", new { id = user.AccountId });
         (await h.Send(HttpMethod.Get, "/api/v1/audit", user.Headers)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
@@ -166,8 +166,8 @@ public sealed class AccessTests(TestApp app)
     public async Task Medical_and_finance_are_never_bundled_into_other_roles()
     {
         await using var c = await app.Db.OpenConnectionAsync();
-        (await c.QueryAsync<string>("SELECT r.key FROM roles r JOIN role_permissions p ON p.role_id = r.id WHERE p.resource = 'health' AND p.level IN ('view', 'full')")).Should().Equal("medical_welfare");
-        (await c.QueryAsync<string>("SELECT r.key FROM roles r JOIN role_permissions p ON p.role_id = r.id WHERE p.resource = 'money' AND p.level = 'edit'")).Should().Equal("finance_officer");
+        (await c.QueryAsync<string>("SELECT r.`key` FROM roles r JOIN role_permissions p ON p.role_id = r.id WHERE p.resource = 'health' AND p.level IN ('view', 'full')")).Should().Equal("medical_welfare");
+        (await c.QueryAsync<string>("SELECT r.`key` FROM roles r JOIN role_permissions p ON p.role_id = r.id WHERE p.resource = 'money' AND p.level = 'edit'")).Should().Equal("finance_officer");
 
         var all = await c.QueryAsync<(string R, string L)>("SELECT resource, level FROM role_permissions");
         all.Should().OnlyContain(p => EmsPermissions.Known(p.R, p.L));
@@ -184,18 +184,25 @@ public sealed class AccessTests(TestApp app)
         (await audit.VerifyChainAsync()).Should().BeNull();
 
         await using var c = await app.Db.OpenConnectionAsync();
-        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => c.ExecuteAsync("UPDATE audit_events SET action = 'x' WHERE action = 'test.one'"));
-        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => c.ExecuteAsync("DELETE FROM audit_events WHERE action = 'test.one'"));
+        await Assert.ThrowsAsync<MySqlConnector.MySqlException>(() => c.ExecuteAsync("UPDATE audit_events SET action = 'x' WHERE action = 'test.one'"));
+        await Assert.ThrowsAsync<MySqlConnector.MySqlException>(() => c.ExecuteAsync("DELETE FROM audit_events WHERE action = 'test.one'"));
 
         // Someone with enough privilege to switch the trigger off and edit a row is caught by the hash chain.
-        await c.ExecuteAsync("ALTER TABLE audit_events DISABLE TRIGGER audit_events_append_only");
-        await c.ExecuteAsync("UPDATE audit_events SET action = 'tampered' WHERE action = 'test.one'");
-        await c.ExecuteAsync("ALTER TABLE audit_events ENABLE TRIGGER audit_events_append_only");
+        await WithoutUpdateTrigger(c, () => c.ExecuteAsync("UPDATE audit_events SET action = 'tampered' WHERE action = 'test.one'"));
         (await audit.VerifyChainAsync()).Should().NotBeNull();
 
-        await c.ExecuteAsync("ALTER TABLE audit_events DISABLE TRIGGER audit_events_append_only");
-        await c.ExecuteAsync("UPDATE audit_events SET action = 'test.one' WHERE action = 'tampered'");
-        await c.ExecuteAsync("ALTER TABLE audit_events ENABLE TRIGGER audit_events_append_only");
+        await WithoutUpdateTrigger(c, () => c.ExecuteAsync("UPDATE audit_events SET action = 'test.one' WHERE action = 'tampered'"));
         (await audit.VerifyChainAsync()).Should().BeNull();
+    }
+
+    /// <summary>MySQL has no "disable trigger": drop it, run the tamper, and put it back exactly as the migration made it.</summary>
+    private static async Task WithoutUpdateTrigger(MySqlConnector.MySqlConnection c, Func<Task> tamper)
+    {
+        await c.ExecuteAsync("DROP TRIGGER audit_events_no_update");
+        try { await tamper(); }
+        finally
+        {
+            await c.ExecuteAsync("CREATE TRIGGER audit_events_no_update BEFORE UPDATE ON audit_events FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'audit_events is append-only'");
+        }
     }
 }

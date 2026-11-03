@@ -116,7 +116,7 @@ public sealed class GoogleSignInTests(TestApp app)
         SessionFrom(refused).Should().BeNull();
 
         await using var conn = await app.Db.OpenConnectionAsync();
-        await conn.ExecuteAsync("UPDATE verified_contacts SET verified_at = now() WHERE person_id = @p AND kind = 'Email'", new { p = user.PersonId });
+        await conn.ExecuteAsync("UPDATE verified_contacts SET verified_at = UTC_TIMESTAMP(6) WHERE person_id = @p AND kind = 'Email'", new { p = user.PersonId });
 
         // Confirmed, but Google does not vouch for the address: refused.
         app.Google.Identity = new GoogleIdentity(sub, user.Email, false, "Ada", "Obi");

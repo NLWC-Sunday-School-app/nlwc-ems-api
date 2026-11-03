@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Npgsql;
-using Testcontainers.PostgreSql;
+using MySqlConnector;
+using Testcontainers.MySql;
 
 namespace nlwc.ems.Tests.Integration;
 
@@ -52,16 +52,18 @@ public sealed class FakeGoogle : IGoogleOidcClient
             : throw new UnauthorizedException("no", "google_failed");
 }
 
-/// <summary>The real app on a real Postgres 16 in a container. The app applies its own EF migrations at startup, exactly as in
+/// <summary>The real app on a real MySQL 8 in a container. The app applies its own EF migrations at startup, exactly as in
 /// production, so these tests also prove the migrations.</summary>
 public sealed class TestApp : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _pg = new PostgreSqlBuilder("postgres:16").Build();
+    private readonly MySqlContainer _pg = new MySqlBuilder("mysql:8.0")
+        .WithCommand("--log-bin-trust-function-creators=1", "--character-set-server=utf8mb4")   // the migrations create triggers
+        .Build();
     private WebApplicationFactory<Program> _factory = null!;
 
     public CapturingMailer Mail { get; } = new();
     public CapturingEmailService Email { get; } = new();
-    public NpgsqlDataSource Db { get; private set; } = null!;
+    public MySqlDataSource Db { get; private set; } = null!;
     public HttpClient Client { get; private set; } = null!;
     public FakeGoogle Google { get; } = new();
 
@@ -89,7 +91,7 @@ public sealed class TestApp : IAsyncLifetime
             }));
         NoRedirectClient = _factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false, AllowAutoRedirect = false });
         Client = _factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false });
-        Db = NpgsqlDataSource.Create(_pg.GetConnectionString());
+        Db = new MySqlDataSource(_pg.GetConnectionString());
     }
 
     public async Task DisposeAsync()

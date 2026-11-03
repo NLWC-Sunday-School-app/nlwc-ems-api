@@ -1,6 +1,6 @@
 # nlwc-ems-api
 
-ASP.NET Core (.NET 10) API for the NLWC Event Management System. PostgreSQL 16 through EF Core. Structured the way the
+ASP.NET Core (.NET 10) API for the NLWC Event Management System. MySQL 8 through EF Core (Pomelo, as the Registrar does). Structured the way the
 clusterv2 services are; see [ADR-0008](documentation/engineering/adr/0008-clusterv2-service-architecture.md).
 
 ```
@@ -13,7 +13,7 @@ nlwc-ems.slnx
     Data.EFCore/       EmsDbContext, EntityConfigurations/, Implementations/ (DAOs), Migrations/
     Services/          Interfaces/, Implementations/, Options/
     Dtos/              request and response types (DataAnnotations only)
-  nlwc-ems.Tests/    Services/ + Core/ (Moq unit tests), Integration/ (real app + real Postgres in a container)
+  nlwc-ems.Tests/    Services/ + Core/ (Moq unit tests), Integration/ (real app + real MySQL in a container)
   shared/            ui tokens and display-only helpers, installed by web/admin/checkin as git dependencies
   documentation/     requirements, design, engineering plan and ADRs
 ```
@@ -21,17 +21,17 @@ nlwc-ems.slnx
 ## Run it
 
 ```
-docker compose up -d postgres
+docker compose up -d mysql
 dotnet run --project nlwc-ems.api              # migrates the database on startup; http://localhost:4000
 ```
-Development settings (local Postgres, a throwaway master key, non-secure cookie) are in `appsettings.Development.json`.
+Development settings (local MySQL on port 3308, a throwaway master key, non-secure cookie) are in `appsettings.Development.json`.
 Anywhere else, supply `ConnectionStrings__EmsDatabase`, `Security__MasterKey` (64 hex chars) and `Cors__AllowedOrigins__0…` (production defaults to `https://events.nlwc.church`; the localhost origins live in `appsettings.Development.json`).
 
 ### Production deployment
 
 The production workflow builds pull requests targeting `main` without deploying. A push to `main` or a manual run on `main` builds and publishes a commit-tagged GHCR image, then deploys it to the `prod` GitHub environment. Configure any required environment approval rules in GitHub.
 
-Set `SERVER_HOST`, `SERVER_USERNAME`, `SERVER_KEY`, `SERVER_KEY_PASSPHRASE`, `DOPPLER_TOKEN`, and `GHCR_PAT` as secrets for the `prod` environment. `SERVER_KEY_PASSPHRASE` is the passphrase protecting the SSH private key. The PAT must allow the server to read the GHCR package, and the GitHub Actions token must have permission to publish it. Install Docker Compose and the Doppler CLI on the server; Doppler must provide the production application settings, including a reachable PostgreSQL connection. The API is exposed on server port `8082` for the reverse proxy; confirm that port is free and restrict direct access using the server firewall. The workflow stores the downloaded settings in `~/nlwc-ems-api/.env`.
+Set `SERVER_HOST`, `SERVER_USERNAME`, `SERVER_KEY`, `SERVER_KEY_PASSPHRASE`, `DOPPLER_TOKEN`, and `GHCR_PAT` as secrets for the `prod` environment. `SERVER_KEY_PASSPHRASE` is the passphrase protecting the SSH private key. The PAT must allow the server to read the GHCR package, and the GitHub Actions token must have permission to publish it. Install Docker Compose and the Doppler CLI on the server; Doppler must provide the production application settings, including a reachable MySQL connection. The API is exposed on server port `8082` for the reverse proxy; confirm that port is free and restrict direct access using the server firewall. The workflow stores the downloaded settings in `~/nlwc-ems-api/.env`.
 
 - Health: `GET /health`. API contract: `GET /swagger/v1/swagger.json` (Development), which the frontends generate clients from.
 - First super admin: sign up, then `dotnet run --project nlwc-ems.api --no-launch-profile -- --bootstrap-admin you@example.com`.
@@ -39,7 +39,7 @@ Set `SERVER_HOST`, `SERVER_USERNAME`, `SERVER_KEY`, `SERVER_KEY_PASSPHRASE`, `DO
 ## Test it
 
 ```
-dotnet test        # needs Docker: the integration tests start a Postgres container
+dotnet test        # needs Docker: the integration tests start a MySQL container
 ```
 
 ## Change the database

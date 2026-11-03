@@ -7,7 +7,7 @@ namespace nlwc.ems.Data.EFCore;
 public class EmsDbContextFactory : IDesignTimeDbContextFactory<EmsDbContext>
 {
     public EmsDbContext CreateDbContext(string[] args) => new(new DbContextOptionsBuilder<EmsDbContext>()
-        .UseNpgsql("Host=localhost;Database=nlwc_ems_design")
+        .UseMySql("Server=localhost;Database=nlwc_ems_design", new MySqlServerVersion(new Version(8, 0, 36)))
         .UseSnakeCaseNamingConvention()
         .Options);
 }

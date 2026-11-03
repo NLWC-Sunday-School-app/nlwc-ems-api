@@ -73,7 +73,7 @@ public class StaffPeopleDao(EmsDbContext dbContext, IHttpContextAccessor httpCon
         if (!string.IsNullOrWhiteSpace(text))
         {
             var pattern = $"%{text.Trim().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_")}%";
-            query = query.Where(p => EF.Functions.ILike(p.GivenName + " " + p.FamilyName, pattern));
+            query = query.Where(p => EF.Functions.Like(p.GivenName + " " + p.FamilyName, pattern));
         }
         var count = await query.CountAsync();
         var data = await query.OrderBy(p => p.FamilyName).ThenBy(p => p.GivenName).ThenBy(p => p.Id).Skip(page * max).Take(max).ToListAsync();
@@ -106,7 +106,7 @@ public class StaffPeopleDao(EmsDbContext dbContext, IHttpContextAccessor httpCon
         var pairs = await (from a in people
                            join b in people on new { a.DateOfBirth, Family = a.FamilyName.ToLower() } equals new { b.DateOfBirth, Family = b.FamilyName.ToLower() }
                            where a.Id.CompareTo(b.Id) < 0 && a.DateOfBirth != null
-                              && (a.GivenName.ToLower() == b.GivenName.ToLower() || EF.Functions.ILike(a.GivenName, b.GivenName + "%") || EF.Functions.ILike(b.GivenName, a.GivenName + "%"))
+                              && (a.GivenName.ToLower() == b.GivenName.ToLower() || EF.Functions.Like(a.GivenName, b.GivenName + "%") || EF.Functions.Like(b.GivenName, a.GivenName + "%"))
                               && !dismissed.Any(d => d.PersonAId == a.Id && d.PersonBId == b.Id)
                            orderby a.FamilyName, a.GivenName
                            select new { A = a.Id, B = b.Id }).Take(max).ToListAsync();

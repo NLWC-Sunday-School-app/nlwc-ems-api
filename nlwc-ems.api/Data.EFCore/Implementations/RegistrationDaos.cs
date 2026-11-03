@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
+using MySqlConnector;
 using nlwc.ems.Core;
 using nlwc.ems.Core.Models;
 
@@ -28,9 +28,10 @@ public class RegistrationDao(EmsDbContext dbContext, IHttpContextAccessor httpCo
             await InTransactionAsync(async () =>
             {
                 // One statement increments and reads, so two concurrent registrations can never share a number.
-                var next = (await DbContext.Database
-                    .SqlQuery<long>($"UPDATE reference_counters SET last_value = last_value + 1 WHERE edition_id = {registration.EditionId} RETURNING last_value AS \"Value\"")
-                    .ToListAsync()).Single();
+                // LAST_INSERT_ID(expr) stores the new value per connection; the UPDATE holds the row lock until commit.
+                await DbContext.Database.ExecuteSqlInterpolatedAsync(
+                    $"UPDATE reference_counters SET `last_value` = LAST_INSERT_ID(`last_value` + 1) WHERE edition_id = {registration.EditionId}");
+                var next = (await DbContext.Database.SqlQueryRaw<long>("SELECT CAST(LAST_INSERT_ID() AS SIGNED) AS `Value`").ToListAsync()).Single();
                 registration.Reference = RegistrationReference.Format(editionCode, next);
 
                 await InsertAsync(registration);
@@ -46,7 +47,7 @@ public class RegistrationDao(EmsDbContext dbContext, IHttpContextAccessor httpCo
             });
             return true;
         }
-        catch (DbUpdateException e) when (e.InnerException is PostgresException { ConstraintName: "ix_registrations_one_active" })
+        catch (DbUpdateException e) when (e.InnerException is MySqlException { ErrorCode: MySqlErrorCode.DuplicateKeyEntry } m && m.Message.Contains("ix_registrations_one_active"))
         {
             DbContext.ChangeTracker.Clear();
             return false;
@@ -62,7 +63,7 @@ public class RegistrationDao(EmsDbContext dbContext, IHttpContextAccessor httpCo
                         && (filter.State == null || r.State == filter.State)
                         && (filter.Mode == null || r.ParticipationMode == filter.Mode)
                         && (filter.AgeBand == null || r.AgeBand == filter.AgeBand)
-                        && (text == null || EF.Functions.ILike(p.GivenName + " " + p.FamilyName, text) || EF.Functions.ILike(r.Reference, text))
+                        && (text == null || EF.Functions.Like(p.GivenName + " " + p.FamilyName, text) || EF.Functions.Like(r.Reference, text))
                     select new StaffRegistrationRow
                     {
                         Id = r.Id, Reference = r.Reference, PersonId = p.Id, GivenName = p.GivenName, FamilyName = p.FamilyName, State = r.State,
@@ -162,7 +163,8 @@ public class CampDecisionDao(EmsDbContext dbContext, IHttpContextAccessor httpCo
 {
     public Task<List<CampQueueRow>> RetrieveQueueAsync(Guid editionId)
     {
-        var live = new[] { RegistrationState.Submitted, RegistrationState.NeedsAction, RegistrationState.Confirmed, RegistrationState.Completed };
+        // A List, not an array: on C# 14 an array's Contains binds to the span overload, which EF Core 9 cannot translate.
+        var live = new List<RegistrationState> { RegistrationState.Submitted, RegistrationState.NeedsAction, RegistrationState.Confirmed, RegistrationState.Completed };
         var latest = DbContext.Set<CampDecision>().AsNoTracking();
         return (from r in DbContext.Set<Registration>().AsNoTracking()
                 join p in DbContext.Set<Person>().AsNoTracking() on r.PersonId equals p.Id

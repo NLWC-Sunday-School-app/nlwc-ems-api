@@ -47,7 +47,7 @@ public class RoleGrantConfiguration : IEntityTypeConfiguration<RoleGrant>
     {
         builder.ConfigureBase("role_grants");
         builder.Property(g => g.Reason).IsRequired().HasMaxLength(500);
-        builder.HasIndex(g => g.AccountId).HasFilter("revoked_at IS NULL");
+        builder.HasIndex(g => g.AccountId);
         builder.HasOne<Account>().WithMany().HasForeignKey(g => g.AccountId);
         builder.HasOne(g => g.Role).WithMany().HasForeignKey(g => g.RoleId);
         builder.HasOne<EventEdition>().WithMany().HasForeignKey(g => g.EditionId);
@@ -83,7 +83,7 @@ public class AuditEventConfiguration : IEntityTypeConfiguration<AuditEvent>
     {
         builder.ToTable("audit_events");
         builder.HasKey(a => a.Seq);
-        builder.Property(a => a.Seq).UseIdentityAlwaysColumn();
+        builder.Property(a => a.Seq).ValueGeneratedOnAdd();
         builder.Property(a => a.Action).IsRequired().HasMaxLength(100);
         builder.Property(a => a.EntityType).IsRequired().HasMaxLength(100);
         builder.Property(a => a.RecordId).HasMaxLength(100);

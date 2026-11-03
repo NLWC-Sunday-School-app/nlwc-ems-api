@@ -25,7 +25,9 @@ public class RatePlanVersionConfiguration : IEntityTypeConfiguration<RatePlanVer
         builder.Property(v => v.Note).HasMaxLength(500);
         builder.HasIndex(v => new { v.PlanId, v.Version }).IsUnique();
         // At most one published version per plan.
-        builder.HasIndex(v => v.PlanId).IsUnique().HasFilter("state = 'Published'").HasDatabaseName("ix_rate_plan_versions_one_published");
+        // NULL unless published, so the unique index only constrains published versions.
+        builder.Property<int?>("PublishedKey").HasComputedColumnSql("IF(`state` = 'Published', 1, NULL)", stored: true);
+        builder.HasIndex("PlanId", "PublishedKey").IsUnique().HasDatabaseName("ix_rate_plan_versions_one_published");
         builder.HasOne<Account>().WithMany().HasForeignKey(v => v.DraftedBy);
         builder.HasOne<Account>().WithMany().HasForeignKey(v => v.ApprovedBy);
         builder.HasMany(v => v.Rules).WithOne().HasForeignKey(r => r.VersionId).OnDelete(DeleteBehavior.Cascade);

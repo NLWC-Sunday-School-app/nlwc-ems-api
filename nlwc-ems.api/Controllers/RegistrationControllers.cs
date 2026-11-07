@@ -145,6 +145,15 @@ public class StaffRegistrationController(IStaffRegistrationService staffService)
         return Ok(ApiResponse.Ok("Registration cancelled."));
     }
 
+    /// <summary>Sends the confirmation email again. Needs <c>registrations:edit</c> and a reason, which is audited.</summary>
+    [HttpPost("{id:guid}/resend-confirmation")]
+    public async Task<ActionResult<ApiResponse>> ResendConfirmation(Guid id, [FromBody] ReasonRequest request)
+    {
+        var editionId = await staffService.GetEditionIdAsync(id);
+        if (!User.HasPermissionWithMfa(EmsPermissions.Registrations.Edit, editionId)) return Denied(EmsPermissions.Registrations.Edit, editionId);
+        return Ok(ApiResponse.Ok(await staffService.ResendConfirmationAsync(User.GetPersonId(), id, request.Reason)));
+    }
+
     /// <summary>A deliberate reveal: needs <c>health:view</c>, a reason, and leaves an access-log row.</summary>
     [HttpGet("{id:guid}/health")]
     public async Task<ActionResult<ApiResponse<HealthDto?>>> Health(Guid id, [FromQuery] string? reason)

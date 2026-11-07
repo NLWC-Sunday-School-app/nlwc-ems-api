@@ -38,7 +38,7 @@ public sealed class RegistrationEmailTests(TestApp app)
         var kid = (await Harness.Data(await h.Send(HttpMethod.Post, "/api/v1/dependant", parent.Headers,
             new { givenName = name, familyName = "Egwu", dateOfBirth = dob, gender = "Male", relationship = "Parent" }))).GetProperty("id").GetGuid();
         var reg = (await Harness.Data(await h.Send(HttpMethod.Post, "/api/v1/registration", parent.Headers, new { editionId = edition, personId = kid, participationMode = mode }))).GetProperty("id").GetGuid();
-        (await h.Send(HttpMethod.Put, $"/api/v1/dependant/{kid}/emergency-contact", parent.Headers, new { fullName = "Ngozi Obi", relationship = "Aunt", phone = "08012345678" })).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await h.Send(HttpMethod.Post, "/api/v1/emergency-contacts", parent.Headers, new { fullName = "Ngozi Obi", relationship = "Aunt", phone = "08012345678" })).StatusCode.Should().Be(HttpStatusCode.OK);
         (await h.Send(HttpMethod.Put, $"/api/v1/registration/{reg}/health", parent.Headers, new { none = true })).StatusCode.Should().Be(HttpStatusCode.OK);
         foreach (var kind in new[] { "Terms", "GuardianAuthorization", "MedicalEmergency" })
             (await h.Send(HttpMethod.Put, $"/api/v1/registration/{reg}/consent/{kind}", parent.Headers, new { accepted = true })).StatusCode.Should().Be(HttpStatusCode.OK);
@@ -65,6 +65,29 @@ public sealed class RegistrationEmailTests(TestApp app)
     }
 
     [Fact]
+    public async Task Staff_can_resend_the_confirmation_with_a_reason_and_only_with_edit_access()
+    {
+        var edition = await BootcampEdition();
+        var parent = await Guardian();
+        var reg = await SubmitChild(parent, edition, "Tobi");
+        var before = SentTo(parent.Email).Count;
+        var url = $"/api/v1/admin/registration/{reg}/resend-confirmation";
+
+        var viewer = await h.StaffWith("finance_officer");   // can view, cannot edit
+        var admin = await h.StaffWith("super_admin");
+        (await h.Send(HttpMethod.Post, url, viewer.Headers, new { reason = "Parent says it never arrived" })).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await h.Send(HttpMethod.Post, url, admin.Headers, new { reason = "" })).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        SentTo(parent.Email).Count.Should().Be(before);
+
+        var ok = await h.Send(HttpMethod.Post, url, admin.Headers, new { reason = "Parent says it never arrived" });
+        ok.StatusCode.Should().Be(HttpStatusCode.OK, await ok.Content.ReadAsStringAsync());
+        SentTo(parent.Email).Count.Should().Be(before + 1);
+
+        await using var c = await app.Db.OpenConnectionAsync();
+        (await c.ExecuteScalarAsync<int>("SELECT count(*) FROM audit_events WHERE action = 'registration.confirmation_resent' AND record_id = @id", new { id = reg.ToString() })).Should().Be(1);
+    }
+
+    [Fact]
     public async Task A_second_child_gets_one_more_email_that_lists_both()
     {
         var edition = await BootcampEdition();
@@ -83,6 +106,7 @@ public sealed class RegistrationEmailTests(TestApp app)
         var edition = await BootcampEdition();
         var adult = await Guardian("Emeka");
         var reg = (await Harness.Data(await h.Send(HttpMethod.Post, "/api/v1/registration", adult.Headers, new { editionId = edition, participationMode = "Online" }))).GetProperty("id").GetGuid();
+        (await h.Send(HttpMethod.Post, "/api/v1/emergency-contacts", adult.Headers, new { fullName = "Ngozi Obi", relationship = "Aunt", phone = "08012345678" })).StatusCode.Should().Be(HttpStatusCode.OK);
         (await h.Send(HttpMethod.Put, $"/api/v1/registration/{reg}/consent/Terms", adult.Headers, new { accepted = true })).StatusCode.Should().Be(HttpStatusCode.OK);
         (await h.Send(HttpMethod.Post, $"/api/v1/registration/{reg}/submit", adult.Headers, new { })).StatusCode.Should().Be(HttpStatusCode.OK);
         SentTo(adult.Email).Should().BeEmpty();

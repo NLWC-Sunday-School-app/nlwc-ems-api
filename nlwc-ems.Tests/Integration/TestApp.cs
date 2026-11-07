@@ -78,6 +78,9 @@ public sealed class TestApp : IAsyncLifetime
         Environment.SetEnvironmentVariable("Security__MasterKey", new string('a', 64));
         Environment.SetEnvironmentVariable("Security__CookieSecure", "false");
         Environment.SetEnvironmentVariable("Security__RequireSeparationOfDuties", "true");   // off by default; the rule itself is tested
+        // Never send real email from tests, whatever the appsettings carry.
+        Environment.SetEnvironmentVariable("Mailgun__Domain", "");
+        Environment.SetEnvironmentVariable("Mailgun__ApiKey", "");
         Environment.SetEnvironmentVariable("Cors__AllowedOrigins__0", "http://localhost:3000");
         Environment.SetEnvironmentVariable("Google__ClientId", "test-client");
         Environment.SetEnvironmentVariable("Google__ClientSecret", "test-secret");

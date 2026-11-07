@@ -56,7 +56,7 @@ public sealed class RegistrationTests(TestApp app)
 
     private async Task CompleteRequired(Staff s, Guid registration, Guid child)
     {
-        (await h.Send(HttpMethod.Put, $"/api/v1/dependant/{child}/emergency-contact", s.Headers,
+        (await h.Send(HttpMethod.Post, "/api/v1/emergency-contacts", s.Headers,
             new { fullName = "Ngozi Obi", relationship = "Aunt", phone = "08012345678" })).StatusCode.Should().Be(HttpStatusCode.OK);
         (await h.Send(HttpMethod.Put, $"/api/v1/registration/{registration}/health", s.Headers, new { none = true })).StatusCode.Should().Be(HttpStatusCode.OK);
         foreach (var kind in new[] { "Terms", "GuardianAuthorization", "MedicalEmergency" })
@@ -111,8 +111,10 @@ public sealed class RegistrationTests(TestApp app)
         var id = (await Harness.Data(await Register(u, edition, null, "Online"))).GetProperty("id").GetGuid();
 
         var review = await Harness.Data(await h.Send(HttpMethod.Get, $"/api/v1/registration/{id}/review", u.Headers));
-        review.GetProperty("openTasks").EnumerateArray().Select(t => t.GetProperty("code").GetString()).Should().Equal("consent_terms");
+        review.GetProperty("openTasks").EnumerateArray().Select(t => t.GetProperty("code").GetString()).Should().Equal("emergency_contact", "consent_terms");
         review.GetProperty("holdsPass").GetBoolean().Should().BeFalse();   // media only applies to children
+
+        (await h.Send(HttpMethod.Post, "/api/v1/emergency-contacts", u.Headers, new { fullName = "Ngozi Obi", relationship = "Aunt", phone = "08012345678" })).StatusCode.Should().Be(HttpStatusCode.OK);
 
         (await Consent(u, id, "Media", true)).StatusCode.Should().Be(HttpStatusCode.BadRequest);
         (await Consent(u, id, "Terms", true)).StatusCode.Should().Be(HttpStatusCode.OK);
@@ -281,7 +283,7 @@ public sealed class RegistrationTests(TestApp app)
         (await Harness.Code(early)).Should().Be("registration_incomplete");
         (await Harness.Data(await h.Send(HttpMethod.Get, $"/api/v1/registration/{id}/review", u.Headers))).GetProperty("openTasks").EnumerateArray()
             .Where(t => t.GetProperty("blocking").GetBoolean()).Select(t => t.GetProperty("code").GetString()).Should()
-            .BeEquivalentTo("health", "consent_terms", "consent_guardian_authorization", "consent_medical_emergency");
+            .BeEquivalentTo("emergency_contact", "health", "consent_terms", "consent_guardian_authorization", "consent_medical_emergency");
 
         await CompleteRequired(u, id, child);
         var review = await Harness.Data(await h.Send(HttpMethod.Get, $"/api/v1/registration/{id}/review", u.Headers));

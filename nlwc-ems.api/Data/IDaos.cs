@@ -133,10 +133,12 @@ public interface IAuthorizedCollectorDao : IBaseDao<AuthorizedCollector>
 
 public interface IEmergencyContactDao : IBaseDao<EmergencyContact>
 {
-    Task<EmergencyContact?> RetrieveForPersonAsync(Guid personId);
+    /// <summary>Every contact the family of this account holder has named, oldest first.</summary>
+    Task<List<EmergencyContact>> RetrieveForFamilyAsync(Guid holderPersonId);
 
-    /// <summary>One contact per person: deletes any existing and inserts <paramref name="contact"/>, in one transaction.</summary>
-    Task ReplaceAsync(EmergencyContact contact);
+    Task<int> CountForFamilyAsync(Guid holderPersonId);
+
+    Task DeleteAsync(Guid holderPersonId, Guid contactId);
 }
 
 // ---- Catalog and pricing ----

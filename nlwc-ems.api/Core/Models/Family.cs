@@ -42,6 +42,7 @@ public class AuthorizedCollector : BaseEntity
     public DateTime? RemovedAt { get; set; }
 }
 
+/// <summary>Someone to call about any child in a family. <see cref="PersonId"/> is the account holder the family hangs off.</summary>
 public class EmergencyContact : BaseEntity
 {
     public Guid PersonId { get; set; }

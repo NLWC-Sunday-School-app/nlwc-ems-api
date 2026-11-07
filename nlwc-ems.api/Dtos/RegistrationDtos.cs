@@ -129,7 +129,7 @@ public class StaffRegistrationDetailDto
 
     public List<StaffActorDto> Actors { get; set; } = [];
     public List<StaffConsentDto> Consents { get; set; } = [];
-    public StaffEmergencyContactDto? EmergencyContact { get; set; }
+    public List<StaffEmergencyContactDto> EmergencyContacts { get; set; } = [];
     public List<StaffHistoryDto> History { get; set; } = [];
     public bool Cancellable { get; set; }
 }

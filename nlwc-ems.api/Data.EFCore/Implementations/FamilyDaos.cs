@@ -48,14 +48,13 @@ public class AuthorizedCollectorDao(EmsDbContext dbContext, IHttpContextAccessor
 public class EmergencyContactDao(EmsDbContext dbContext, IHttpContextAccessor httpContextAccessor, IAuditEventPublisher auditEventPublisher)
     : BaseDao<EmsDbContext, EmergencyContact>(dbContext, httpContextAccessor, auditEventPublisher), IEmergencyContactDao
 {
-    public Task<EmergencyContact?> RetrieveForPersonAsync(Guid personId) => Query().FirstOrDefaultAsync(c => c.PersonId == personId);
+    public Task<List<EmergencyContact>> RetrieveForFamilyAsync(Guid holderPersonId)
+        => Query().Where(c => c.PersonId == holderPersonId).OrderBy(c => c.DateCreated).ThenBy(c => c.Id).ToListAsync();
 
-    public Task ReplaceAsync(EmergencyContact contact)
-        => InTransactionAsync(async () =>
-        {
-            await DbContext.Set<EmergencyContact>().Where(c => c.PersonId == contact.PersonId).ExecuteDeleteAsync();
-            await InsertAsync(contact);
-        });
+    public Task<int> CountForFamilyAsync(Guid holderPersonId) => Query().CountAsync(c => c.PersonId == holderPersonId);
+
+    public Task DeleteAsync(Guid holderPersonId, Guid contactId)
+        => DbContext.Set<EmergencyContact>().Where(c => c.PersonId == holderPersonId && c.Id == contactId).ExecuteDeleteAsync();
 }
 
 public class StaffPeopleDao(EmsDbContext dbContext, IHttpContextAccessor httpContextAccessor, IAuditEventPublisher auditEventPublisher)

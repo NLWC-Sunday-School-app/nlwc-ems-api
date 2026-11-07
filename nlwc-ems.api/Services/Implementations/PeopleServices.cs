@@ -3,20 +3,17 @@ using nlwc.ems.Dtos;
 
 namespace nlwc.ems.Services.Implementations;
 
-public class ProfileService(IPersonDao personDao, IAccountDao accountDao, IEmergencyContactDao contactDao, IFieldEncryptor encryptor,
-    IAuditEventPublisher auditPublisher) : BaseService<Person>(personDao), IProfileService
+public class ProfileService(IPersonDao personDao, IAccountDao accountDao, IAuditEventPublisher auditPublisher) : BaseService<Person>(personDao), IProfileService
 {
     public async Task<ProfileDto> GetAsync(Guid accountId, Guid personId, bool emailVerified)
     {
         var person = await personDao.RetrieveByIdAsync(personId) ?? throw new NotFoundException("Profile not found.");
         var account = await accountDao.RetrieveByIdAsync(accountId) ?? throw new NotFoundException("Account not found.");
-        var contact = await contactDao.RetrieveForPersonAsync(personId);
         return new ProfileDto
         {
             PersonId = person.Id, GivenName = person.GivenName, FamilyName = person.FamilyName, MiddleName = person.MiddleName,
             DateOfBirth = person.DateOfBirth, Gender = person.Gender, MaritalStatus = person.MaritalStatus, Country = person.Country, City = person.City,
-            Email = account.Email, EmailVerified = emailVerified, NeedsDateOfBirth = person.DateOfBirth is null,
-            EmergencyContact = contact is null ? null : EmergencyContactService.ToDto(contact, encryptor)
+            Email = account.Email, EmailVerified = emailVerified, NeedsDateOfBirth = person.DateOfBirth is null
         };
     }
 
@@ -159,27 +156,49 @@ public class CollectorService(IAuthorizedCollectorDao collectorDao, IGuardianAut
     }
 }
 
-public class EmergencyContactService(IEmergencyContactDao contactDao, IGuardianAuthorizationDao guardianDao, IFieldEncryptor encryptor)
+public class EmergencyContactService(IEmergencyContactDao contactDao, IFieldEncryptor encryptor)
     : BaseService<EmergencyContact>(contactDao), IEmergencyContactService
 {
-    public static ContactDto ToDto(EmergencyContact c, IFieldEncryptor encryptor) =>
-        new() { FullName = c.FullName, Relationship = c.Relationship, Phone = encryptor.DecryptString(c.PhoneEncrypted) };
+    public const int MaxPerFamily = 5;
 
-    public async Task SetAsync(Guid callerPersonId, Guid subjectPersonId, EmergencyContactRequest request)
+    private EmergencyContactDto ToDto(EmergencyContact c) =>
+        new() { Id = c.Id, FullName = c.FullName, Relationship = c.Relationship, Phone = encryptor.DecryptString(c.PhoneEncrypted) };
+
+    public async Task<IReadOnlyList<EmergencyContactDto>> ListAsync(Guid holderPersonId)
+        => (await contactDao.RetrieveForFamilyAsync(holderPersonId)).Select(ToDto).ToList();
+
+    public async Task<EmergencyContactDto> AddAsync(Guid holderPersonId, EmergencyContactRequest request)
     {
-        if (subjectPersonId != callerPersonId) await PersonRules.RequireGuardianAsync(guardianDao, callerPersonId, subjectPersonId);
         var phone = PersonRules.NormalizePhone(request.Phone);
-        await contactDao.ReplaceAsync(new EmergencyContact
+        if (await contactDao.CountForFamilyAsync(holderPersonId) >= MaxPerFamily)
+            throw new AppException($"A family can name up to {MaxPerFamily} pick-up persons. Remove one to add another.", isConflict: true, code: "too_many_contacts");
+        var contact = await InsertOrThrowAsync(new EmergencyContact
         {
-            Id = Guid.NewGuid(), PersonId = subjectPersonId, FullName = request.FullName.Trim(), Relationship = request.Relationship.Trim(),
+            Id = Guid.NewGuid(), PersonId = holderPersonId, FullName = request.FullName.Trim(), Relationship = request.Relationship.Trim(),
             PhoneEncrypted = encryptor.EncryptString(phone)
         });
+        return ToDto(contact);
     }
 
-    public async Task<ContactDto?> GetAsync(Guid callerPersonId, Guid subjectPersonId)
+    public async Task<EmergencyContactDto> UpdateAsync(Guid holderPersonId, Guid contactId, EmergencyContactRequest request)
     {
-        if (subjectPersonId != callerPersonId) await PersonRules.RequireGuardianAsync(guardianDao, callerPersonId, subjectPersonId);
-        var contact = await contactDao.RetrieveForPersonAsync(subjectPersonId);
-        return contact is null ? null : ToDto(contact, encryptor);
+        var contact = await RequireAsync(holderPersonId, contactId);
+        contact.FullName = request.FullName.Trim();
+        contact.Relationship = request.Relationship.Trim();
+        contact.PhoneEncrypted = encryptor.EncryptString(PersonRules.NormalizePhone(request.Phone));
+        await UpdateOrThrowAsync(contact);
+        return ToDto(contact);
+    }
+
+    public async Task RemoveAsync(Guid holderPersonId, Guid contactId)
+    {
+        await RequireAsync(holderPersonId, contactId);
+        await contactDao.DeleteAsync(holderPersonId, contactId);
+    }
+
+    private async Task<EmergencyContact> RequireAsync(Guid holderPersonId, Guid contactId)
+    {
+        var contact = await contactDao.RetrieveByIdAsync(contactId);
+        return contact is null || contact.PersonId != holderPersonId ? throw new NotFoundException("Not found.") : contact;
     }
 }

@@ -98,10 +98,14 @@ public interface ICollectorService : IBaseService<AuthorizedCollector>
 
 public interface IEmergencyContactService : IBaseService<EmergencyContact>
 {
-    /// <summary>For yourself (<paramref name="subjectPersonId"/> = your own person id) or one of your dependants.</summary>
-    Task SetAsync(Guid callerPersonId, Guid subjectPersonId, EmergencyContactRequest request);
+    /// <summary>The family's contacts. A family is the account holder and everyone they are guardian of, so these apply to every child.</summary>
+    Task<IReadOnlyList<EmergencyContactDto>> ListAsync(Guid holderPersonId);
 
-    Task<ContactDto?> GetAsync(Guid callerPersonId, Guid subjectPersonId);
+    Task<EmergencyContactDto> AddAsync(Guid holderPersonId, EmergencyContactRequest request);
+
+    Task<EmergencyContactDto> UpdateAsync(Guid holderPersonId, Guid contactId, EmergencyContactRequest request);
+
+    Task RemoveAsync(Guid holderPersonId, Guid contactId);
 }
 
 // ---- Catalog and pricing ----
@@ -184,6 +188,9 @@ public interface IStaffRegistrationService : IBaseService<Registration>
     /// <summary>Cancels on staff's behalf: the reason is kept in the history and the audit log.</summary>
     Task CancelAsync(Guid staffPersonId, Guid registrationId, string reason);
 
+    /// <summary>Sends the parent or guardian the confirmation email again. Audited; fails loudly with the reason when it cannot be sent.</summary>
+    Task<string> ResendConfirmationAsync(Guid staffPersonId, Guid registrationId, string reason);
+
     /// <summary>The edition a registration belongs to, or 404.</summary>
     Task<Guid> GetEditionIdAsync(Guid registrationId);
 
@@ -195,7 +202,12 @@ public interface IStaffRegistrationService : IBaseService<Registration>
 public interface IRegistrationNotifier
 {
     Task NotifyRegisteredAsync(Guid guardianPersonId, Guid registrationId);
+
+    /// <summary>Sends the confirmation and says what happened. Unlike <see cref="NotifyRegisteredAsync"/> it reports failure to the caller.</summary>
+    Task<ConfirmationSendResult> SendConfirmationAsync(Guid guardianPersonId, Guid registrationId);
 }
+
+public record ConfirmationSendResult(bool Sent, string Message);
 
 public interface IStaffPeopleService : IBaseService<PersonRelationship>
 {

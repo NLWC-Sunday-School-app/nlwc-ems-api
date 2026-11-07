@@ -85,7 +85,6 @@ public sealed class PeopleTests(TestApp app)
         (await Harness.Data(await h.Send(HttpMethod.Get, "/api/v1/dependant", other.Headers))).GetArrayLength().Should().Be(0);
         (await h.Send(HttpMethod.Get, $"/api/v1/dependant/{kid}/collector", other.Headers)).StatusCode.Should().Be(HttpStatusCode.NotFound);
         (await h.Send(HttpMethod.Post, $"/api/v1/dependant/{kid}/collector", other.Headers, new { fullName = "X Y", relationship = "uncle", phone = "08031234567" })).StatusCode.Should().Be(HttpStatusCode.NotFound);
-        (await h.Send(HttpMethod.Get, $"/api/v1/dependant/{kid}/emergency-contact", other.Headers)).StatusCode.Should().Be(HttpStatusCode.NotFound);
         (await h.Send(HttpMethod.Post, $"/api/v1/dependant/{kid}/remove", other.Headers, new { reason = "x" })).StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
@@ -149,20 +148,47 @@ public sealed class PeopleTests(TestApp app)
     }
 
     [Fact]
-    public async Task The_emergency_contact_is_one_per_person_and_replaceable()
+    public async Task A_family_keeps_several_emergency_contacts_that_it_can_edit_and_remove()
     {
         var u = await h.NewUser();
-        var kid = await Kid(u);
+        await Kid(u);
         object Body(string name) => new { fullName = name, relationship = "aunt", phone = "08031234567" };
-        await h.Send(HttpMethod.Put, $"/api/v1/dependant/{kid}/emergency-contact", u.Headers, Body("First"));
-        await h.Send(HttpMethod.Put, $"/api/v1/dependant/{kid}/emergency-contact", u.Headers, Body("Second"));
-        (await Harness.Data(await h.Send(HttpMethod.Get, $"/api/v1/dependant/{kid}/emergency-contact", u.Headers))).GetProperty("fullName").GetString().Should().Be("Second");
+        var first = await Harness.Data(await h.Send(HttpMethod.Post, "/api/v1/emergency-contacts", u.Headers, Body("First")));
+        await h.Send(HttpMethod.Post, "/api/v1/emergency-contacts", u.Headers, Body("Second"));
 
-        await h.Send(HttpMethod.Put, "/api/v1/emergency-contact", u.Headers, Body("Mine"));
-        (await Harness.Data(await h.Send(HttpMethod.Get, "/api/v1/profile", u.Headers))).GetProperty("emergencyContact").GetProperty("fullName").GetString().Should().Be("Mine");
+        var list = await Harness.Data(await h.Send(HttpMethod.Get, "/api/v1/emergency-contacts", u.Headers));
+        list.EnumerateArray().Select(c => c.GetProperty("fullName").GetString()).Should().Equal("First", "Second");
+        list[0].GetProperty("phone").GetString().Should().NotBeNullOrEmpty();
+
+        var id = first.GetProperty("id").GetGuid();
+        await h.Send(HttpMethod.Put, $"/api/v1/emergency-contacts/{id}", u.Headers, Body("Renamed"));
+        (await Harness.Data(await h.Send(HttpMethod.Get, "/api/v1/emergency-contacts", u.Headers))).EnumerateArray()
+            .Select(c => c.GetProperty("fullName").GetString()).Should().Equal("Renamed", "Second");
+
+        (await h.Send(HttpMethod.Delete, $"/api/v1/emergency-contacts/{id}", u.Headers)).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await Harness.Data(await h.Send(HttpMethod.Get, "/api/v1/emergency-contacts", u.Headers))).GetArrayLength().Should().Be(1);
 
         await using var c = await app.Db.OpenConnectionAsync();
-        (await c.ExecuteScalarAsync<int>("SELECT count(*) FROM emergency_contacts WHERE person_id = @kid", new { kid })).Should().Be(1);
+        (await c.ExecuteScalarAsync<string>("SELECT CONVERT(phone_encrypted USING latin1) FROM emergency_contacts WHERE person_id = @p LIMIT 1", new { p = u.PersonId }))
+            .Should().NotContain("08031234567");   // encrypted at rest
+    }
+
+    [Fact]
+    public async Task Emergency_contacts_are_private_to_their_family_and_capped()
+    {
+        var owner = await h.NewUser();
+        var other = await h.NewUser();
+        var created = await Harness.Data(await h.Send(HttpMethod.Post, "/api/v1/emergency-contacts", owner.Headers, new { fullName = "A B", relationship = "aunt", phone = "08031234567" }));
+        var id = created.GetProperty("id").GetGuid();
+
+        (await Harness.Data(await h.Send(HttpMethod.Get, "/api/v1/emergency-contacts", other.Headers))).GetArrayLength().Should().Be(0);
+        (await h.Send(HttpMethod.Put, $"/api/v1/emergency-contacts/{id}", other.Headers, new { fullName = "X Y", relationship = "x", phone = "08031234567" })).StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await h.Send(HttpMethod.Delete, $"/api/v1/emergency-contacts/{id}", other.Headers)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+
+        for (var i = 1; i < 5; i++) (await h.Send(HttpMethod.Post, "/api/v1/emergency-contacts", owner.Headers, new { fullName = $"C {i}", relationship = "friend", phone = "08031234567" })).StatusCode.Should().Be(HttpStatusCode.OK);
+        var sixth = await h.Send(HttpMethod.Post, "/api/v1/emergency-contacts", owner.Headers, new { fullName = "C 6", relationship = "friend", phone = "08031234567" });
+        sixth.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await Harness.Code(sixth)).Should().Be("too_many_contacts");
     }
 
     [Fact]

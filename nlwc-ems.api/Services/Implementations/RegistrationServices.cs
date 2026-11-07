@@ -77,12 +77,12 @@ public class RegistrationService(IRegistrationDao registrationDao, IConsentRecor
     }
 
     public async Task<ReviewDto> ReviewAsync(Guid callerPersonId, Guid registrationId)
-        => await BuildReviewAsync(await RequireAsync(callerPersonId, registrationId));
+        => await BuildReviewAsync(callerPersonId, await RequireAsync(callerPersonId, registrationId));
 
     public async Task<ReviewDto> SubmitAsync(Guid callerPersonId, Guid registrationId)
     {
         var registration = await RequireEditableAsync(callerPersonId, registrationId);
-        var review = await BuildReviewAsync(registration);
+        var review = await BuildReviewAsync(callerPersonId, registration);
         if (!review.CanSubmit)
             throw new AppException("Complete the open steps before submitting.", code: "registration_incomplete");   // the review lists them
 
@@ -118,10 +118,13 @@ public class RegistrationService(IRegistrationDao registrationDao, IConsentRecor
         });
     }
 
-    private async Task<ReviewDto> BuildReviewAsync(Registration registration)
+    private async Task<ReviewDto> BuildReviewAsync(Guid callerPersonId, Registration registration)
     {
         var tasks = new List<ReviewTaskDto>();
         var age = registration.AgeOnReferenceDate ?? 0;
+
+        // Emergency contacts are the family's, not the child's: the account holder needs at least one, whoever is registered.
+        if (await contactDao.CountForFamilyAsync(callerPersonId) == 0) tasks.Add(new() { Code = "emergency_contact", Blocking = true });
 
         if (RegistrationRules.IsPhysical(registration.ParticipationMode))
         {
@@ -252,14 +255,16 @@ public class HealthService(IHealthDisclosureDao healthDao, IRegistrationDao regi
 }
 
 public class StaffRegistrationService(IRegistrationDao registrationDao, IHealthDisclosureDao healthDao, IAccessLogDao accessLogDao,
-    IFieldEncryptor encryptor, IConsentRecordDao consentDao, IEmergencyContactDao contactDao, IAuditEventPublisher auditPublisher)
+    IFieldEncryptor encryptor, IConsentRecordDao consentDao, IEmergencyContactDao contactDao, IAuditEventPublisher auditPublisher, IRegistrationNotifier notifier)
     : BaseService<Registration>(registrationDao), IStaffRegistrationService
 {
     public async Task<StaffRegistrationDetailDto> GetDetailAsync(Guid registrationId, bool includeHealthFlags)
     {
         var d = await registrationDao.RetrieveStaffDetailAsync(registrationId) ?? throw new NotFoundException("Not found.");
         var r = d.Registration;
-        var contact = await contactDao.RetrieveForPersonAsync(r.PersonId);
+        // The family is the account holder who registered them; a self-registered adult is their own.
+        var holder = d.Actors.FirstOrDefault(a => a.PersonId != r.PersonId && a.Role is RegistrationRole.Guardian or RegistrationRole.Registrant)?.PersonId ?? r.PersonId;
+        var contacts = await contactDao.RetrieveForFamilyAsync(holder);
         var consents = await consentDao.RetrieveCurrentAsync(r.Id);
         return new StaffRegistrationDetailDto
         {
@@ -273,7 +278,7 @@ public class StaffRegistrationService(IRegistrationDao registrationDao, IHealthD
             HasHealthFlags = includeHealthFlags ? (await healthDao.RetrieveForRegistrationAsync(r.Id))?.HasFlags ?? false : null,
             Actors = d.Actors.Select(a => new StaffActorDto { PersonId = a.PersonId, Name = a.Name, Role = a.Role }).ToList(),
             Consents = consents.OrderBy(c => c.Kind).Select(c => new StaffConsentDto { Kind = c.Kind, Accepted = c.Accepted, DocumentVersion = c.DocumentVersion, At = c.DateCreated }).ToList(),
-            EmergencyContact = contact is null ? null : new StaffEmergencyContactDto { FullName = contact.FullName, Relationship = contact.Relationship },
+            EmergencyContacts = contacts.Select(c => new StaffEmergencyContactDto { FullName = c.FullName, Relationship = c.Relationship }).ToList(),
             History = d.History.Select(h => new StaffHistoryDto { From = h.FromState, To = h.ToState, Actor = h.ActorName, Reason = h.Reason, At = h.At }).ToList(),
             Cancellable = RegistrationRules.Cancellable(r.State)
         };
@@ -322,6 +327,23 @@ public class StaffRegistrationService(IRegistrationDao registrationDao, IHealthD
     {
         if (value.Length > 0 && "=+-@\t\r".Contains(value[0])) value = "'" + value;
         return "\"" + value.Replace("\"", "\"\"") + "\"";
+    }
+
+    public async Task<string> ResendConfirmationAsync(Guid staffPersonId, Guid registrationId, string reason)
+    {
+        var d = await registrationDao.RetrieveStaffDetailAsync(registrationId) ?? throw new NotFoundException("Not found.");
+        var guardian = d.Actors.FirstOrDefault(a => a.PersonId != d.Registration.PersonId && a.Role is RegistrationRole.Guardian or RegistrationRole.Registrant)
+            ?? throw new AppException("This registration has no parent or guardian to email.", isConflict: true, code: "email_not_sent");
+
+        var result = await notifier.SendConfirmationAsync(guardian.PersonId, registrationId);
+        await auditPublisher.PublishAsync(new EntityAuditEvent
+        {
+            EntityType = nameof(Registration), RecordId = registrationId.ToString(), DisplayName = d.Registration.Reference,
+            Action = result.Sent ? "registration.confirmation_resent" : "registration.confirmation_resend_failed", Reason = reason.Trim(),
+            EditionId = d.Registration.EditionId, Detail = new { result.Message }
+        });
+        if (!result.Sent) throw new AppException(result.Message, isConflict: true, code: "email_not_sent");
+        return result.Message;
     }
 
     public async Task CancelAsync(Guid staffPersonId, Guid registrationId, string reason)

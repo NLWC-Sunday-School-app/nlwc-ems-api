@@ -1096,7 +1096,6 @@ namespace nlwc.ems.Data.EFCore.Migrations
                         .HasName("pk_emergency_contacts");
 
                     b.HasIndex("PersonId")
-                        .IsUnique()
                         .HasDatabaseName("ix_emergency_contacts_person_id");
 
                     b.ToTable("emergency_contacts", (string)null);

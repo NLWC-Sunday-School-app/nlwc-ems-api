@@ -153,7 +153,7 @@ public sealed class StaffReviewTests(TestApp app)
             var kid = (await Harness.Data(await h.Send(HttpMethod.Post, "/api/v1/dependant", family.Headers,
                 new { givenName = $"Kid{i}", familyName = "Camper", dateOfBirth = "2014-06-01", gender = "Male", relationship = "Parent" }))).GetProperty("id").GetGuid();
             var registration = (await Harness.Data(await h.Send(HttpMethod.Post, "/api/v1/registration", family.Headers, new { editionId = edition, personId = kid, participationMode = "Camp" }))).GetProperty("id").GetGuid();
-            (await h.Send(HttpMethod.Put, $"/api/v1/dependant/{kid}/emergency-contact", family.Headers, new { fullName = "Ngozi Obi", relationship = "Aunt", phone = "08012345678" })).StatusCode.Should().Be(HttpStatusCode.OK);
+            (await h.Send(HttpMethod.Post, "/api/v1/emergency-contacts", family.Headers, new { fullName = "Ngozi Obi", relationship = "Aunt", phone = "08012345678" })).StatusCode.Should().Be(HttpStatusCode.OK);
             (await h.Send(HttpMethod.Put, $"/api/v1/registration/{registration}/health", family.Headers, new { none = true })).StatusCode.Should().Be(HttpStatusCode.OK);
             foreach (var kind in new[] { "Terms", "GuardianAuthorization", "MedicalEmergency" })
                 (await h.Send(HttpMethod.Put, $"/api/v1/registration/{registration}/consent/{kind}", family.Headers, new { accepted = true })).StatusCode.Should().Be(HttpStatusCode.OK);

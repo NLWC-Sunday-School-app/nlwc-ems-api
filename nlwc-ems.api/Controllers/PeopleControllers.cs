@@ -80,30 +80,28 @@ public class CollectorController(ICollectorService collectorService) : Controlle
     }
 }
 
-/// <summary>One emergency contact for yourself, and one for each child you are guardian of.</summary>
+/// <summary>The family's emergency contacts. They belong to the account holder's family, not to any one child.</summary>
 [ApiController]
 [Authorize]
+[Route("api/v1/emergency-contacts")]
 public class EmergencyContactController(IEmergencyContactService contactService) : ControllerBase
 {
-    [HttpGet("~/api/v1/emergency-contact")]
-    public async Task<ActionResult<ApiResponse<ContactDto?>>> GetMine()
-        => Ok(ApiResponse<ContactDto?>.Ok(await contactService.GetAsync(User.GetPersonId(), User.GetPersonId())));
+    [HttpGet]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<EmergencyContactDto>>>> List()
+        => Ok(ApiResponse<IReadOnlyList<EmergencyContactDto>>.Ok(await contactService.ListAsync(User.GetPersonId())));
 
-    [HttpPut("~/api/v1/emergency-contact")]
-    public async Task<ActionResult<ApiResponse>> SetMine([FromBody] EmergencyContactRequest request)
+    [HttpPost]
+    public async Task<ActionResult<ApiResponse<EmergencyContactDto>>> Add([FromBody] EmergencyContactRequest request)
+        => Ok(ApiResponse<EmergencyContactDto>.Ok(await contactService.AddAsync(User.GetPersonId(), request)));
+
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<ApiResponse<EmergencyContactDto>>> Update(Guid id, [FromBody] EmergencyContactRequest request)
+        => Ok(ApiResponse<EmergencyContactDto>.Ok(await contactService.UpdateAsync(User.GetPersonId(), id, request)));
+
+    [HttpDelete("{id:guid}")]
+    public async Task<ActionResult<ApiResponse>> Remove(Guid id)
     {
-        await contactService.SetAsync(User.GetPersonId(), User.GetPersonId(), request);
-        return Ok(ApiResponse.Ok("Emergency contact saved."));
-    }
-
-    [HttpGet("~/api/v1/dependant/{dependantId:guid}/emergency-contact")]
-    public async Task<ActionResult<ApiResponse<ContactDto?>>> GetForDependant(Guid dependantId)
-        => Ok(ApiResponse<ContactDto?>.Ok(await contactService.GetAsync(User.GetPersonId(), dependantId)));
-
-    [HttpPut("~/api/v1/dependant/{dependantId:guid}/emergency-contact")]
-    public async Task<ActionResult<ApiResponse>> SetForDependant(Guid dependantId, [FromBody] EmergencyContactRequest request)
-    {
-        await contactService.SetAsync(User.GetPersonId(), dependantId, request);
-        return Ok(ApiResponse.Ok("Emergency contact saved."));
+        await contactService.RemoveAsync(User.GetPersonId(), id);
+        return Ok(ApiResponse.Ok("Pick-up person removed."));
     }
 }

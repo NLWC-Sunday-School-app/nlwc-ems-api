@@ -149,44 +149,51 @@ public class RegistrationNotifier(IRegistrationDao registrationDao, IPersonDao p
     {
         try
         {
-            var registration = await registrationDao.RetrieveByIdAsync(registrationId);
-            if (registration is null || registration.PersonId == guardianPersonId) return;   // an adult registering themself is not this email
-
-            // Only Bible Bootcamp has a confirmation template so far; other programmes get theirs when it is designed.
-            if (await editionDao.RetrieveTemplateCodeAsync(registration.EditionId) != "BB")
-            {
-                logger.LogInformation("No confirmation email template for the programme of registration {Registration}; nothing sent.", registration.Reference);
-                return;
-            }
-            var account = await accountDao.RetrieveByPersonIdAsync(guardianPersonId);
-            var guardian = await personDao.RetrieveByIdAsync(guardianPersonId);
-            var edition = await editionDao.RetrieveByIdAsync(registration.EditionId);
-            if (account is null || guardian is null || edition is null) return;
-
-            // Every child this guardian has registered for the event, so a second child's email lists both.
-            var camp = (await campDecisionDao.RetrieveQueueAsync(edition.Id)).ToDictionary(r => r.RegistrationId);
-            var children = new List<ConfirmationChild>();
-            foreach (var r in (await registrationDao.RetrieveForActorAsync(guardianPersonId))
-                         .Where(r => r.EditionId == edition.Id && r.PersonId != guardianPersonId && Live.Contains(r.State)).OrderBy(r => r.DateCreated))
-            {
-                var child = await personDao.RetrieveByIdAsync(r.PersonId);
-                if (child is null) continue;
-                var (label, pending) = Status(r, camp.GetValueOrDefault(r.Id));
-                children.Add(new ConfirmationChild(child.GivenName, $"{child.GivenName} {child.FamilyName}", r.AgeOnReferenceDate, r.Reference, r.ParticipationMode, label, pending));
-            }
-            if (children.Count == 0) return;
-
-            var venue = edition.Venue;
-            var html = RegistrationConfirmationEmail.Render(guardian.GivenName,
-                new ConfirmationEdition(edition.Name, edition.StartsOn, edition.EndsOn, venue?.Name, venue?.Address,
-                    await ratePlanService.GetPriceStateAsync(edition.Id) == PriceState.Free, edition.PickupWindowStart, edition.PickupWindowEnd),
-                children, options.Value.WebBaseUrl);
-            await email.SendEmailAsync(new Mailer(account.Email, guardian.GivenName), null, RegistrationConfirmationEmail.Subject(edition.Name), html);
+            await SendConfirmationAsync(guardianPersonId, registrationId);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "The registration confirmation email for {Registration} could not be sent.", registrationId);
         }
+    }
+
+    public async Task<ConfirmationSendResult> SendConfirmationAsync(Guid guardianPersonId, Guid registrationId)
+    {
+        var registration = await registrationDao.RetrieveByIdAsync(registrationId);
+        if (registration is null) return new(false, "Registration not found.");
+        if (registration.PersonId == guardianPersonId) return new(false, "This is an adult's own registration; no confirmation email is sent for it.");   // an adult registering themself is not this email
+
+        // Only Bible Bootcamp has a confirmation template so far; other programmes get theirs when it is designed.
+        if (await editionDao.RetrieveTemplateCodeAsync(registration.EditionId) != "BB")
+        {
+            logger.LogInformation("No confirmation email template for the programme of registration {Registration}; nothing sent.", registration.Reference);
+            return new(false, "This programme has no confirmation email yet.");
+        }
+        var account = await accountDao.RetrieveByPersonIdAsync(guardianPersonId);
+        var guardian = await personDao.RetrieveByIdAsync(guardianPersonId);
+        var edition = await editionDao.RetrieveByIdAsync(registration.EditionId);
+        if (account is null || guardian is null || edition is null) return new(false, "The parent or guardian has no account email to send to.");
+
+        // Every child this guardian has registered for the event, so a second child's email lists both.
+        var camp = (await campDecisionDao.RetrieveQueueAsync(edition.Id)).ToDictionary(r => r.RegistrationId);
+        var children = new List<ConfirmationChild>();
+        foreach (var r in (await registrationDao.RetrieveForActorAsync(guardianPersonId))
+                     .Where(r => r.EditionId == edition.Id && r.PersonId != guardianPersonId && Live.Contains(r.State)).OrderBy(r => r.DateCreated))
+        {
+            var child = await personDao.RetrieveByIdAsync(r.PersonId);
+            if (child is null) continue;
+            var (label, pending) = Status(r, camp.GetValueOrDefault(r.Id));
+            children.Add(new ConfirmationChild(child.GivenName, $"{child.GivenName} {child.FamilyName}", r.AgeOnReferenceDate, r.Reference, r.ParticipationMode, label, pending));
+        }
+        if (children.Count == 0) return new(false, "There are no live registrations to confirm.");
+
+        var venue = edition.Venue;
+        var html = RegistrationConfirmationEmail.Render(guardian.GivenName,
+            new ConfirmationEdition(edition.Name, edition.StartsOn, edition.EndsOn, venue?.Name, venue?.Address,
+                await ratePlanService.GetPriceStateAsync(edition.Id) == PriceState.Free, edition.PickupWindowStart, edition.PickupWindowEnd),
+            children, options.Value.WebBaseUrl);
+        var sent = await email.SendEmailAsync(new Mailer(account.Email, guardian.GivenName), null, RegistrationConfirmationEmail.Subject(edition.Name), html);
+        return sent ? new(true, $"Confirmation email sent to {account.Email}.") : new(false, "The email was not sent. Check that Mailgun is set up on the server (domain, API key, sender) and see the API log for the reason.");
     }
 
     private static (string Label, bool Pending) Status(Registration r, CampQueueRow? camp)

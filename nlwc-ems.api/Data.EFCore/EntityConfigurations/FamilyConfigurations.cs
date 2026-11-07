@@ -62,8 +62,8 @@ public class EmergencyContactConfiguration : IEntityTypeConfiguration<EmergencyC
         builder.Property(c => c.FullName).IsRequired().HasMaxLength(100);
         builder.Property(c => c.Relationship).IsRequired().HasMaxLength(100);
         builder.Property(c => c.PhoneEncrypted).IsRequired();
-        // One per person: replacing is delete-then-insert in one transaction.
-        builder.HasIndex(c => c.PersonId).IsUnique();
+        // A family names several; PersonId is the account holder whose family they belong to.
+        builder.HasIndex(c => c.PersonId);
         builder.HasOne<Person>().WithMany().HasForeignKey(c => c.PersonId);
     }
 }

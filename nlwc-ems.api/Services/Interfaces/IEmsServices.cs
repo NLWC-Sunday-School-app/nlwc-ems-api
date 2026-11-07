@@ -155,6 +155,9 @@ public interface IRegistrationService : IBaseService<Registration>
     Task SaveDraftAsync(Guid callerPersonId, Guid registrationId, SaveDraftRequest request);
     Task<ReviewDto> ReviewAsync(Guid callerPersonId, Guid registrationId);
     Task<ReviewDto> SubmitAsync(Guid callerPersonId, Guid registrationId);
+
+    /// <summary>Submits each registration in turn, then sends one confirmation email that lists every child registered for the edition.</summary>
+    Task<IReadOnlyList<SubmitOutcomeDto>> SubmitManyAsync(Guid callerPersonId, IReadOnlyList<Guid> registrationIds);
     Task CancelAsync(Guid callerPersonId, Guid registrationId, string reason);
 }
 

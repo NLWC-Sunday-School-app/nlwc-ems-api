@@ -81,6 +81,39 @@ public class RegistrationService(IRegistrationDao registrationDao, IConsentRecor
 
     public async Task<ReviewDto> SubmitAsync(Guid callerPersonId, Guid registrationId)
     {
+        var (review, registration) = await SubmitWithoutEmailAsync(callerPersonId, registrationId);
+        await notifier.NotifyRegisteredAsync(callerPersonId, registration.Id);   // never throws; a failed email must not undo the registration
+        return review;
+    }
+
+    public async Task<IReadOnlyList<SubmitOutcomeDto>> SubmitManyAsync(Guid callerPersonId, IReadOnlyList<Guid> registrationIds)
+    {
+        var outcomes = new List<SubmitOutcomeDto>();
+        Registration? emailFor = null;
+        foreach (var id in registrationIds.Distinct())
+        {
+            try
+            {
+                var (review, registration) = await SubmitWithoutEmailAsync(callerPersonId, id);
+                outcomes.Add(new() { RegistrationId = id, Ok = true, State = review.State });
+                if (registration.PersonId != callerPersonId) emailFor ??= registration;
+            }
+            catch (Exception ex) when (ex is AppException or ValidationException or NotFoundException or ForbiddenException)
+            {
+                outcomes.Add(new()
+                {
+                    RegistrationId = id, Ok = false, Message = ex.Message,
+                    Code = ex switch { AppException a => a.Code, ValidationException v => v.Code, ForbiddenException => "forbidden", _ => "not_found" }
+                });
+            }
+        }
+        // One email for the whole family: the notifier lists every live child registration for the edition, not just this one.
+        if (emailFor is not null) await notifier.NotifyRegisteredAsync(callerPersonId, emailFor.Id);
+        return outcomes;
+    }
+
+    private async Task<(ReviewDto Review, Registration Registration)> SubmitWithoutEmailAsync(Guid callerPersonId, Guid registrationId)
+    {
         var registration = await RequireEditableAsync(callerPersonId, registrationId);
         var review = await BuildReviewAsync(callerPersonId, registration);
         if (!review.CanSubmit)
@@ -97,9 +130,8 @@ public class RegistrationService(IRegistrationDao registrationDao, IConsentRecor
             EntityType = nameof(Registration), RecordId = registration.Id.ToString(), DisplayName = registration.Reference,
             Action = "registration.submitted", EditionId = registration.EditionId
         });
-        await notifier.NotifyRegisteredAsync(callerPersonId, registration.Id);   // never throws; a failed email must not undo the registration
         review.State = registration.State;
-        return review;
+        return (review, registration);
     }
 
     public async Task CancelAsync(Guid callerPersonId, Guid registrationId, string reason)

@@ -100,6 +100,68 @@ public sealed class RegistrationEmailTests(TestApp app)
         mails[1].Html.Should().Contain("Tobi and Dara").And.Contain("Tobi Egwu").And.Contain("Dara Egwu").And.Contain("What to bring to camp").And.Contain("Pending our team&#39;s review");
     }
 
+    /// <summary>Registers one child and completes every step, without submitting. Returns the registration id.</summary>
+    private async Task<Guid> PrepareChild(Staff parent, Guid edition, string name, string mode = "Day", string dob = "2017-05-01")
+    {
+        var kid = (await Harness.Data(await h.Send(HttpMethod.Post, "/api/v1/dependant", parent.Headers,
+            new { givenName = name, familyName = "Egwu", dateOfBirth = dob, gender = "Male", relationship = "Parent" }))).GetProperty("id").GetGuid();
+        var reg = (await Harness.Data(await h.Send(HttpMethod.Post, "/api/v1/registration", parent.Headers, new { editionId = edition, personId = kid, participationMode = mode }))).GetProperty("id").GetGuid();
+        (await h.Send(HttpMethod.Put, $"/api/v1/registration/{reg}/health", parent.Headers, new { none = true })).StatusCode.Should().Be(HttpStatusCode.OK);
+        foreach (var kind in new[] { "Terms", "GuardianAuthorization", "MedicalEmergency" })
+            (await h.Send(HttpMethod.Put, $"/api/v1/registration/{reg}/consent/{kind}", parent.Headers, new { accepted = true })).StatusCode.Should().Be(HttpStatusCode.OK);
+        return reg;
+    }
+
+    [Fact]
+    public async Task Children_submitted_together_get_one_email_listing_all_and_a_later_child_gets_one_listing_everyone()
+    {
+        var edition = await BootcampEdition();
+        var parent = await Guardian();
+        (await h.Send(HttpMethod.Post, "/api/v1/emergency-contacts", parent.Headers, new { fullName = "Ngozi Obi", relationship = "Aunt", phone = "08012345678" })).StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // First visit: two children, one submit, one email that names both.
+        var tobi = await PrepareChild(parent, edition, "Tobi");
+        var dara = await PrepareChild(parent, edition, "Dara", "Camp", "2014-06-01");
+        var first = await h.Send(HttpMethod.Post, "/api/v1/registration/submit", parent.Headers, new { registrationIds = new[] { tobi, dara } });
+        first.StatusCode.Should().Be(HttpStatusCode.OK, await first.Content.ReadAsStringAsync());
+        (await Harness.Data(first)).EnumerateArray().Should().HaveCount(2).And.OnlyContain(o => o.GetProperty("ok").GetBoolean());
+
+        var mails = SentTo(parent.Email);
+        mails.Should().ContainSingle();
+        mails[0].Html.Should().Contain("Tobi and Dara").And.Contain("Tobi Egwu").And.Contain("Dara Egwu");
+
+        // Later visit: a new child is added and registered. The new email names everyone registered for the edition.
+        var ife = await PrepareChild(parent, edition, "Ife");
+        (await h.Send(HttpMethod.Post, "/api/v1/registration/submit", parent.Headers, new { registrationIds = new[] { ife } })).StatusCode.Should().Be(HttpStatusCode.OK);
+
+        mails = SentTo(parent.Email);
+        mails.Should().HaveCount(2);
+        mails[1].Html.Should().Contain("Tobi, Dara and Ife").And.Contain("Tobi Egwu").And.Contain("Dara Egwu").And.Contain("Ife Egwu");
+    }
+
+    [Fact]
+    public async Task A_child_that_cannot_be_submitted_does_not_stop_the_others_in_the_batch()
+    {
+        var edition = await BootcampEdition();
+        var parent = await Guardian();
+        (await h.Send(HttpMethod.Post, "/api/v1/emergency-contacts", parent.Headers, new { fullName = "Ngozi Obi", relationship = "Aunt", phone = "08012345678" })).StatusCode.Should().Be(HttpStatusCode.OK);
+        var tobi = await PrepareChild(parent, edition, "Tobi");
+        var kid = (await Harness.Data(await h.Send(HttpMethod.Post, "/api/v1/dependant", parent.Headers,
+            new { givenName = "Dara", familyName = "Egwu", dateOfBirth = "2016-01-01", gender = "Male", relationship = "Parent" }))).GetProperty("id").GetGuid();
+        var unfinished = (await Harness.Data(await h.Send(HttpMethod.Post, "/api/v1/registration", parent.Headers, new { editionId = edition, personId = kid, participationMode = "Day" }))).GetProperty("id").GetGuid();
+
+        var res = await h.Send(HttpMethod.Post, "/api/v1/registration/submit", parent.Headers, new { registrationIds = new[] { tobi, unfinished } });
+        res.StatusCode.Should().Be(HttpStatusCode.OK, await res.Content.ReadAsStringAsync());
+        var outcomes = (await Harness.Data(res)).EnumerateArray().ToList();
+        outcomes.Single(o => o.GetProperty("registrationId").GetGuid() == tobi).GetProperty("ok").GetBoolean().Should().BeTrue();
+        var bad = outcomes.Single(o => o.GetProperty("registrationId").GetGuid() == unfinished);
+        bad.GetProperty("ok").GetBoolean().Should().BeFalse();
+        bad.GetProperty("code").GetString().Should().Be("registration_incomplete");
+
+        var mail = SentTo(parent.Email).Should().ContainSingle().Subject;
+        mail.Html.Should().Contain("Tobi Egwu").And.NotContain("Dara Egwu");
+    }
+
     [Fact]
     public async Task An_adult_registering_themself_gets_no_guardian_email()
     {

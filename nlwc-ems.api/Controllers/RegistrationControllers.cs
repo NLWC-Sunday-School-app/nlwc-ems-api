@@ -42,6 +42,11 @@ public class RegistrationController(IRegistrationService registrationService) : 
     public async Task<ActionResult<ApiResponse<ReviewDto>>> Submit(Guid id)
         => Ok(ApiResponse<ReviewDto>.Ok(await registrationService.SubmitAsync(User.GetPersonId(), id), "Registration submitted."));
 
+    /// <summary>Submits several registrations at once (a family registering more than one child) and sends one confirmation email for them all.</summary>
+    [HttpPost("submit")]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<SubmitOutcomeDto>>>> SubmitMany([FromBody] SubmitManyRequest request)
+        => Ok(ApiResponse<IReadOnlyList<SubmitOutcomeDto>>.Ok(await registrationService.SubmitManyAsync(User.GetPersonId(), request.RegistrationIds), "Registrations submitted."));
+
     [HttpPost("{id:guid}/cancel")]
     public async Task<ActionResult<ApiResponse>> Cancel(Guid id, [FromBody] ReasonRequest request)
     {

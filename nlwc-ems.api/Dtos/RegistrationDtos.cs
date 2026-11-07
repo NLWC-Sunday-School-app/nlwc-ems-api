@@ -3,6 +3,23 @@ using System.Text.Json;
 
 namespace nlwc.ems.Dtos;
 
+/// <summary>Several of a family's registrations submitted together, so the parent gets one confirmation email listing all of them.</summary>
+public class SubmitManyRequest
+{
+    [Required, MinLength(1), MaxLength(20)]
+    public List<Guid> RegistrationIds { get; set; } = [];
+}
+
+/// <summary>What happened to one registration in a <see cref="SubmitManyRequest"/>. A failure for one never stops the others.</summary>
+public class SubmitOutcomeDto
+{
+    public Guid RegistrationId { get; set; }
+    public bool Ok { get; set; }
+    public RegistrationState? State { get; set; }
+    public string? Code { get; set; }
+    public string? Message { get; set; }
+}
+
 public class CreateRegistrationRequest
 {
     [Required]

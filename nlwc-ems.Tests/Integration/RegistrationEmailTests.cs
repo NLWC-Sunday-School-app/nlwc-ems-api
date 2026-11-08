@@ -61,6 +61,7 @@ public sealed class RegistrationEmailTests(TestApp app)
         var mail = SentTo(parent.Email).Should().ContainSingle().Subject;
         mail.Subject.Should().Be("Registration confirmed: Bible Bootcamp 2026");
         mail.Html.Should().Contain("Congratulations, Chioma!").And.Contain("Tobi Egwu").And.Contain("Faith Plaza, Bariga, Lagos").And.Contain("4 – 6pm daily for walk-in participants").And.Contain("Walk-in");
+        mail.Html.Should().Contain("Chioma Egwu, Ngozi Obi");   // the parent first, then the pick-up persons the family named
         mail.Html.Should().NotContain("What to bring to camp").And.NotContain("{{");
     }
 

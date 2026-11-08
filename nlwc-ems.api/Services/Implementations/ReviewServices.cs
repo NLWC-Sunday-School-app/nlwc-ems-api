@@ -188,7 +188,10 @@ public class RegistrationNotifier(IRegistrationDao registrationDao, IPersonDao p
         if (children.Count == 0) return new(false, "There are no live registrations to confirm.");
 
         var venue = edition.Venue;
-        var pickupPersons = (await contactDao.RetrieveForFamilyAsync(guardianPersonId)).Select(c => c.FullName).ToList();
+        // The parent or guardian who registered is always the first person who may collect the children, then anyone else the family named.
+        var pickupPersons = new List<string> { $"{guardian.GivenName} {guardian.FamilyName}".Trim() };
+        foreach (var c in await contactDao.RetrieveForFamilyAsync(guardianPersonId))
+            if (!pickupPersons.Contains(c.FullName, StringComparer.OrdinalIgnoreCase)) pickupPersons.Add(c.FullName);
         var html = RegistrationConfirmationEmail.Render(guardian.GivenName,
             new ConfirmationEdition(edition.Name, edition.StartsOn, edition.EndsOn, venue?.Name, venue?.Address,
                 edition.PickupWindowStart, edition.PickupWindowEnd),

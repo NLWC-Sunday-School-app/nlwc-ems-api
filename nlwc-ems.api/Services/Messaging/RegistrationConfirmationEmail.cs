@@ -8,7 +8,7 @@ namespace nlwc.ems.Services.Messaging;
 
 public record ConfirmationChild(string GivenName, string FullName, int? Age, string Reference, ParticipationMode Mode, string StatusLabel, bool StatusIsPending);
 
-public record ConfirmationEdition(string Name, DateOnly StartsOn, DateOnly EndsOn, string? VenueName, string? VenueAddress, bool Free, TimeOnly? PickupStart, TimeOnly? PickupEnd);
+public record ConfirmationEdition(string Name, DateOnly StartsOn, DateOnly EndsOn, string? VenueName, string? VenueAddress, TimeOnly? PickupStart, TimeOnly? PickupEnd);
 
 /// <summary>Fills the Bible Bootcamp registration-confirmation template (copied from documentation/design/email) for one parent or guardian.
 /// Everything that varies is HTML-encoded here; the template's own wording (FAQ, camp checklist, closing) is the church's copy for Bootcamp 2026.</summary>
@@ -36,11 +36,20 @@ public static class RegistrationConfirmationEmail
             : $"{start.ToString("ddd d MMM yyyy", c)} – {end.ToString("ddd d MMM yyyy", c)}";
     }
 
-    private static string Time(TimeOnly t) => t.ToString("h:mmtt", CultureInfo.InvariantCulture).ToLowerInvariant();
+    /// <summary>"4 – 6pm" for a window on the hour in one half of the day, otherwise "11am – 2pm" or "4:30pm – 6:15pm".</summary>
+    public static string FormatWindow(TimeOnly start, TimeOnly end)
+    {
+        string Short(TimeOnly t) => t.Minute == 0 ? t.ToString("%h", CultureInfo.InvariantCulture) : t.ToString("h:mm", CultureInfo.InvariantCulture);
+        string Mer(TimeOnly t) => t.Hour < 12 ? "am" : "pm";
+        return Mer(start) == Mer(end) ? $"{Short(start)} – {Short(end)}{Mer(end)}" : $"{Short(start)}{Mer(start)} – {Short(end)}{Mer(end)}";
+    }
+
+    /// <summary>When walk-in children are collected. NLWC's announced hours apply until the edition sets its own window.</summary>
+    private static readonly string DefaultPickupWindow = FormatWindow(new TimeOnly(16, 0), new TimeOnly(18, 0));
 
     public static string Subject(string editionName) => $"Registration confirmed: {editionName}";
 
-    public static string Render(string guardianFirstName, ConfirmationEdition edition, IReadOnlyList<ConfirmationChild> children, string webBaseUrl)
+    public static string Render(string guardianFirstName, ConfirmationEdition edition, IReadOnlyList<ConfirmationChild> children, string webBaseUrl, IReadOnlyList<string>? pickupPersons = null)
     {
         var html = LoadTemplate();
         var web = webBaseUrl.TrimEnd('/');
@@ -63,8 +72,8 @@ public static class RegistrationConfirmationEmail
             ["child_will"] = multiple ? "children will" : "child will",
             ["dates"] = Enc(FormatDates(edition.StartsOn, edition.EndsOn)),
             ["venue"] = Enc(venue.Length > 0 ? venue : "To be announced"),
-            ["cost"] = edition.Free ? "Free" : "See the event page",
-            ["pickup"] = edition.PickupStart is { } a && edition.PickupEnd is { } b ? $"{Time(a)} – {Time(b)} daily" : "To be announced",
+            ["pickup"] = Enc($"{(edition.PickupStart is { } a && edition.PickupEnd is { } b ? FormatWindow(a, b) : DefaultPickupWindow)} daily for walk-in participants"),
+            ["pickup_persons"] = pickupPersons is { Count: > 0 } ? Enc(string.Join(", ", pickupPersons)) : "None added yet. You can add them in your profile.",
             ["children_rows"] = Rows(children),
             ["logo_url"] = Enc($"{web}/nlwc-logo-coloured.png"),
             ["passes_url"] = Enc($"{web}/dashboard"),

@@ -6,7 +6,7 @@ namespace nlwc.ems.Tests.Services;
 public class RegistrationConfirmationEmailTests
 {
     private static readonly ConfirmationEdition Edition = new("Bible Bootcamp 2026", new DateOnly(2026, 12, 21), new DateOnly(2026, 12, 23),
-        "Faith Plaza", "Igbogunu Bus Stop, Bariga, Lagos", Free: true, new TimeOnly(16, 0), new TimeOnly(18, 0));
+        "Faith Plaza", "Igbogunu Bus Stop, Bariga, Lagos", new TimeOnly(16, 0), new TimeOnly(18, 0));
 
     private static ConfirmationChild Child(string given, ParticipationMode mode = ParticipationMode.Day, string status = "Confirmed", bool pending = false, int age = 9)
         => new(given, $"{given} Egwu", age, $"BB26-{given.Length:0000}-A7", mode, status, pending);
@@ -18,8 +18,8 @@ public class RegistrationConfirmationEmailTests
     {
         var html = Render(Child("Tobi"));
         html.Should().Contain("Congratulations, Ada!").And.Contain("<strong>Tobi</strong>").And.Contain("We are so glad your child will be with us.")
-            .And.Contain("Mon 21 – Wed 23 December 2026").And.Contain("Faith Plaza, Igbogunu Bus Stop, Bariga, Lagos").And.Contain(">Free<")
-            .And.Contain("4:00pm – 6:00pm daily").And.Contain("Tobi Egwu").And.Contain("9 years old").And.Contain("Walk-in").And.Contain("Confirmed");
+            .And.Contain("Mon 21 – Wed 23 December 2026").And.Contain("Faith Plaza, Igbogunu Bus Stop, Bariga, Lagos").And.NotContain("Cost")
+            .And.Contain("Daily pick-up time").And.Contain("4 – 6pm daily for walk-in participants").And.Contain("Tobi Egwu").And.Contain("9 years old").And.Contain("Walk-in").And.Contain("Confirmed");
         html.Should().Contain("Tobi is registered for Bible Bootcamp 2026");
         html.Should().NotContain("{{").And.NotContain("CAMP_START").And.NotContain("Sample rows");
     }
@@ -61,11 +61,26 @@ public class RegistrationConfirmationEmailTests
     }
 
     [Fact]
-    public void Missing_venue_pickup_and_a_paid_price_read_sensibly()
+    public void A_missing_venue_reads_sensibly_and_the_pickup_hours_fall_back_to_the_announced_ones()
     {
-        var html = RegistrationConfirmationEmail.Render("Ada", new ConfirmationEdition("E", new DateOnly(2026, 12, 30), new DateOnly(2027, 1, 2), null, null, false, null, null), [Child("Tobi")], "https://x.test");
-        html.Should().Contain("To be announced").And.Contain("See the event page").And.Contain("Wed 30 Dec 2026 – Sat 2 Jan 2027");
+        var html = RegistrationConfirmationEmail.Render("Ada", new ConfirmationEdition("E", new DateOnly(2026, 12, 30), new DateOnly(2027, 1, 2), null, null, null, null), [Child("Tobi")], "https://x.test");
+        html.Should().Contain("To be announced").And.Contain("4 – 6pm daily for walk-in participants").And.Contain("Wed 30 Dec 2026 – Sat 2 Jan 2027");
     }
+
+    [Fact]
+    public void Confirmed_pickup_persons_are_listed_by_name_or_say_none_yet()
+    {
+        var many = RegistrationConfirmationEmail.Render("Ada", Edition, [Child("Tobi")], "https://events.test/", ["Ngozi Obi", "Chief & Sons"]);
+        many.Should().Contain("Confirmed pick-up persons").And.Contain("Ngozi Obi, Chief &amp; Sons");
+        Render(Child("Tobi")).Should().Contain("None added yet");
+    }
+
+    [Theory]
+    [InlineData(16, 0, 18, 0, "4 – 6pm")]
+    [InlineData(10, 0, 14, 0, "10am – 2pm")]
+    [InlineData(16, 30, 18, 15, "4:30 – 6:15pm")]
+    public void The_pickup_window_reads_naturally(int h1, int m1, int h2, int m2, string expected)
+        => RegistrationConfirmationEmail.FormatWindow(new TimeOnly(h1, m1), new TimeOnly(h2, m2)).Should().Be(expected);
 
     [Theory]
     [InlineData(new string[0], "")]

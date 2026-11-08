@@ -139,8 +139,8 @@ public class CampReviewService(ICampDecisionDao decisionDao, IRegistrationDao re
     }
 }
 
-public class RegistrationNotifier(IRegistrationDao registrationDao, IPersonDao personDao, IAccountDao accountDao, IEditionDao editionDao, IRatePlanService ratePlanService,
-    ICampDecisionDao campDecisionDao, IEmailService email, IOptions<MailgunOptions> options, ILogger<RegistrationNotifier> logger) : IRegistrationNotifier
+public class RegistrationNotifier(IRegistrationDao registrationDao, IPersonDao personDao, IAccountDao accountDao, IEditionDao editionDao,
+    ICampDecisionDao campDecisionDao, IEmergencyContactDao contactDao, IEmailService email, IOptions<MailgunOptions> options, ILogger<RegistrationNotifier> logger) : IRegistrationNotifier
 {
     // A List, not an array: on C# 14 an array's Contains binds to the span overload, which EF Core 9 cannot translate inside a query.
     private static readonly List<RegistrationState> Live = [RegistrationState.Submitted, RegistrationState.NeedsAction, RegistrationState.Confirmed, RegistrationState.Completed];
@@ -188,10 +188,11 @@ public class RegistrationNotifier(IRegistrationDao registrationDao, IPersonDao p
         if (children.Count == 0) return new(false, "There are no live registrations to confirm.");
 
         var venue = edition.Venue;
+        var pickupPersons = (await contactDao.RetrieveForFamilyAsync(guardianPersonId)).Select(c => c.FullName).ToList();
         var html = RegistrationConfirmationEmail.Render(guardian.GivenName,
             new ConfirmationEdition(edition.Name, edition.StartsOn, edition.EndsOn, venue?.Name, venue?.Address,
-                await ratePlanService.GetPriceStateAsync(edition.Id) == PriceState.Free, edition.PickupWindowStart, edition.PickupWindowEnd),
-            children, options.Value.WebBaseUrl);
+                edition.PickupWindowStart, edition.PickupWindowEnd),
+            children, options.Value.WebBaseUrl, pickupPersons);
         var sent = await email.SendEmailAsync(new Mailer(account.Email, guardian.GivenName), null, RegistrationConfirmationEmail.Subject(edition.Name), html);
         return sent ? new(true, $"Confirmation email sent to {account.Email}.") : new(false, "The email was not sent. Check that Mailgun is set up on the server (domain, API key, sender) and see the API log for the reason.");
     }

@@ -155,9 +155,7 @@ public class RegistrationService(IRegistrationDao registrationDao, IConsentRecor
         var tasks = new List<ReviewTaskDto>();
         var age = registration.AgeOnReferenceDate ?? 0;
 
-        // Emergency contacts are the family's, not the child's: the account holder needs at least one, whoever is registered.
-        if (await contactDao.CountForFamilyAsync(callerPersonId) == 0) tasks.Add(new() { Code = "emergency_contact", Blocking = true });
-
+        // Pick-up persons are the family's and optional: nothing is blocked if there are none.
         if (RegistrationRules.IsPhysical(registration.ParticipationMode))
         {
             if (await healthDao.RetrieveForRegistrationAsync(registration.Id) is null) tasks.Add(new() { Code = "health", Blocking = true });

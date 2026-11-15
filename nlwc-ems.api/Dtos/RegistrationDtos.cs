@@ -130,6 +130,8 @@ public class StaffRegistrationDto
 
     /// <summary>Latest answer per permission, so the list can show them as tags.</summary>
     public List<StaffConsentAnswerDto> Consents { get; set; } = [];
+
+    public string? RegistrantName { get; set; }
 }
 
 public class StaffConsentAnswerDto { public ConsentKind Kind { get; set; } public bool Accepted { get; set; } }

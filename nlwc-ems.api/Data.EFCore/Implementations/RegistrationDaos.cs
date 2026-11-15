@@ -75,6 +75,13 @@ public class RegistrationDao(EmsDbContext dbContext, IHttpContextAccessor httpCo
         var ids = data.Select(d => d.Id).ToList();
         var records = await DbContext.Set<ConsentRecord>().AsNoTracking().Where(c => ids.Contains(c.RegistrationId)).OrderBy(c => c.DateCreated).ThenBy(c => c.Id).ToListAsync();
         var latest = records.GroupBy(c => c.RegistrationId).ToDictionary(g => g.Key, g => g.GroupBy(c => c.Kind).Select(k => k.Last()).OrderBy(c => c.Kind).ToList());
+        var registrants = await (from a in DbContext.Set<RegistrationActor>().AsNoTracking()
+                                 join p in DbContext.Set<Person>().AsNoTracking() on a.PersonId equals p.Id
+                                 where ids.Contains(a.RegistrationId) && a.Role == RegistrationRole.Registrant
+                                 select new { a.RegistrationId, p.GivenName, p.FamilyName }).ToListAsync();
+        var registrantNames = registrants.GroupBy(x => x.RegistrationId).ToDictionary(g => g.Key, g => $"{g.First().GivenName} {g.First().FamilyName}");
+        foreach (var row in data)
+            if (registrantNames.TryGetValue(row.Id, out var rn)) row.RegistrantName = rn;
         foreach (var row in data)
             if (latest.TryGetValue(row.Id, out var list)) row.Consents = list.Select(c => new StaffConsentAnswer { Kind = c.Kind, Accepted = c.Accepted }).ToList();
         return new PagerEntity<StaffRegistrationRow> { Page = page, Max = max, Count = count, Data = data };

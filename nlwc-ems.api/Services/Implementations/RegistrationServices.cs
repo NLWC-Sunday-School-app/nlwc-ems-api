@@ -403,7 +403,8 @@ public class StaffRegistrationService(IRegistrationDao registrationDao, IHealthD
                 ParticipationMode = r.ParticipationMode, AgeBand = r.AgeBand, DateCreated = r.DateCreated,
                 // Flags-only roles see that something exists; roles without health access are not told even that.
                 HasHealthFlags = includeHealthFlags ? r.HasHealthFlags : null,
-                Consents = r.Consents.Select(c => new StaffConsentAnswerDto { Kind = c.Kind, Accepted = c.Accepted }).ToList()
+                Consents = r.Consents.Select(c => new StaffConsentAnswerDto { Kind = c.Kind, Accepted = c.Accepted }).ToList(),
+                RegistrantName = r.RegistrantName
             }).ToList()
         };
     }

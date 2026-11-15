@@ -207,6 +207,9 @@ public class StaffRegistrationRow
 
     /// <summary>Latest answer per permission kind. Kinds never answered are absent.</summary>
     public List<StaffConsentAnswer> Consents { get; set; } = [];
+
+    /// <summary>Who registered them (the account holder). Null if none recorded.</summary>
+    public string? RegistrantName { get; set; }
 }
 
 public class StaffConsentAnswer { public ConsentKind Kind { get; set; } public bool Accepted { get; set; } }

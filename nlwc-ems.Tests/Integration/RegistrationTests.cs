@@ -394,6 +394,7 @@ public sealed class RegistrationTests(TestApp app)
         var row = asMedical.GetProperty("data")[0];
         row.GetProperty("id").GetGuid().Should().Be(registration);
         row.GetProperty("givenName").GetString().Should().Be("Tobi");
+        row.GetProperty("registrantName").GetString().Should().NotBeNullOrWhiteSpace();   // who registered the child
         row.GetProperty("hasHealthFlags").GetBoolean().Should().BeTrue();
         row.ToString().Should().NotContain("asthma").And.NotContain("Inhaler");   // the queue never carries health content
 

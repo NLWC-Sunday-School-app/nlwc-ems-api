@@ -204,7 +204,12 @@ public class StaffRegistrationRow
     public string? AgeBand { get; set; }
     public bool HasHealthFlags { get; set; }
     public DateTime DateCreated { get; set; }
+
+    /// <summary>Latest answer per permission kind. Kinds never answered are absent.</summary>
+    public List<StaffConsentAnswer> Consents { get; set; } = [];
 }
+
+public class StaffConsentAnswer { public ConsentKind Kind { get; set; } public bool Accepted { get; set; } }
 
 public class StaffRegistrationFilter
 {

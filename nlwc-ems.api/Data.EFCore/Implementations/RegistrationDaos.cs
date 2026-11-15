@@ -72,6 +72,11 @@ public class RegistrationDao(EmsDbContext dbContext, IHttpContextAccessor httpCo
                     };
         var count = await query.CountAsync();
         var data = await query.OrderByDescending(x => x.DateCreated).ThenByDescending(x => x.Id).Skip(page * max).Take(max).ToListAsync();
+        var ids = data.Select(d => d.Id).ToList();
+        var records = await DbContext.Set<ConsentRecord>().AsNoTracking().Where(c => ids.Contains(c.RegistrationId)).OrderBy(c => c.DateCreated).ThenBy(c => c.Id).ToListAsync();
+        var latest = records.GroupBy(c => c.RegistrationId).ToDictionary(g => g.Key, g => g.GroupBy(c => c.Kind).Select(k => k.Last()).OrderBy(c => c.Kind).ToList());
+        foreach (var row in data)
+            if (latest.TryGetValue(row.Id, out var list)) row.Consents = list.Select(c => new StaffConsentAnswer { Kind = c.Kind, Accepted = c.Accepted }).ToList();
         return new PagerEntity<StaffRegistrationRow> { Page = page, Max = max, Count = count, Data = data };
     }
 
